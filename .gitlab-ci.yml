@@ -13,15 +13,15 @@ default:
   image: node:20-alpine
   interruptible: true
   variables:
-    APP_DIR: KUKUZA-FRONTEND/microfronts/portal
+    APP_DIR: KUKUZA-FRONTEND/microfronts/auth
     npm_config_cache: "$CI_PROJECT_DIR/.npm"
     NPM_FLAGS: "--no-audit --no-fund --prefer-offline --progress=false"
   cache:
     key:
       files:
-        - KUKUZA-FRONTEND/microfronts/portal/package-lock.json
+        - KUKUZA-FRONTEND/microfronts/auth/package-lock.json
     paths:
-      - KUKUZA-FRONTEND/microfronts/portal/node_modules/
+      - KUKUZA-FRONTEND/microfronts/auth/node_modules/
       - .npm/
     policy: pull-push
   before_script:
@@ -34,8 +34,8 @@ install:
   artifacts:
     expire_in: 1h
     paths:
-      - KUKUZA-FRONTEND/microfronts/portal/node_modules/
-      - KUKUZA-FRONTEND/microfronts/portal/package-lock.json
+      - KUKUZA-FRONTEND/microfronts/auth/node_modules/
+      - KUKUZA-FRONTEND/microfronts/auth/package-lock.json
 
 test:
   stage: test
@@ -43,6 +43,7 @@ test:
     - job: install
       artifacts: true
   script:
+    - if [ "$(npm pkg get scripts.test | tr -d '"' | tr -d '[:space:]')" = "null" ]; then echo "Aucun script test détecté, étape test ignorée."; exit 0; fi
     - npm run test -- --watch=false
 
 build:
@@ -56,8 +57,8 @@ build:
   artifacts:
     expire_in: 1 week
     paths:
-      - KUKUZA-FRONTEND/microfronts/portal/dist/
-      - KUKUZA-FRONTEND/microfronts/portal/build/
+      - KUKUZA-FRONTEND/microfronts/auth/dist/
+      - KUKUZA-FRONTEND/microfronts/auth/build/
 
 pages:
   stage: deploy
