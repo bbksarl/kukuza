@@ -28,7 +28,7 @@ default:
       - KUKUZA-FRONTEND/microfronts/portal/node_modules/
     policy: pull-push
   before_script:
-    - set -euo pipefail
+    - set -eu
 
 install:
   stage: install
@@ -55,19 +55,11 @@ install:
         fi
         cd "$CI_PROJECT_DIR"
       done
-  artifacts:
-    expire_in: 2h
-    paths:
-      - KUKUZA-FRONTEND/microfronts/auth/node_modules/
-      - KUKUZA-FRONTEND/microfronts/catalog/node_modules/
-      - KUKUZA-FRONTEND/microfronts/shop/node_modules/
-      - KUKUZA-FRONTEND/microfronts/portal/node_modules/
 
 test:
   stage: test
   needs:
     - job: install
-      artifacts: true
   script:
     - echo "[test] Running tests for microfrontends"
     - |
@@ -84,6 +76,15 @@ test:
         fi
 
         cd "$APP_DIR"
+        if [ ! -d node_modules ]; then
+          echo "[test][$APP] node_modules missing, running install"
+          if [ -f package-lock.json ]; then
+            npm ci $NPM_FLAGS
+          else
+            npm install $NPM_FLAGS
+          fi
+        fi
+
         TEST_SCRIPT="$(npm pkg get scripts.test | tr -d '"' | tr -d '[:space:]' || true)"
         if [ -z "$TEST_SCRIPT" ] || [ "$TEST_SCRIPT" = "null" ]; then
           echo "[test][$APP] No test script, skipping"
@@ -108,12 +109,14 @@ build:
   stage: build
   needs:
     - job: install
-      artifacts: true
     - job: test
   script:
     - echo "[build] Building microfrontends"
     - |
       FAILED=0
+      BUILT=0
+      rm -rf .ci-builds
+      mkdir -p .ci-builds
       for APP in $MICROFRONTS; do
         APP_DIR="KUKUZA-FRONTEND/microfronts/$APP"
         if [ ! -d "$APP_DIR" ]; then
@@ -125,12 +128,39 @@ build:
           continue
         fi
 
-        echo "[build][$APP] npm run build"
         cd "$APP_DIR"
+        if [ ! -d node_modules ]; then
+          echo "[build][$APP] node_modules missing, running install"
+          if [ -f package-lock.json ]; then
+            npm ci $NPM_FLAGS
+          else
+            npm install $NPM_FLAGS
+          fi
+        fi
+
+        echo "[build][$APP] npm run build"
         if ! npm run build; then
           echo "[build][$APP] Build failed"
           FAILED=1
+          cd "$CI_PROJECT_DIR"
+          continue
         fi
+
+        if [ -d dist ]; then
+          mkdir -p "$CI_PROJECT_DIR/.ci-builds/$APP"
+          cp -r dist/. "$CI_PROJECT_DIR/.ci-builds/$APP/"
+          echo "[build][$APP] Collected dist"
+          BUILT=1
+        elif [ -d build ]; then
+          mkdir -p "$CI_PROJECT_DIR/.ci-builds/$APP"
+          cp -r build/. "$CI_PROJECT_DIR/.ci-builds/$APP/"
+          echo "[build][$APP] Collected build"
+          BUILT=1
+        else
+          echo "[build][$APP] No dist/build output found"
+          FAILED=1
+        fi
+
         cd "$CI_PROJECT_DIR"
       done
 
@@ -138,17 +168,14 @@ build:
         echo "[build] One or more builds failed"
         exit 1
       fi
+      if [ "$BUILT" -eq 0 ]; then
+        echo "[build] No build output collected"
+        exit 1
+      fi
   artifacts:
     expire_in: 1 week
     paths:
-      - KUKUZA-FRONTEND/microfronts/auth/dist/
-      - KUKUZA-FRONTEND/microfronts/auth/build/
-      - KUKUZA-FRONTEND/microfronts/catalog/dist/
-      - KUKUZA-FRONTEND/microfronts/catalog/build/
-      - KUKUZA-FRONTEND/microfronts/shop/dist/
-      - KUKUZA-FRONTEND/microfronts/shop/build/
-      - KUKUZA-FRONTEND/microfronts/portal/dist/
-      - KUKUZA-FRONTEND/microfronts/portal/build/
+      - .ci-builds/
 
 pages:
   stage: deploy
@@ -157,31 +184,23 @@ pages:
       artifacts: true
   script:
     - echo "[deploy] Preparing GitLab Pages artifacts"
+    - rm -rf public
     - mkdir -p public
     - |
       DEPLOYED=0
       for APP in $MICROFRONTS; do
-        DIST_DIR="KUKUZA-FRONTEND/microfronts/$APP/dist"
-        BUILD_DIR="KUKUZA-FRONTEND/microfronts/$APP/build"
+        BUILD_DIR=".ci-builds/$APP"
         TARGET_DIR="public/$APP"
 
-        if [ -d "$DIST_DIR" ]; then
-          echo "[deploy][$APP] Copying dist"
-          mkdir -p "$TARGET_DIR"
-          cp -r "$DIST_DIR/." "$TARGET_DIR/"
-          DEPLOYED=1
-          continue
-        fi
-
         if [ -d "$BUILD_DIR" ]; then
-          echo "[deploy][$APP] Copying build"
+          echo "[deploy][$APP] Publishing build output"
           mkdir -p "$TARGET_DIR"
           cp -r "$BUILD_DIR/." "$TARGET_DIR/"
           DEPLOYED=1
           continue
         fi
 
-        echo "[deploy][$APP] No dist/build found, skipping"
+        echo "[deploy][$APP] No collected build, skipping"
       done
 
       if [ "$DEPLOYED" -eq 0 ] || [ -z "$(find public -type f -print -quit)" ]; then
