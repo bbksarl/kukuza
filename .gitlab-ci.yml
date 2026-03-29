@@ -1,3 +1,8 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - when: never
+
 stages:
   - install
   - test
@@ -8,65 +13,135 @@ default:
   image: node:20-alpine
   interruptible: true
   variables:
-    APPS: "auth catalog shop portal"
+    CI: "true"
+    MICROFRONTS: "auth catalog shop portal"
     npm_config_cache: "$CI_PROJECT_DIR/.npm"
     NPM_FLAGS: "--no-audit --no-fund --prefer-offline --progress=false"
   cache:
-    key: "$CI_COMMIT_REF_SLUG"
+    key:
+      files:
+        - KUKUZA-FRONTEND/microfronts/auth/package-lock.json
+        - KUKUZA-FRONTEND/microfronts/catalog/package-lock.json
+        - KUKUZA-FRONTEND/microfronts/shop/package-lock.json
+        - KUKUZA-FRONTEND/microfronts/portal/package-lock.json
     paths:
       - .npm/
+      - KUKUZA-FRONTEND/microfronts/auth/node_modules/
+      - KUKUZA-FRONTEND/microfronts/catalog/node_modules/
+      - KUKUZA-FRONTEND/microfronts/shop/node_modules/
+      - KUKUZA-FRONTEND/microfronts/portal/node_modules/
     policy: pull-push
+  before_script:
+    - set -euo pipefail
 
 install:
   stage: install
-  only:
-    - main
   script:
+    - echo "[install] Installing dependencies for microfrontends"
     - |
-      for APP in $APPS; do
+      for APP in $MICROFRONTS; do
         APP_DIR="KUKUZA-FRONTEND/microfronts/$APP"
-        echo "Installing dependencies for $APP_DIR"
-        test -d "$APP_DIR" || (echo "Missing directory: $APP_DIR" && exit 1)
+        if [ ! -d "$APP_DIR" ]; then
+          echo "[install][$APP] Directory not found, skipping"
+          continue
+        fi
+        if [ ! -f "$APP_DIR/package.json" ]; then
+          echo "[install][$APP] package.json not found, skipping"
+          continue
+        fi
+
+        echo "[install][$APP] Installing dependencies"
         cd "$APP_DIR"
-        npm install $NPM_FLAGS
+        if [ -f package-lock.json ]; then
+          npm ci $NPM_FLAGS
+        else
+          npm install $NPM_FLAGS
+        fi
         cd "$CI_PROJECT_DIR"
       done
+  artifacts:
+    expire_in: 2h
+    paths:
+      - KUKUZA-FRONTEND/microfronts/auth/node_modules/
+      - KUKUZA-FRONTEND/microfronts/catalog/node_modules/
+      - KUKUZA-FRONTEND/microfronts/shop/node_modules/
+      - KUKUZA-FRONTEND/microfronts/portal/node_modules/
 
 test:
   stage: test
-  only:
-    - main
+  needs:
+    - job: install
+      artifacts: true
   script:
+    - echo "[test] Running tests for microfrontends"
     - |
-      for APP in $APPS; do
+      FAILED=0
+      for APP in $MICROFRONTS; do
         APP_DIR="KUKUZA-FRONTEND/microfronts/$APP"
-        echo "Testing $APP_DIR"
-        test -d "$APP_DIR" || (echo "Missing directory: $APP_DIR" && exit 1)
+        if [ ! -d "$APP_DIR" ]; then
+          echo "[test][$APP] Directory not found, skipping"
+          continue
+        fi
+        if [ ! -f "$APP_DIR/package.json" ]; then
+          echo "[test][$APP] package.json not found, skipping"
+          continue
+        fi
+
         cd "$APP_DIR"
-        npm install $NPM_FLAGS
-        if [ "$(npm pkg get scripts.test | tr -d '"' | tr -d '[:space:]')" = "null" ]; then
-          echo "No test script in $APP, skipping."
-        else
-          npm run test -- --watch=false
+        TEST_SCRIPT="$(npm pkg get scripts.test | tr -d '"' | tr -d '[:space:]' || true)"
+        if [ -z "$TEST_SCRIPT" ] || [ "$TEST_SCRIPT" = "null" ]; then
+          echo "[test][$APP] No test script, skipping"
+          cd "$CI_PROJECT_DIR"
+          continue
+        fi
+
+        echo "[test][$APP] npm run test -- --watch=false --passWithNoTests"
+        if ! npm run test -- --watch=false --passWithNoTests; then
+          echo "[test][$APP] Test failed"
+          FAILED=1
         fi
         cd "$CI_PROJECT_DIR"
       done
 
+      if [ "$FAILED" -ne 0 ]; then
+        echo "[test] One or more test suites failed"
+        exit 1
+      fi
+
 build:
   stage: build
-  only:
-    - main
+  needs:
+    - job: install
+      artifacts: true
+    - job: test
   script:
+    - echo "[build] Building microfrontends"
     - |
-      for APP in $APPS; do
+      FAILED=0
+      for APP in $MICROFRONTS; do
         APP_DIR="KUKUZA-FRONTEND/microfronts/$APP"
-        echo "Building $APP_DIR"
-        test -d "$APP_DIR" || (echo "Missing directory: $APP_DIR" && exit 1)
+        if [ ! -d "$APP_DIR" ]; then
+          echo "[build][$APP] Directory not found, skipping"
+          continue
+        fi
+        if [ ! -f "$APP_DIR/package.json" ]; then
+          echo "[build][$APP] package.json not found, skipping"
+          continue
+        fi
+
+        echo "[build][$APP] npm run build"
         cd "$APP_DIR"
-        npm install $NPM_FLAGS
-        npm run build
+        if ! npm run build; then
+          echo "[build][$APP] Build failed"
+          FAILED=1
+        fi
         cd "$CI_PROJECT_DIR"
       done
+
+      if [ "$FAILED" -ne 0 ]; then
+        echo "[build] One or more builds failed"
+        exit 1
+      fi
   artifacts:
     expire_in: 1 week
     paths:
@@ -81,15 +156,42 @@ build:
 
 pages:
   stage: deploy
-  only:
-    - main
+  needs:
+    - job: build
+      artifacts: true
   script:
-    - mkdir -p public/auth public/catalog public/shop public/portal
-    - if [ -d KUKUZA-FRONTEND/microfronts/auth/dist ]; then cp -r KUKUZA-FRONTEND/microfronts/auth/dist/. public/auth/; elif [ -d KUKUZA-FRONTEND/microfronts/auth/build ]; then cp -r KUKUZA-FRONTEND/microfronts/auth/build/. public/auth/; fi
-    - if [ -d KUKUZA-FRONTEND/microfronts/catalog/dist ]; then cp -r KUKUZA-FRONTEND/microfronts/catalog/dist/. public/catalog/; elif [ -d KUKUZA-FRONTEND/microfronts/catalog/build ]; then cp -r KUKUZA-FRONTEND/microfronts/catalog/build/. public/catalog/; fi
-    - if [ -d KUKUZA-FRONTEND/microfronts/shop/dist ]; then cp -r KUKUZA-FRONTEND/microfronts/shop/dist/. public/shop/; elif [ -d KUKUZA-FRONTEND/microfronts/shop/build ]; then cp -r KUKUZA-FRONTEND/microfronts/shop/build/. public/shop/; fi
-    - if [ -d KUKUZA-FRONTEND/microfronts/portal/dist ]; then cp -r KUKUZA-FRONTEND/microfronts/portal/dist/. public/portal/; elif [ -d KUKUZA-FRONTEND/microfronts/portal/build ]; then cp -r KUKUZA-FRONTEND/microfronts/portal/build/. public/portal/; fi
-    - test -n "$(find public -type f -print -quit)" || (echo "No build artifact found to publish" && exit 1)
+    - echo "[deploy] Preparing GitLab Pages artifacts"
+    - mkdir -p public
+    - |
+      DEPLOYED=0
+      for APP in $MICROFRONTS; do
+        DIST_DIR="KUKUZA-FRONTEND/microfronts/$APP/dist"
+        BUILD_DIR="KUKUZA-FRONTEND/microfronts/$APP/build"
+        TARGET_DIR="public/$APP"
+
+        if [ -d "$DIST_DIR" ]; then
+          echo "[deploy][$APP] Copying dist"
+          mkdir -p "$TARGET_DIR"
+          cp -r "$DIST_DIR/." "$TARGET_DIR/"
+          DEPLOYED=1
+          continue
+        fi
+
+        if [ -d "$BUILD_DIR" ]; then
+          echo "[deploy][$APP] Copying build"
+          mkdir -p "$TARGET_DIR"
+          cp -r "$BUILD_DIR/." "$TARGET_DIR/"
+          DEPLOYED=1
+          continue
+        fi
+
+        echo "[deploy][$APP] No dist/build found, skipping"
+      done
+
+      if [ "$DEPLOYED" -eq 0 ] || [ -z "$(find public -type f -print -quit)" ]; then
+        echo "[deploy] No files found to publish"
+        exit 1
+      fi
   artifacts:
     paths:
       - public
