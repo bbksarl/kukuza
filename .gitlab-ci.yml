@@ -19,12 +19,7 @@ default:
   image: node:20-alpine
   interruptible: true
   cache:
-    key:
-      files:
-        - KUKUZA-FRONTEND/microfronts/auth/package-lock.json
-        - KUKUZA-FRONTEND/microfronts/catalog/package-lock.json
-        - KUKUZA-FRONTEND/microfronts/shop/package-lock.json
-        - KUKUZA-FRONTEND/microfronts/portal/package-lock.json
+    key: "npm-cache-$CI_COMMIT_REF_SLUG"
     paths:
       - .npm/
       - KUKUZA-FRONTEND/microfronts/auth/node_modules/
