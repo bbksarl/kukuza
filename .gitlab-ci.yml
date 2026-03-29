@@ -13,188 +13,80 @@ default:
   image: node:20-alpine
   interruptible: true
   variables:
+    APPS: "auth catalog shop portal"
     npm_config_cache: "$CI_PROJECT_DIR/.npm"
     NPM_FLAGS: "--no-audit --no-fund --prefer-offline --progress=false"
   cache:
-    key: "$CI_JOB_NAME"
-    paths:
-      - .npm/
-
-install_auth:
-  stage: install
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/auth
-    - npm install $NPM_FLAGS
-  cache:
-    key: "auth-$CI_COMMIT_REF_SLUG"
+    key: "$CI_COMMIT_REF_SLUG"
     paths:
       - KUKUZA-FRONTEND/microfronts/auth/node_modules/
-      - .npm/
-    policy: pull-push
-  artifacts:
-    expire_in: 2h
-    paths:
-      - KUKUZA-FRONTEND/microfronts/auth/node_modules/
-
-install_catalog:
-  stage: install
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/catalog
-    - npm install $NPM_FLAGS
-  cache:
-    key: "catalog-$CI_COMMIT_REF_SLUG"
-    paths:
       - KUKUZA-FRONTEND/microfronts/catalog/node_modules/
-      - .npm/
-    policy: pull-push
-  artifacts:
-    expire_in: 2h
-    paths:
-      - KUKUZA-FRONTEND/microfronts/catalog/node_modules/
-
-install_shop:
-  stage: install
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/shop
-    - npm install $NPM_FLAGS
-  cache:
-    key: "shop-$CI_COMMIT_REF_SLUG"
-    paths:
       - KUKUZA-FRONTEND/microfronts/shop/node_modules/
-      - .npm/
-    policy: pull-push
-  artifacts:
-    expire_in: 2h
-    paths:
-      - KUKUZA-FRONTEND/microfronts/shop/node_modules/
-
-install_portal:
-  stage: install
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/portal
-    - npm install $NPM_FLAGS
-  cache:
-    key: "portal-$CI_COMMIT_REF_SLUG"
-    paths:
       - KUKUZA-FRONTEND/microfronts/portal/node_modules/
       - .npm/
     policy: pull-push
+
+install_all:
+  stage: install
+  script:
+    - |
+      for APP in $APPS; do
+        APP_DIR="KUKUZA-FRONTEND/microfronts/$APP"
+        echo "Installing dependencies for $APP_DIR"
+        test -d "$APP_DIR" || (echo "Missing directory: $APP_DIR" && exit 1)
+        cd "$APP_DIR"
+        npm install $NPM_FLAGS
+        cd "$CI_PROJECT_DIR"
+      done
   artifacts:
     expire_in: 2h
     paths:
+      - KUKUZA-FRONTEND/microfronts/auth/node_modules/
+      - KUKUZA-FRONTEND/microfronts/catalog/node_modules/
+      - KUKUZA-FRONTEND/microfronts/shop/node_modules/
       - KUKUZA-FRONTEND/microfronts/portal/node_modules/
-
-test_auth:
+test_all:
   stage: test
-  needs:
-    - job: install_auth
-      artifacts: true
   script:
-    - cd KUKUZA-FRONTEND/microfronts/auth
-    - if [ "$(npm pkg get scripts.test | tr -d '"' | tr -d '[:space:]')" = "null" ]; then echo "No test script in auth, skipping."; exit 0; fi
-    - npm run test -- --watch=false
+    - |
+      for APP in $APPS; do
+        APP_DIR="KUKUZA-FRONTEND/microfronts/$APP"
+        echo "Running tests for $APP_DIR"
+        cd "$APP_DIR"
+        if [ "$(npm pkg get scripts.test | tr -d '"' | tr -d '[:space:]')" = "null" ]; then
+          echo "No test script in $APP, skipping."
+        else
+          npm run test -- --watch=false
+        fi
+        cd "$CI_PROJECT_DIR"
+      done
 
-test_catalog:
-  stage: test
-  needs:
-    - job: install_catalog
-      artifacts: true
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/catalog
-    - if [ "$(npm pkg get scripts.test | tr -d '"' | tr -d '[:space:]')" = "null" ]; then echo "No test script in catalog, skipping."; exit 0; fi
-    - npm run test -- --watch=false
-
-test_shop:
-  stage: test
-  needs:
-    - job: install_shop
-      artifacts: true
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/shop
-    - if [ "$(npm pkg get scripts.test | tr -d '"' | tr -d '[:space:]')" = "null" ]; then echo "No test script in shop, skipping."; exit 0; fi
-    - npm run test -- --watch=false
-
-test_portal:
-  stage: test
-  needs:
-    - job: install_portal
-      artifacts: true
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/portal
-    - if [ "$(npm pkg get scripts.test | tr -d '"' | tr -d '[:space:]')" = "null" ]; then echo "No test script in portal, skipping."; exit 0; fi
-    - npm run test -- --watch=false
-
-build_auth:
+build_all:
   stage: build
-  needs:
-    - job: install_auth
-      artifacts: true
-    - job: test_auth
   script:
-    - cd KUKUZA-FRONTEND/microfronts/auth
-    - npm run build
+    - |
+      for APP in $APPS; do
+        APP_DIR="KUKUZA-FRONTEND/microfronts/$APP"
+        echo "Building $APP_DIR"
+        cd "$APP_DIR"
+        npm run build
+        cd "$CI_PROJECT_DIR"
+      done
   artifacts:
     expire_in: 1 week
     paths:
       - KUKUZA-FRONTEND/microfronts/auth/dist/
       - KUKUZA-FRONTEND/microfronts/auth/build/
-
-build_catalog:
-  stage: build
-  needs:
-    - job: install_catalog
-      artifacts: true
-    - job: test_catalog
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/catalog
-    - npm run build
-  artifacts:
-    expire_in: 1 week
-    paths:
       - KUKUZA-FRONTEND/microfronts/catalog/dist/
       - KUKUZA-FRONTEND/microfronts/catalog/build/
-
-build_shop:
-  stage: build
-  needs:
-    - job: install_shop
-      artifacts: true
-    - job: test_shop
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/shop
-    - npm run build
-  artifacts:
-    expire_in: 1 week
-    paths:
       - KUKUZA-FRONTEND/microfronts/shop/dist/
       - KUKUZA-FRONTEND/microfronts/shop/build/
-
-build_portal:
-  stage: build
-  needs:
-    - job: install_portal
-      artifacts: true
-    - job: test_portal
-  script:
-    - cd KUKUZA-FRONTEND/microfronts/portal
-    - npm run build
-  artifacts:
-    expire_in: 1 week
-    paths:
       - KUKUZA-FRONTEND/microfronts/portal/dist/
       - KUKUZA-FRONTEND/microfronts/portal/build/
 
 pages:
+  pages: true
   stage: deploy
-  needs:
-    - job: build_auth
-      artifacts: true
-    - job: build_catalog
-      artifacts: true
-    - job: build_shop
-      artifacts: true
-    - job: build_portal
-      artifacts: true
   script:
     - mkdir -p public
     - mkdir -p public/auth public/catalog public/shop public/portal
