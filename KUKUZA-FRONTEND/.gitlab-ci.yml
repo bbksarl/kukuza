@@ -9,14 +9,15 @@ stages:
   - build
   - deploy
 
+variables:
+  CI: "true"
+  MICROFRONTS: "auth catalog shop portal"
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  NPM_FLAGS: "--no-audit --no-fund --prefer-offline --progress=false"
+
 default:
   image: node:20-alpine
   interruptible: true
-  variables:
-    CI: "true"
-    MICROFRONTS: "auth catalog shop portal"
-    npm_config_cache: "$CI_PROJECT_DIR/.npm"
-    NPM_FLAGS: "--no-audit --no-fund --prefer-offline --progress=false"
   cache:
     key:
       files:
