@@ -7,6 +7,7 @@ stages:
   - install
   - test
   - build
+  - docker
   - deploy
 
 variables:
@@ -177,36 +178,64 @@ build:
     paths:
       - .ci-builds/
 
-pages:
-  stage: deploy
+docker:develop:
+  stage: docker
+  image: docker:27
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - |
+      docker build \
+        --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+        --build-arg VCS_REF=$CI_COMMIT_SHORT_SHA \
+        -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG \
+        -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA \
+        .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
   needs:
     - job: build
       artifacts: true
+  only:
+    - develop
+    - main
+
+deploy:develop:
+  stage: deploy
+  image: alpine:latest
+  when: manual
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
   script:
-    - echo "[deploy] Preparing GitLab Pages artifacts"
-    - rm -rf public
-    - mkdir -p public
     - |
-      DEPLOYED=0
-      for APP in $MICROFRONTS; do
-        BUILD_DIR=".ci-builds/$APP"
-        TARGET_DIR="public/$APP"
-
-        if [ -d "$BUILD_DIR" ]; then
-          echo "[deploy][$APP] Publishing build output"
-          mkdir -p "$TARGET_DIR"
-          cp -r "$BUILD_DIR/." "$TARGET_DIR/"
-          DEPLOYED=1
-          continue
-        fi
-
-        echo "[deploy][$APP] No collected build, skipping"
-      done
-
-      if [ "$DEPLOYED" -eq 0 ] || [ -z "$(find public -type f -print -quit)" ]; then
-        echo "[deploy] No files found to publish"
-        exit 1
-      fi
-  artifacts:
-    paths:
-      - public
+      ssh $SSH_USER@$SSH_HOST "
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
+        docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG &&
+        docker stop kukuza-frontend-$CI_COMMIT_REF_SLUG 2>/dev/null || true &&
+        docker rm   kukuza-frontend-$CI_COMMIT_REF_SLUG 2>/dev/null || true &&
+        docker run -d \
+          --name kukuza-frontend-$CI_COMMIT_REF_SLUG \
+          --network kukuza-network \
+          --add-host=host.docker.internal:host-gateway \
+          --restart unless-stopped \
+          -p 3000:80 \
+          $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG &&
+        docker image prune -f
+      "
+  environment:
+    name: $CI_COMMIT_REF_SLUG
+    url: https://www.kukuzaa.com
+  needs:
+    - job: docker:develop
+  only:
+    - develop
+    - main
