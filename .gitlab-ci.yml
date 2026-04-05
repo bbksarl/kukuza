@@ -222,11 +222,40 @@ deploy:develop:
   when: manual
   before_script:
     - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
+    - |
+      if [ -z "${SSH_PRIVATE_KEY:-}" ]; then
+        echo "SSH_PRIVATE_KEY is not set"
+        exit 1
+      fi
+
+      KEY_FILE="$HOME/.ssh/gitlab_deploy_key"
+      if [ -f "$SSH_PRIVATE_KEY" ]; then
+        cp "$SSH_PRIVATE_KEY" "$KEY_FILE"
+      else
+        printf '%s\n' "$SSH_PRIVATE_KEY" | sed 's/\\n/\n/g' > "$KEY_FILE"
+      fi
+
+      tr -d '\r' < "$KEY_FILE" > "${KEY_FILE}.tmp"
+      mv "${KEY_FILE}.tmp" "$KEY_FILE"
+      chmod 600 "$KEY_FILE"
+
+      eval "$(ssh-agent -s)"
+      ssh-add "$KEY_FILE"
+    - |
+      if [ -n "${SSH_KNOWN_HOSTS:-}" ]; then
+        if [ -f "$SSH_KNOWN_HOSTS" ]; then
+          cp "$SSH_KNOWN_HOSTS" ~/.ssh/known_hosts
+        else
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | sed 's/\\n/\n/g' > ~/.ssh/known_hosts
+        fi
+      else
+        ssh-keyscan -H "$SSH_HOST" > ~/.ssh/known_hosts
+      fi
+
+      tr -d '\r' < ~/.ssh/known_hosts > ~/.ssh/known_hosts.tmp
+      mv ~/.ssh/known_hosts.tmp ~/.ssh/known_hosts
+      chmod 644 ~/.ssh/known_hosts
   script:
     - |
       ssh $SSH_USER@$SSH_HOST "
