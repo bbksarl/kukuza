@@ -1,4 +1,71 @@
-import Cookies from 'js-cookie';
+interface CookieOptions {
+  expires?: number;
+  path?: string;
+  sameSite?: 'strict' | 'lax' | 'none';
+  secure?: boolean;
+}
+
+const DEFAULT_COOKIE_PATH = '/';
+
+const isBrowser = (): boolean => typeof document !== 'undefined';
+
+const getCookie = (name: string): string | null => {
+  if (!isBrowser()) {
+    return null;
+  }
+
+  const encodedName = encodeURIComponent(name);
+  const cookies = document.cookie ? document.cookie.split('; ') : [];
+
+  for (const cookie of cookies) {
+    const separatorIndex = cookie.indexOf('=');
+    const rawName = separatorIndex >= 0 ? cookie.slice(0, separatorIndex) : cookie;
+
+    if (rawName === encodedName) {
+      const rawValue = separatorIndex >= 0 ? cookie.slice(separatorIndex + 1) : '';
+      return decodeURIComponent(rawValue);
+    }
+  }
+
+  return null;
+};
+
+const setCookie = (name: string, value: string, options: CookieOptions = {}): void => {
+  if (!isBrowser()) {
+    return;
+  }
+
+  const parts = [`${encodeURIComponent(name)}=${encodeURIComponent(value)}`];
+
+  if (typeof options.expires === 'number') {
+    const expiresAt = new Date(Date.now() + options.expires * 24 * 60 * 60 * 1000);
+    parts.push(`Expires=${expiresAt.toUTCString()}`);
+  }
+
+  parts.push(`Path=${options.path ?? DEFAULT_COOKIE_PATH}`);
+
+  if (options.sameSite) {
+    parts.push(`SameSite=${options.sameSite}`);
+  }
+
+  if (options.secure) {
+    parts.push('Secure');
+  }
+
+  document.cookie = parts.join('; ');
+};
+
+const removeCookie = (name: string): void => {
+  if (!isBrowser()) {
+    return;
+  }
+
+  document.cookie = [
+    `${encodeURIComponent(name)}=`,
+    'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
+    `Path=${DEFAULT_COOKIE_PATH}`,
+  ].join('; ');
+};
 
 export const TOKEN_KEY = typeof window !== 'undefined' && (window as any).__RUNTIME_CONFIG__?.TOKEN_KEY 
   ? (window as any).__RUNTIME_CONFIG__.TOKEN_KEY
@@ -21,7 +88,7 @@ class TokenService {
 
   getToken(): string | null {
     try {
-      return Cookies.get(this.accessTokenKey) || null;
+      return getCookie(this.accessTokenKey);
     } catch {
       return null;
     }
@@ -29,8 +96,9 @@ class TokenService {
 
   setToken(token: string): void {
     try {
-      Cookies.set(this.accessTokenKey, token, {
+      setCookie(this.accessTokenKey, token, {
         expires: 7,
+        path: DEFAULT_COOKIE_PATH,
         secure: typeof window !== 'undefined' && window.location.protocol === 'https:',
         sameSite: 'strict'
       });
@@ -41,15 +109,15 @@ class TokenService {
 
   removeToken(): void {
     try {
-      Cookies.remove(this.accessTokenKey);
-      Cookies.remove(this.refreshTokenKey);
+      removeCookie(this.accessTokenKey);
+      removeCookie(this.refreshTokenKey);
     } catch (error) {
       console.error('Failed to remove token', error);
     }
   }
 
   isAuthenticated(): boolean {
-    return !!Cookies.get(this.accessTokenKey);
+    return !!getCookie(this.accessTokenKey);
   }
 
   isTokenValid(): boolean {

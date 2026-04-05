@@ -1,9 +1,5 @@
 {
   "name": "@kukuza/libs-api",
   "version": "0.0.1",
-  "private": true,
-  "dependencies": {
-    "axios": "^1.6.0",
-    "js-cookie": "^3.0.5"
-  }
+  "private": true
 }
