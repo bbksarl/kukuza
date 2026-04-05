@@ -34,6 +34,19 @@ default:
 install:
   stage: install
   script:
+    - echo "[install] Installing dependencies for shared libraries"
+    - |
+      if [ -d "KUKUZA-FRONTEND/libs/api" ] && [ -f "KUKUZA-FRONTEND/libs/api/package.json" ]; then
+        echo "[install][libs/api] Installing dependencies"
+        cd "KUKUZA-FRONTEND/libs/api"
+        rm -rf node_modules
+        if [ -f package-lock.json ]; then
+          npm ci $NPM_FLAGS
+        else
+          npm install $NPM_FLAGS
+        fi
+        cd "$CI_PROJECT_DIR"
+      fi
     - echo "[install] Installing dependencies for microfrontends"
     - |
       for APP in $MICROFRONTS; do
