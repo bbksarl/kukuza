@@ -86,17 +86,16 @@ test:
           fi
         fi
 
-        if node -e 'const p=require("./package.json"); process.exit(!(p.scripts && p.scripts.test));'; then
+        if node -e 'const p=require("./package.json"); process.exit(p.scripts && p.scripts.test ? 0 : 1);'; then
+          echo "[test][$APP] npm run test -- --watch=false --passWithNoTests"
+          if ! npm run test -- --watch=false --passWithNoTests; then
+            echo "[test][$APP] Test failed"
+            FAILED=1
+          fi
+        else
           echo "[test][$APP] No test script, skipping"
-          cd "$CI_PROJECT_DIR"
-          continue
         fi
-
-        echo "[test][$APP] npm run test -- --watch=false --passWithNoTests"
-        if ! npm run test -- --watch=false --passWithNoTests; then
-          echo "[test][$APP] Test failed"
-          FAILED=1
-        fi
+        cd "$CI_PROJECT_DIR"
         cd "$CI_PROJECT_DIR"
       done
 
