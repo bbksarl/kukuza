@@ -49,6 +49,7 @@ install:
 
         echo "[install][$APP] Installing dependencies"
         cd "$APP_DIR"
+        rm -rf node_modules
         if [ -f package-lock.json ]; then
           npm ci $NPM_FLAGS
         else
