@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Product, ProductFilter } from '../types';
-import { getMockProducts } from '../utils/mockData';
+import { shopService } from '../services/shop/shopService';
 
 interface UseProductsReturn {
   products: Product[];
@@ -9,33 +9,31 @@ interface UseProductsReturn {
   error: Error | null;
   filter: ProductFilter;
   setFilter: (filter: ProductFilter) => void;
-  refetch: () => void;
+  refetch: () => Promise<void>;
 }
 
 export const useProducts = (): UseProductsReturn => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const [filter, setFilter] = useState<ProductFilter>('all');
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      
-      setProducts(getMockProducts());
+      const data = await shopService.getProducts();
+      setProducts(data);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch products'));
+      setError(err instanceof Error ? err : new Error('Impossible de charger les produits.'));
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    void fetchProducts();
   }, []);
 
   const filteredProducts = products.filter(product => {

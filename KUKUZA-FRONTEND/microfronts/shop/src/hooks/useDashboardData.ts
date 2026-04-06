@@ -1,43 +1,41 @@
 import { useState, useEffect } from 'react';
 import type { DashboardStats, ChartDataPoint, VisitsData } from '../types';
-import { getMockDashboardStats, getMockSalesData, getMockVisitsData } from '../utils/mockData';
+import { shopService } from '../services/shop/shopService';
 
 interface UseDashboardDataReturn {
-  stats: DashboardStats;
+  stats: DashboardStats | null;
   salesData: ChartDataPoint[];
   visitsData: VisitsData[];
   isLoading: boolean;
   error: Error | null;
-  refetch: () => void;
+  refetch: () => Promise<void>;
 }
 
 export const useDashboardData = (): UseDashboardDataReturn => {
-  const [stats, setStats] = useState<DashboardStats>(getMockDashboardStats());
-  const [salesData, setSalesData] = useState<ChartDataPoint[]>(getMockSalesData());
-  const [visitsData, setVisitsData] = useState<VisitsData[]>(getMockVisitsData());
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [salesData, setSalesData] = useState<ChartDataPoint[]>([]);
+  const [visitsData, setVisitsData] = useState<VisitsData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      
-      setStats(getMockDashboardStats());
-      setSalesData(getMockSalesData());
-      setVisitsData(getMockVisitsData());
+      const data = await shopService.getDashboardOverview();
+      setStats(data.stats);
+      setSalesData(data.salesData);
+      setVisitsData(data.visitsData);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch dashboard data'));
+      setError(err instanceof Error ? err : new Error('Impossible de charger le dashboard.'));
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   return {

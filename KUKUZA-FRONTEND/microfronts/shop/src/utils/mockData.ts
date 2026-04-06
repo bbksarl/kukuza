@@ -1,4 +1,12 @@
-import type { DashboardStats, ChartDataPoint, VisitsData, Product } from '../types';
+import type {
+  DashboardOverview,
+  DashboardStats,
+  ChartDataPoint,
+  VisitsData,
+  Product,
+  SaleItem,
+  CreateProductInput,
+} from '../types';
 
 export const getMockDashboardStats = (): DashboardStats => ({
   totalRevenue: 52600,
@@ -56,6 +64,65 @@ export const getMockProducts = (): Product[] => {
   }
   
   return products;
+};
+
+export const getMockDashboardOverview = (): DashboardOverview => ({
+  stats: getMockDashboardStats(),
+  salesData: getMockSalesData(),
+  visitsData: getMockVisitsData(),
+});
+
+export const getMockSales = (): SaleItem[] => [
+  {
+    id: 'sale-1',
+    productName: 'Produit 1',
+    reference: 'REF-897654',
+    quantity: 3,
+    unitPrice: 45.99,
+    totalPrice: 137.97,
+    customer: 'Client A',
+    date: new Date(),
+    status: 'completed'
+  },
+  {
+    id: 'sale-2',
+    productName: 'Produit 2',
+    reference: 'REF-897653',
+    quantity: 1,
+    unitPrice: 89.99,
+    totalPrice: 89.99,
+    customer: 'Client B',
+    date: new Date(Date.now() - 86400000),
+    status: 'completed'
+  },
+  {
+    id: 'sale-3',
+    productName: 'Produit 3',
+    reference: 'REF-897652',
+    quantity: 5,
+    unitPrice: 29.99,
+    totalPrice: 149.95,
+    customer: 'Client C',
+    date: new Date(Date.now() - 172800000),
+    status: 'pending'
+  }
+];
+
+export const buildMockCreatedProduct = (input: CreateProductInput): Product => {
+  const now = new Date();
+
+  return {
+    id: `product-${Date.now()}`,
+    reference: `REF-${String(Math.floor(100000 + Math.random() * 900000))}`,
+    name: input.name,
+    category: input.category,
+    price: input.price,
+    stock: input.quantity,
+    image: input.images[0] ? URL.createObjectURL(input.images[0]) : undefined,
+    status: input.quantity === 0 ? 'out_of_stock' : input.quantity <= 10 ? 'low_stock' : 'in_stock',
+    createdAt: now,
+    updatedAt: now
+  };
 };
 
 export const formatCurrency = (value: number, currency: string = 'USD'): string => {

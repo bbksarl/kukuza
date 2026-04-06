@@ -8,8 +8,18 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import { useProducts } from '../hooks/useProducts';
 
 const DashboardPage: React.FC = () => {
-  const { salesData, visitsData, isLoading: isDashboardLoading } = useDashboardData();
-  const { products, isLoading: isProductsLoading } = useProducts();
+  const {
+    stats,
+    salesData,
+    visitsData,
+    isLoading: isDashboardLoading,
+    error: dashboardError,
+  } = useDashboardData();
+  const {
+    products,
+    isLoading: isProductsLoading,
+    error: productsError,
+  } = useProducts();
 
   if (isDashboardLoading || isProductsLoading) {
     return (
@@ -24,13 +34,25 @@ const DashboardPage: React.FC = () => {
     );
   }
 
+  if ((dashboardError && !stats) || (productsError && products.length === 0)) {
+    return (
+      <DashboardLayout activePath="/dashboard">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          Certaines donnees du dashboard ne sont pas disponibles pour le moment.
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout activePath="/dashboard">
       <div className="space-y-6 md:space-y-8">
-        {/* Section Analytics fixe */}
-        <AnalyticsSection />
+        <AnalyticsSection
+          stats={stats}
+          isLoading={isDashboardLoading}
+          error={dashboardError}
+        />
 
-        {/* Charts Section - Responsive Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
           <div className="md:col-span-2 lg:col-span-2">
             <SalesChart data={salesData} />
@@ -40,7 +62,6 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Products Table */}
         <div className="overflow-hidden">
           <ProductsTable products={products} />
         </div>

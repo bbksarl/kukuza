@@ -2,6 +2,7 @@ import React from 'react';
 import StatCard from '../common/StatCard';
 import { LineChart, Banknote, ShoppingBag, Users } from 'lucide-react';
 import type { DashboardStats } from '../../types';
+import { formatCurrency } from '../../utils/mockData';
 
 interface AnalyticsCardsProps {
   stats: DashboardStats;
@@ -17,15 +18,15 @@ const AnalyticsCards: React.FC<AnalyticsCardsProps> = ({ stats }) => {
         <StatCard
           icon={<LineChart size={24} style={{ color: '#287460' }} />}
           iconBgColor="bg-green-100"
-          label="Total Revenue"
-          value={`$${(stats.totalRevenue / 1000).toFixed(1)}k`}
+          label="Revenu total"
+          value={formatCurrency(stats.totalRevenue)}
           change={stats.revenueChange}
         />
         <StatCard
           icon={<Banknote size={24} style={{ color: '#287460' }} />}
           iconBgColor="bg-green-100"
-          label="Revénue du jour"
-          value={`$${stats.dailyRevenue}`}
+          label="Revenu du jour"
+          value={formatCurrency(stats.dailyRevenue)}
           change={stats.dailyRevenueChange}
         />
         <StatCard
@@ -37,7 +38,7 @@ const AnalyticsCards: React.FC<AnalyticsCardsProps> = ({ stats }) => {
         <StatCard
           icon={<Users size={24} style={{ color: '#287460' }} />}
           iconBgColor="bg-green-100"
-          label="Users Active"
+          label="Utilisateurs actifs"
           value={stats.activeUsers}
         />
       </div>

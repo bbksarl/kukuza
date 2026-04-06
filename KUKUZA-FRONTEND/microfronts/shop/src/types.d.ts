@@ -24,7 +24,7 @@ export interface Product {
   price: number;
   stock: number;
   image?: string;
-  status: 'in_stock' | 'out_of_stock' | 'low_stock';
+  status: ProductStatus;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,6 +56,48 @@ export interface VisitsData {
   visits: number;
 }
 
-export type ProductFilter = 'all' | 'in_stock' | 'out_of_stock';
+export type ProductStatus = 'in_stock' | 'out_of_stock' | 'low_stock';
+
+export type ProductFilter = 'all' | ProductStatus;
 
 export type TimeFilter = 'day' | 'week' | 'month' | 'year';
+
+export type SaleStatus = 'completed' | 'pending' | 'cancelled';
+
+export interface SaleItem {
+  id: string;
+  productName: string;
+  reference: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  customer: string;
+  date: Date;
+  status: SaleStatus;
+}
+
+export interface DashboardOverview {
+  stats: DashboardStats;
+  salesData: ChartDataPoint[];
+  visitsData: VisitsData[];
+}
+
+export interface CreateProductInput {
+  name: string;
+  category: string;
+  price: number;
+  quantity: number;
+  ageRange: string;
+  gender: string;
+  images: File[];
+}
+
+export interface ProductFormValues {
+  name: string;
+  category: string;
+  price: string;
+  quantity: string;
+  ageRange: string;
+  gender: string;
+  images: File[];
+}

@@ -19,6 +19,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
   const tabs: Tab[] = [
     { id: 'all', label: 'Produits', count: products.length },
     { id: 'in_stock', label: 'En Stocks', count: products.filter(p => p.status === 'in_stock').length },
+    { id: 'low_stock', label: 'Stock Faible', count: products.filter(p => p.status === 'low_stock').length },
     { id: 'out_of_stock', label: 'Stocks Épuisés', count: products.filter(p => p.status === 'out_of_stock').length }
   ];
 

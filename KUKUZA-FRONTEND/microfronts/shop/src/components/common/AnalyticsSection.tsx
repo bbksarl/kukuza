@@ -1,9 +1,21 @@
 import React from 'react';
 import AnalyticsCards from '../dashboard/AnalyticsCards';
-import { useDashboardData } from '../../hooks/useDashboardData';
+import type { DashboardStats } from '../../types';
 
-const AnalyticsSection: React.FC = () => {
-  const { stats, isLoading } = useDashboardData();
+interface AnalyticsSectionProps {
+  stats: DashboardStats | null;
+  isLoading: boolean;
+  error?: Error | null;
+}
+
+const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({ stats, isLoading, error }) => {
+  if (error && !stats) {
+    return (
+      <div className="mb-6 md:mb-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        Impossible de charger les statistiques pour le moment.
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -16,6 +28,10 @@ const AnalyticsSection: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  if (!stats) {
+    return null;
   }
 
   return (

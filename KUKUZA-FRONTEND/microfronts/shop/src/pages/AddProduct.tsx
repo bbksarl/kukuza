@@ -1,158 +1,109 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import Card from '../components/common/Card';
 import ImageUpload from '../components/common/ImageUpload';
-import { ArrowRight } from 'lucide-react';
-
-interface ProductForm {
-  name: string;
-  category: string;
-  price: string;
-  quantity: string;
-  ageRange: string;
-  gender: string;
-  images: File[];
-}
+import type { ProductFormValues } from '../types';
+import { shopService } from '../services/shop/shopService';
+import {
+  createEmptyProductForm,
+  getGenderOptions,
+  PRODUCT_AGE_RANGES,
+  PRODUCT_CATEGORIES,
+  toCreateProductInput,
+  validateProductForm,
+} from '../utils/productForm';
 
 const AddProductPage: React.FC = () => {
-  const [formData, setFormData] = useState<ProductForm>({
-    name: '',
-    category: '',
-    price: '',
-    quantity: '',
-    ageRange: '',
-    gender: '',
-    images: []
-  });
+  const [formData, setFormData] = useState<ProductFormValues>(createEmptyProductForm());
+  const [errors, setErrors] = useState<Partial<Record<keyof ProductFormValues, string>>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [mainPreviewUrl, setMainPreviewUrl] = useState<string | null>(null);
 
-  const [errors, setErrors] = useState<Partial<Record<keyof ProductForm, string>>>({});
-
-  const categories = [
-    'Vêtements',
-    'Chaussures',
-    'Accessoires',
-    'Électronique',
-    'Livres',
-    'Jouets',
-    'Autres'
-  ];
-
-  const ageRanges = [
-    'Adulte',
-    'Enfant'
-  ];
-
-  const getGenderOptions = () => {
-    if (formData.ageRange === 'Adulte') {
-      return ['Homme', 'Femme', 'Unisexe'];
-    } else if (formData.ageRange === 'Enfant') {
-      return ['Filles', 'Garçon', 'Unisexe'];
-    }
-    return [];
-  };
-
-  const handleInputChange = (field: keyof ProductForm, value: string) => {
-    setFormData(prev => {
-      const newData = { ...prev, [field]: value };
+  const handleInputChange = (field: keyof ProductFormValues, value: string) => {
+    setFormData((previous) => {
+      const nextFormData = { ...previous, [field]: value };
       if (field === 'ageRange') {
-        newData.gender = '';
+        nextFormData.gender = '';
       }
-      return newData;
+      return nextFormData;
     });
+
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((previous) => ({ ...previous, [field]: '' }));
     }
+
     if (field === 'ageRange' && errors.gender) {
-      setErrors(prev => ({ ...prev, gender: '' }));
+      setErrors((previous) => ({ ...previous, gender: '' }));
     }
   };
 
   const handleImagesChange = (images: File[]) => {
-    setFormData(prev => ({ ...prev, images }));
+    setFormData((previous) => ({ ...previous, images }));
     if (errors.images) {
-      setErrors(prev => ({ ...prev, images: '' }));
+      setErrors((previous) => ({ ...previous, images: '' }));
     }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof ProductForm, string>> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Le nom de l\'article est requis';
-    }
-
-    if (!formData.category) {
-      newErrors.category = 'La catégorie est requise';
-    }
-
-    if (!formData.price.trim()) {
-      newErrors.price = 'Le prix est requis';
-    } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = 'Le prix doit être un nombre valide';
-    }
-
-    if (!formData.quantity.trim()) {
-      newErrors.quantity = 'La quantité est requise';
-    } else if (isNaN(Number(formData.quantity)) || Number(formData.quantity) < 0) {
-      newErrors.quantity = 'La quantité doit être un nombre valide';
-    }
-
-    if (!formData.ageRange) {
-      newErrors.ageRange = 'La tranche d\'âge est requise';
-    }
-
-    if (!formData.gender) {
-      newErrors.gender = 'La catégorie de genre est requise';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleReset = () => {
-    setFormData({
-      name: '',
-      category: '',
-      price: '',
-      quantity: '',
-      ageRange: '',
-      gender: '',
-      images: []
-    });
+    setFormData(createEmptyProductForm());
     setErrors({});
+    setSubmitError(null);
+    setSubmitSuccess(null);
+  };
+
+  const validateCurrentForm = (): boolean => {
+    const nextErrors = validateProductForm(formData);
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const submitProduct = async (successMessage: string) => {
+    if (!validateCurrentForm()) {
+      setSubmitSuccess(null);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
+    try {
+      await shopService.createProduct(toCreateProductInput(formData));
+      handleReset();
+      setSubmitSuccess(successMessage);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Impossible de sauvegarder le produit.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddAnother = () => {
-    if (validateForm()) {
-      console.log('Produit ajouté:', formData);
-      handleReset();
-      alert('Produit ajouté avec succès! Vous pouvez en ajouter un autre.');
-    }
+    void submitProduct('Produit enregistre. Vous pouvez en ajouter un autre.');
   };
 
   const handlePublish = () => {
-    if (validateForm()) {
-      console.log('Publication des produits:', formData);
-      alert('Produit(s) publié(s) avec succès!');
-      handleReset();
-    }
+    void submitProduct('Produit publie avec succes.');
   };
 
-  const [mainPreviewUrl, setMainPreviewUrl] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (formData.images.length > 0) {
-      const url = URL.createObjectURL(formData.images[0]);
-      setMainPreviewUrl(url);
-      
-      return () => {
-        URL.revokeObjectURL(url);
-      };
-    } else {
+  useEffect(() => {
+    if (formData.images.length === 0) {
       setMainPreviewUrl(null);
       return undefined;
     }
+
+    const previewUrl = URL.createObjectURL(formData.images[0]);
+    setMainPreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
   }, [formData.images]);
+
+  const genderOptions = getGenderOptions(formData.ageRange);
 
   return (
     <DashboardLayout activePath="/produits/ajouter">
@@ -161,12 +112,22 @@ const AddProductPage: React.FC = () => {
           Ajouter vos produits
         </h1>
 
+        {submitError && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {submitError}
+          </div>
+        )}
+
+        {submitSuccess && (
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+            {submitSuccess}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-          {/* Formulaire principal */}
           <div className="lg:col-span-2">
             <Card>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                {/* Nom de l'article */}
                 <div>
                   <label className="block text-sm font-medium text-(--color-text-primary) mb-2">
                     Nom de l'article <span className="text-red-500">*</span>
@@ -174,40 +135,36 @@ const AddProductPage: React.FC = () => {
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(event) => handleInputChange('name', event.target.value)}
                     className={`w-full px-3 md:px-4 py-2 md:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-all ${
                       errors.name ? 'border-red-500' : 'border-(--color-border)'
                     }`}
                     placeholder="Entrez le nom du produit"
                   />
-                  {errors.name && (
-                    <p className="text-xs text-red-500 mt-1">{errors.name}</p>
-                  )}
+                  {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
 
-                {/* Catégorie de l'article */}
                 <div>
                   <label className="block text-sm font-medium text-(--color-text-primary) mb-2">
-                    Catégorie de l'article <span className="text-red-500">*</span>
+                    Categorie de l'article <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.category}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
+                    onChange={(event) => handleInputChange('category', event.target.value)}
                     className={`w-full px-3 md:px-4 py-2 md:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-all ${
                       errors.category ? 'border-red-500' : 'border-(--color-border)'
                     }`}
                   >
-                    <option value="">Sélectionnez une catégorie</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
+                    <option value="">Selectionnez une categorie</option>
+                    {PRODUCT_CATEGORIES.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
                     ))}
                   </select>
-                  {errors.category && (
-                    <p className="text-xs text-red-500 mt-1">{errors.category}</p>
-                  )}
+                  {errors.category && <p className="text-xs text-red-500 mt-1">{errors.category}</p>}
                 </div>
 
-                {/* Prix de l'article */}
                 <div>
                   <label className="block text-sm font-medium text-(--color-text-primary) mb-2">
                     Prix de l'article <span className="text-red-500">*</span>
@@ -216,135 +173,130 @@ const AddProductPage: React.FC = () => {
                     type="number"
                     step="0.01"
                     value={formData.price}
-                    onChange={(e) => handleInputChange('price', e.target.value)}
+                    onChange={(event) => handleInputChange('price', event.target.value)}
                     className={`w-full px-3 md:px-4 py-2 md:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-all ${
                       errors.price ? 'border-red-500' : 'border-(--color-border)'
                     }`}
                     placeholder="0.00"
                   />
-                  {errors.price && (
-                    <p className="text-xs text-red-500 mt-1">{errors.price}</p>
-                  )}
+                  {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
                 </div>
 
-                {/* Quantité d'article */}
                 <div>
                   <label className="block text-sm font-medium text-(--color-text-primary) mb-2">
-                    Quantité d'article <span className="text-red-500">*</span>
+                    Quantite d'article <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     value={formData.quantity}
-                    onChange={(e) => handleInputChange('quantity', e.target.value)}
+                    onChange={(event) => handleInputChange('quantity', event.target.value)}
                     className={`w-full px-3 md:px-4 py-2 md:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-all ${
                       errors.quantity ? 'border-red-500' : 'border-(--color-border)'
                     }`}
                     placeholder="0"
                   />
-                  {errors.quantity && (
-                    <p className="text-xs text-red-500 mt-1">{errors.quantity}</p>
-                  )}
+                  {errors.quantity && <p className="text-xs text-red-500 mt-1">{errors.quantity}</p>}
                 </div>
 
-                {/* Tranche d'âge */}
                 <div>
                   <label className="block text-sm font-medium text-(--color-text-primary) mb-2">
-                    Tranche d'âge <span className="text-red-500">*</span>
+                    Tranche d'age <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.ageRange}
-                    onChange={(e) => handleInputChange('ageRange', e.target.value)}
+                    onChange={(event) => handleInputChange('ageRange', event.target.value)}
                     className={`w-full px-3 md:px-4 py-2 md:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-all ${
                       errors.ageRange ? 'border-red-500' : 'border-(--color-border)'
                     }`}
                   >
-                    <option value="">Sélectionnez une tranche d'âge</option>
-                    {ageRanges.map(range => (
-                      <option key={range} value={range}>{range}</option>
+                    <option value="">Selectionnez une tranche d'age</option>
+                    {PRODUCT_AGE_RANGES.map((ageRange) => (
+                      <option key={ageRange} value={ageRange}>
+                        {ageRange}
+                      </option>
                     ))}
                   </select>
-                  {errors.ageRange && (
-                    <p className="text-xs text-red-500 mt-1">{errors.ageRange}</p>
-                  )}
+                  {errors.ageRange && <p className="text-xs text-red-500 mt-1">{errors.ageRange}</p>}
                 </div>
 
-                {/* Catégorie de genre */}
                 <div>
                   <label className="block text-sm font-medium text-(--color-text-primary) mb-2">
-                    Choisissez une catégorie de genre <span className="text-red-500">*</span>
+                    Choisissez une categorie de genre <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.gender}
-                    onChange={(e) => handleInputChange('gender', e.target.value)}
+                    onChange={(event) => handleInputChange('gender', event.target.value)}
                     disabled={!formData.ageRange}
                     className={`w-full px-3 md:px-4 py-2 md:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-all ${
                       errors.gender ? 'border-red-500' : 'border-(--color-border)'
                     } ${!formData.ageRange ? 'opacity-50 cursor-not-allowed bg-(--color-secondary)' : ''}`}
                   >
-                    <option value="">Sélectionnez un genre</option>
-                    {getGenderOptions().map(gender => (
-                      <option key={gender} value={gender}>{gender}</option>
+                    <option value="">Selectionnez un genre</option>
+                    {genderOptions.map((gender) => (
+                      <option key={gender} value={gender}>
+                        {gender}
+                      </option>
                     ))}
                   </select>
                   {!formData.ageRange && (
-                    <p className="text-xs text-(--color-text-secondary) mt-1">Veuillez d'abord sélectionner une tranche d'âge</p>
+                    <p className="text-xs text-(--color-text-secondary) mt-1">
+                      Veuillez d'abord selectionner une tranche d'age
+                    </p>
                   )}
-                  {errors.gender && (
-                    <p className="text-xs text-red-500 mt-1">{errors.gender}</p>
-                  )}
+                  {errors.gender && <p className="text-xs text-red-500 mt-1">{errors.gender}</p>}
                 </div>
               </div>
 
-              {/* Section images */}
               <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-(--color-border)">
                 <h3 className="text-base md:text-lg font-semibold text-(--color-text-primary) mb-4">
-                  Images du produits
+                  Images du produit
                 </h3>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <p className="text-sm text-(--color-text-secondary)">
-                    Importer les images du produits :
+                    Importer les images du produit :
                   </p>
                   <button
                     type="button"
                     onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
                     className="btn-primary flex items-center justify-center gap-2 sm:flex-none"
+                    disabled={isSubmitting}
                   >
-                    + Ajouter une images
+                    + Ajouter une image
                   </button>
                 </div>
-                
+
                 <ImageUpload
                   images={formData.images}
                   onImagesChange={handleImagesChange}
                 />
               </div>
 
-              {/* Boutons d'action */}
               <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4">
                 <button
                   type="button"
                   onClick={handleReset}
                   className="btn-secondary flex-1"
+                  disabled={isSubmitting}
                 >
-                  Réinitialiser
+                  Reinitialiser
                 </button>
                 <button
                   type="button"
                   onClick={handleAddAnother}
                   className="btn-primary flex-1 flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
                 >
-                  Ajouter un autre produit
+                  {isSubmitting ? 'Enregistrement...' : 'Ajouter un autre produit'}
                   <ArrowRight size={18} />
                 </button>
               </div>
             </Card>
           </div>
 
-          {/* Preview de l'image principale */}
           <div className="lg:col-span-1">
             <Card>
               <h3 className="text-base md:text-lg font-semibold text-(--color-text-primary) mb-4">
-                Importer une images
+                Apercu principal
               </h3>
               <div className="aspect-square rounded-xl bg-(--color-secondary) flex items-center justify-center overflow-hidden">
                 {mainPreviewUrl ? (
@@ -355,21 +307,21 @@ const AddProductPage: React.FC = () => {
                   />
                 ) : (
                   <div className="text-center p-6 md:p-8">
-                    <svg 
-                      className="w-16 md:w-24 h-16 md:h-24 mx-auto text-(--color-text-tertiary) mb-4" 
-                      fill="none" 
-                      stroke="currentColor" 
+                    <svg
+                      className="w-16 md:w-24 h-16 md:h-24 mx-auto text-(--color-text-tertiary) mb-4"
+                      fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={1.5} 
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
                     <p className="text-xs md:text-sm text-(--color-text-tertiary)">
-                      Aucune image sélectionnée
+                      Aucune image selectionnee
                     </p>
                   </div>
                 )}
@@ -379,8 +331,9 @@ const AddProductPage: React.FC = () => {
                 type="button"
                 onClick={handlePublish}
                 className="btn-primary w-full mt-6 flex items-center justify-center gap-2"
+                disabled={isSubmitting}
               >
-                Publiez le(s) Produit(s)
+                {isSubmitting ? 'Publication...' : 'Publier le produit'}
                 <ArrowRight size={18} />
               </button>
             </Card>
