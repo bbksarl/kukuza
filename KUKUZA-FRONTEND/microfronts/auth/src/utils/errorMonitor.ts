@@ -96,12 +96,12 @@ Total Errors: ${metrics.totalErrors}
 
 Errors by Type:
 ${Object.entries(metrics.errorsByType)
-  .map(([type, count]) => `  ${type}: ${count}`)
+  .map(([type, count]: [string, number]) => `  ${type}: ${count}`)
   .join('\n')}
 
 Errors by Component:
 ${Object.entries(metrics.errorsByComponent)
-  .map(([component, count]) => `  ${component}: ${count}`)
+  .map(([component, count]: [string, number]) => `  ${component}: ${count}`)
   .join('\n')}
 
 Recent Errors:

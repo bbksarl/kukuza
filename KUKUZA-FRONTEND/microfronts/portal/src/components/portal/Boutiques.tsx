@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCreators } from '../../hooks/useCreators';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
+import './animations.css';
 
 export default function Boutiques() {
   const { creators, loading, error } = useCreators();
@@ -35,7 +36,7 @@ export default function Boutiques() {
         aria-label="Carousel des boutiques"
         style={{ maskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)' }}
       >
-        <div className="flex w-max animate-[marquee_24s_linear_infinite] items-center gap-4 sm:gap-5 md:gap-6">
+        <div className="flex w-max boutiques-track items-center gap-4 sm:gap-5 md:gap-6">
           {logos.map((src: string, idx: number) => (
             <div
               key={idx}
