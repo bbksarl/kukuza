@@ -88,7 +88,7 @@ const Pagination: React.FC<PaginationProps> = ({
 
         {/* Numéros de page */}
         <div className="flex items-center gap-1">
-          {getPageNumbers().map((page, index) => (
+          {getPageNumbers().map((page: number | string, index: number) => (
             <React.Fragment key={index}>
               {page === '...' ? (
                 <span className="px-3 py-2 text-sm text-(--color-text-tertiary)">...</span>

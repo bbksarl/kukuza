@@ -7,6 +7,8 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<any>(null);
   const [selectedFilter, setSelectedFilter] = useState<any>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const previousHeaderHeight = document.documentElement.style.getPropertyValue('--portal-header-height');
@@ -177,6 +179,7 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+    setIsSearchOpen(false);
   };
 
   useEffect(() => {
@@ -189,10 +192,18 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
     setSelectedFilter(filter);
     setActiveDropdown(null);
     setIsMenuOpen(false);
+    setIsSearchOpen(false);
   };
 
   const clearFilter = () => {
     setSelectedFilter(null);
+    setActiveDropdown(null);
+    setIsMenuOpen(false);
+    setIsSearchOpen(false);
+  };
+
+  const toggleSearch = () => {
+    setIsSearchOpen((prev) => !prev);
     setActiveDropdown(null);
     setIsMenuOpen(false);
   };
@@ -214,13 +225,13 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-[60] h-16 transition-all duration-200 ${
+      className={`fixed inset-x-0 top-0 z-[60] overflow-visible transition-all duration-200 ${
         isScrolled
           ? 'bg-white backdrop-blur-md border-b border-slate-900/5 shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
           : 'bg-transparent border-b border-transparent'
       }`}
     >
-      <div className="mx-auto flex h-full max-w-screen-2xl items-center justify-between gap-3 px-3 sm:px-5 lg:px-7">
+      <div className="mx-auto flex h-16 max-w-screen-2xl items-center justify-between gap-3 px-3 sm:px-5 lg:px-7">
         <button
           className={`flex items-center justify-center rounded-md p-2 transition duration-200 md:hidden ${
             isScrolled ? 'text-slate-900' : 'text-white'
@@ -257,10 +268,12 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
                     e.preventDefault();
                     if (activeDropdown !== item.hash) setSelectedFilter(null);
                     setActiveDropdown(activeDropdown === item.hash ? null : item.hash);
+                    setIsSearchOpen(false);
                     return;
                   }
                   setIsMenuOpen(false);
                   setSelectedFilter(null);
+                  setIsSearchOpen(false);
                 }}
               >
                 <span className="flex items-center gap-2">
@@ -433,7 +446,15 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
         )}
 
           <div className="flex items-center gap-2.5">
-          <button className={`${actionBtn} ${isScrolled ? 'text-slate-900' : 'text-white'}`} aria-label="Search">
+          <button
+            className={`${actionBtn} ${isScrolled ? 'text-slate-900' : 'text-white'} ${
+              isSearchOpen ? 'bg-white/12 ring-2 ring-white/20 md:bg-slate-900/5 md:ring-slate-900/10' : ''
+            }`}
+            aria-label="Search"
+            aria-expanded={isSearchOpen}
+            aria-controls="portal-search-panel"
+            onClick={toggleSearch}
+          >
             <Search size={20} />
           </button>
           <button
@@ -458,6 +479,43 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
           <button className={`${actionBtn} ${isScrolled ? 'text-slate-900' : 'text-white'}`} aria-label="Language">
             <Globe size={20} />
           </button>
+        </div>
+      </div>
+
+      <div
+        id="portal-search-panel"
+        className={`absolute inset-x-0 top-full transition-all duration-300 ${
+          isSearchOpen
+            ? 'pointer-events-auto translate-y-0 opacity-100'
+            : 'pointer-events-none -translate-y-2 opacity-0'
+        }`}
+      >
+        <div className="border-t border-slate-200/80">
+          <div className="mx-auto max-w-screen-2xl px-3 py-3 sm:px-5 lg:px-7">
+            <form
+              className="mx-auto flex max-w-5xl flex-col gap-2 md:flex-row md:items-center"
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <div className="flex flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
+                <Search size={17} className="shrink-0 text-slate-400" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher un produit, une marque ou une catégorie"
+                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                />
+              </div>
+
+              <button
+                type="button"
+                className="inline-flex items-center justify-center rounded-full border border-white/70 px-4 py-2 text-sm font-semibold text-white transition hover:border-white hover:text-white"
+                onClick={() => setIsSearchOpen(false)}
+              >
+                Fermer
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 

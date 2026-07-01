@@ -7,7 +7,9 @@ export default function Boutiques() {
   const { creators, loading, error } = useCreators();
   const [sectionRef, isVisible] = useScrollAnimation();
 
-  const logos = (creators || []).map((creator: any) => creator.profile_image_url || '/assets/logo.png');
+  const logos: string[] = (creators || []).map(
+    (creator: { profile_image_url?: string }) => creator.profile_image_url || '/assets/logo.png'
+  );
 
   if (loading) {
     return (

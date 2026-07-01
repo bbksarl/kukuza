@@ -1,10 +1,3 @@
-/**
- * Circuit Breaker Pattern
- * Gère l'état de connexion au backend Redis avec 3 états:
- * - CLOSED: Tout fonctionne, requêtes normales
- * - OPEN: Trop d'erreurs, bypasse Redis vers fallback local
- * - HALF_OPEN: Testant la récupération du service
- */
 
 export enum CircuitBreakerState {
   CLOSED = 'CLOSED',

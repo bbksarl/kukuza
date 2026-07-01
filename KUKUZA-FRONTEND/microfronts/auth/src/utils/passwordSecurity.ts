@@ -32,11 +32,13 @@ export const isWeakPassword = (password: string): boolean => {
   return WEAK_PASSWORDS.has(password.toLowerCase());
 };
 
-export const validatePasswordStrength = (password: string): {
+export type PasswordStrength = {
   isStrong: boolean;
   score: number;
   feedback: string[];
-} => {
+};
+
+export const validatePasswordStrength = (password: string): PasswordStrength => {
   const feedback: string[] = [];
   let score = 0;
 

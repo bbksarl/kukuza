@@ -2,12 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 import './outfitoftheweek.css';
 
+type OutfitImage = {
+  src: string;
+  alt: string;
+};
+
+type Outfit = {
+  id: string;
+  title: string;
+  description: string;
+  images: [OutfitImage, OutfitImage, OutfitImage];
+};
+
 export default function OutfitOfTheWeek() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [sectionRef, isVisible] = useScrollAnimation();
 
-  const outfits = [
+  const outfits: Outfit[] = [
     {
       id: 'femme',
       title: "L'ÉLÉGANCE INTEMPORELLE",
@@ -100,7 +112,7 @@ export default function OutfitOfTheWeek() {
           </div>
 
           <div className="outfit-dots">
-            {outfits.map((_, index) => (
+            {outfits.map((_: Outfit, index: number) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}

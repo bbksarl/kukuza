@@ -1,9 +1,5 @@
-/**
- * Retry Interceptor for Axios
- * Gère les retries automatiques avec exponential backoff
- */
 
-import { AxiosInstance } from 'axios';
+import type { AxiosInstance } from 'axios';
 
 export interface RetryConfig {
   maxRetries: number;
@@ -19,9 +15,6 @@ export class RetryInterceptor {
     this.setupInterceptor();
   }
 
-  /**
-   * Vérifie si une erreur est retryable (erreurs réseau)
-   */
   private isRetryableError(error: any): boolean {
     if (!error.response) {
       const code = error.code;
@@ -43,10 +36,18 @@ export class RetryInterceptor {
     this.httpClient.interceptors.response.use(
       response => response,
       error => {
-        const config = error.config;
+        const originalConfig = error.config;
+
+        // Si on n'a pas de config de requête, ne pas tenter de retry
+        if (!originalConfig) {
+          return Promise.reject(error);
+        }
+
+        // Travailler sur une copie mutable de la config
+        const config: any = { ...originalConfig };
 
         // Initialiser le compteur de retry
-        if (!config || config.retryCount === undefined) {
+        if (config.retryCount === undefined) {
           config.retryCount = 0;
         }
 
