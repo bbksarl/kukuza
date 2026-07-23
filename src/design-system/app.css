@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/* Existing visual language is retained while all screens share one stylesheet/build. */
+@import "../features/portal/index.css";
+@import "../features/shop/styles/index.css";
+@import "../features/auth/styles/index.css";
+
+/* Tailwind scans every feature folder because the unified app imports them directly. */
+@source "../features/portal";
+@source "../features/auth";
+@source "../features/catalog";
+@source "../features/shop";
+
+/*
+ * The shop theme uses --spacing-md/xl/2xl for padding and gaps. Tailwind v4
+ * can otherwise reuse those values for max-w-* utilities (1rem, 2rem, 3rem),
+ * collapsing text and modal containers. Keep the layout scale explicit.
+ */
+@layer utilities {
+  .max-w-xs { max-width: 20rem; }
+  .max-w-sm { max-width: 24rem; }
+  .max-w-md { max-width: 28rem; }
+  .max-w-lg { max-width: 32rem; }
+  .max-w-xl { max-width: 36rem; }
+  .max-w-2xl { max-width: 42rem; }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: #fff;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 3px solid color-mix(in srgb, #287460 70%, white);
+    outline-offset: 2px;
+  }
+}
+
+/* Catalog screens do not need a second Tailwind entry point, but keep its scrollbar UX. */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}

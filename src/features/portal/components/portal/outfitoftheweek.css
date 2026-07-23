@@ -1,0 +1,264 @@
+.outfit-section {
+  background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
+}
+
+.outfit-main-title {
+  color: #0f766e;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.outfit-main-description {
+  font-size: 16px;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.outfit-carousel-wrapper {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.outfit-group {
+  width: 100%;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.outfit-group-title {
+  color: #0f766e;
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.outfit-group-description {
+  font-size: 15px;
+  line-height: 1.6;
+  font-style: italic;
+  text-align: center;
+  color: #6b7280;
+  margin-bottom: 40px;
+  padding: 0 20px;
+  transition: all 0.3s ease;
+}
+
+.outfit-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(12, 70px);
+  gap: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.outfit-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #f0ede8;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 0;
+  padding: 0;
+  appearance: none;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.outfit-item:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 4px;
+}
+
+.outfit-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+}
+
+.outfit-item-1 {
+  grid-column: 1 / 5;
+  grid-row: 1 / 7;
+  z-index: 2;
+  margin-left: -20px;
+}
+
+.outfit-item-2 {
+  grid-column: 2 / 6;
+  grid-row: 7 / 13;
+  z-index: 3;
+}
+
+.outfit-item-3 {
+  grid-column: 7 / 13;
+  grid-row: 1 / 13;
+  z-index: 1;
+}
+
+.outfit-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.outfit-item:hover .outfit-image {
+  transform: scale(1.05);
+}
+
+.outfit-dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+.outfit-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #d1d5db;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.outfit-dot:hover {
+  background: #9ca3af;
+  transform: scale(1.2);
+}
+
+.outfit-dot.active {
+  background: #0f766e;
+  width: 32px;
+  border-radius: 6px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .outfit-grid {
+    grid-template-rows: repeat(12, 45px);
+  }
+
+  .outfit-group-title {
+    font-size: 24px;
+  }
+
+  .outfit-group-description {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .outfit-main-title {
+    font-size: 24px;
+  }
+
+  .outfit-main-description {
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  .outfit-group-title {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .outfit-group-description {
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+
+  .outfit-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 20px;
+  }
+
+  .outfit-item-1,
+  .outfit-item-2,
+  .outfit-item-3 {
+    grid-column: 1;
+    grid-row: auto;
+    margin-left: 0;
+  }
+
+  .outfit-item-1 {
+    aspect-ratio: 1;
+  }
+
+  .outfit-item-2 {
+    aspect-ratio: 1.3;
+    z-index: 1;
+  }
+
+  .outfit-item-3 {
+    aspect-ratio: 0.75;
+  }
+
+  .outfit-dots {
+    margin-top: 30px;
+    gap: 10px;
+  }
+
+  .outfit-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .outfit-dot.active {
+    width: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .outfit-section {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  .outfit-main-title {
+    font-size: 20px;
+  }
+
+  .outfit-main-description {
+    font-size: 13px;
+  }
+
+  .outfit-group-title {
+    font-size: 18px;
+  }
+
+  .outfit-group-description {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+
+  .outfit-dots {
+    margin-top: 24px;
+    gap: 8px;
+  }
+
+  .outfit-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .outfit-dot.active {
+    width: 24px;
+  }
+}

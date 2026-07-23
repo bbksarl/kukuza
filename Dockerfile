@@ -9,9 +9,9 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.vcs-url="https://gitlab.com/your-project" \
       org.label-schema.name="kukuza-frontend" \
-      org.label-schema.description="Kukuza Frontend Microfrontends"
+      org.label-schema.description="Kukuza unified React application"
 
-# Copy built artifacts
+# The CI artifact is the single Vite dist directory (not one directory per app).
 COPY .ci-builds/ /usr/share/nginx/html/
 
 # Copy nginx configuration
@@ -22,4 +22,4 @@ EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost/ || exit 1
+  CMD wget -q -O - http://localhost/ >/dev/null || exit 1
