@@ -12,33 +12,33 @@ interface AnalyticsCardsProps {
 const AnalyticsCards: React.FC<AnalyticsCardsProps> = ({ stats }) => {
   const { t } = useLanguage();
   return (
-    <div>
+    <div className="dashboard-analytics">
       <h2 className="text-lg md:text-xl font-semibold text-(--color-text-primary) mb-4 md:mb-6">
         {t('shop.analytics')}
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="dashboard-stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatCard
-          icon={<LineChart size={24} style={{ color: '#287460' }} />}
+          icon={<LineChart size={24} style={{ color: '#297560' }} />}
           iconBgColor="bg-green-100"
           label={t('shop.totalRevenue')}
           value={formatCurrency(stats.totalRevenue)}
           change={stats.revenueChange}
         />
         <StatCard
-          icon={<Banknote size={24} style={{ color: '#287460' }} />}
+          icon={<Banknote size={24} style={{ color: '#297560' }} />}
           iconBgColor="bg-green-100"
           label={t('shop.dailyRevenue')}
           value={formatCurrency(stats.dailyRevenue)}
           change={stats.dailyRevenueChange}
         />
         <StatCard
-          icon={<ShoppingBag size={24} style={{ color: '#287460' }} />}
+          icon={<ShoppingBag size={24} style={{ color: '#297560' }} />}
           iconBgColor="bg-green-100"
           label={t('shop.sold')}
           value={stats.totalSales}
         />
         <StatCard
-          icon={<Users size={24} style={{ color: '#287460' }} />}
+          icon={<Users size={24} style={{ color: '#297560' }} />}
           iconBgColor="bg-green-100"
           label={t('shop.activeUsers')}
           value={stats.activeUsers}

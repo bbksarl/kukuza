@@ -20,6 +20,24 @@ interface UseAuthReturn {
   checkAuth: () => Promise<void>;
 }
 
+const persistUser = (user: User) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem('kukuza-auth-user', JSON.stringify(user.toJSON()));
+  } catch {
+    // The API session remains authoritative if local storage is unavailable.
+  }
+};
+
+const clearPersistedUser = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem('kukuza-auth-user');
+  } catch {
+    // Ignore storage failures during logout.
+  }
+};
+
 export const useAuth = (): UseAuthReturn => {
   // Utiliser useMemo pour créer une seule instance d'AuthService
   const authService = useMemo(() => new AuthService(), []);
@@ -35,6 +53,7 @@ export const useAuth = (): UseAuthReturn => {
       const response = await authService.login(credentials);
       setUser(response.user);
       setIsAuthenticated(true);
+      persistUser(response.user);
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error && (err.message.includes('401') || err.message.includes('Invalid'))
@@ -54,6 +73,7 @@ export const useAuth = (): UseAuthReturn => {
       const response = await authService.register(userData);
       setUser(response.user);
       setIsAuthenticated(true);
+      persistUser(response.user);
       return response;
     } catch (err) {
       setError(ERROR_MESSAGES.REGISTRATION_FAILED);
@@ -69,6 +89,7 @@ export const useAuth = (): UseAuthReturn => {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
+      clearPersistedUser();
     }
   }, [authService]);
 
@@ -77,9 +98,11 @@ export const useAuth = (): UseAuthReturn => {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
       setIsAuthenticated(true);
+      persistUser(currentUser);
     } catch {
       setUser(null);
       setIsAuthenticated(false);
+      clearPersistedUser();
     }
   }, [authService]);
 

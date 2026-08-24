@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { EllipsisVertical, Search } from 'lucide-react';
-import Card from '../common/Card';
+import { EllipsisVertical, Eye, Pencil } from 'lucide-react';
 import Tabs, { Tab } from '../common/Tabs';
 import Pagination from '../common/Pagination';
 import type { Product, ProductFilter } from '../../types';
@@ -17,11 +16,11 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
   const [activeTab, setActiveTab] = useState<ProductFilter>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const tabs: Tab[] = [
     { id: 'all', label: t('shop.tabProducts'), count: products.length },
     { id: 'in_stock', label: t('shop.inStock'), count: products.filter(p => p.status === 'in_stock').length },
-    { id: 'low_stock', label: t('shop.lowStock'), count: products.filter(p => p.status === 'low_stock').length },
     { id: 'out_of_stock', label: t('shop.outOfStock'), count: products.filter(p => p.status === 'out_of_stock').length }
   ];
 
@@ -63,8 +62,8 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
   };
 
   return (
-    <div className="table-container">
-      <div className="p-3 md:p-4 border-b border-(--color-border) flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6">
+    <div className="dashboard-products-section">
+      <div className="dashboard-product-tabs">
         <div className="flex-1 min-w-0">
           <Tabs 
             tabs={tabs} 
@@ -72,24 +71,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
             onTabChange={(tabId) => setActiveTab(tabId as ProductFilter)} 
           />
         </div>
-        
-        {/* Barre de recherche */}
-        <div className="relative w-full md:w-80">
-          <Search 
-            size={18} 
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-tertiary)"
-          />
-          <input
-            type="text"
-            placeholder={t('shop.search')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-(--color-border) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary) focus:border-transparent transition-all"
-          />
-        </div>
       </div>
 
-      <div className="overflow-x-auto table-responsive">
+      <div className="table-container overflow-x-auto table-responsive">
         <table className="table">
           <thead>
             <tr>
@@ -122,9 +106,11 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-2xs md:text-xs text-(--color-text-tertiary)">
-                            IMG
-                          </span>
+                          <img
+                            src="/assets/mVentes/im1.png"
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
                         )}
                       </div>
                       <span className="text-xs md:text-sm truncate">{product.name}</span>
@@ -134,20 +120,32 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
                   <td className="font-medium text-xs md:text-sm">{product.stock}</td>
                   <td className="hidden lg:table-cell text-xs md:text-sm">{getStatusBadge(product.status)}</td>
                   <td>
-                    <button className="icon-btn" title={t('shop.moreOptions')} aria-label={t('shop.moreOptions')}>
+                    <div className="relative inline-flex">
+                    <button
+                      className="icon-btn"
+                      title={t('shop.moreOptions')}
+                      aria-label={t('shop.moreOptions')}
+                      aria-expanded={openMenuId === product.id}
+                      onClick={() => setOpenMenuId(openMenuId === product.id ? null : product.id)}
+                    >
                       <EllipsisVertical size={16} />
                     </button>
+                    {openMenuId === product.id && (
+                      <div className="product-action-menu" role="menu">
+                        <button role="menuitem"><Eye size={15} />Voir</button>
+                        <button role="menuitem"><Pencil size={15} />Modifier</button>
+                      </div>
+                    )}
+                    </div>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      </div>
-
-      {/* Pagination */}
-      {filteredProducts.length > ITEMS_PER_PAGE && (
-        <div className="px-3 md:px-4">
+        {/* Pagination */}
+        {filteredProducts.length > ITEMS_PER_PAGE && (
+          <div className="px-3 md:px-4">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -155,8 +153,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
             itemsPerPage={ITEMS_PER_PAGE}
             totalItems={filteredProducts.length}
           />
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

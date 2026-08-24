@@ -5,6 +5,7 @@ import { logger } from '../../../utils/logger';
 import { errorMonitor } from '../../../utils/errorMonitor';
 import { validatePasswordStrength } from '../../../utils/passwordSecurity';
 import type { AuthResult, RegisterData } from '../types';
+import { getDevelopmentBoutique } from '../../../config/defaultBoutique';
 
 interface AuthServiceInterface {
   login(credentialsData: { email: string; password: string }): Promise<AuthResult>;
@@ -51,6 +52,13 @@ class AuthService implements AuthServiceInterface {
   async login(credentialsData: { email: string; password: string }): Promise<AuthResult> {
     try {
       const normalizedData = this.normalizeLoginData(credentialsData);
+
+      // Le compte boutique de démonstration est vérifié avant la Value Object
+      // Password afin d'accepter exactement le mot de passe fourni pour le
+      // compte local, sans modifier les règles de validation des autres comptes.
+      const developmentBoutique = getDevelopmentBoutique(normalizedData.email, normalizedData.password);
+      if (developmentBoutique) return developmentBoutique;
+
       const credentials = new Credentials(normalizedData.email, normalizedData.password);
       const result = await this.repository.login(credentials);
       return result;

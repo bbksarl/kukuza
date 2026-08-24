@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, User, Heart, ShoppingBag, Globe, Menu, X, ChevronDown } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage, type Language } from '@/core/i18n';
+import { useCart } from '@/providers/CartProvider';
+import { useFavorites } from '@/providers/FavoritesProvider';
 import { formatFilterLabel, groupFilters, NAV_ITEMS, type DropdownType, type NavItem } from '../../data/catalog';
 
 type FilterGroupEntry = [string, { label: string; category: string }[]];
@@ -59,6 +61,8 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { language, setLanguage, t, translateCatalogLabel } = useLanguage();
+  const { totalQuantity } = useCart();
+  const { items: favoriteItems } = useFavorites();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<DropdownType | null>(null);
@@ -383,17 +387,32 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
           >
             <User size={20} />
           </button>
-          <button className={`${actionBtn} ${isSolidHeader ? 'text-slate-900' : 'text-white'}`} aria-label={t('navigation.favorites')}>
+          <button
+            className={`${actionBtn} relative ${isSolidHeader ? 'text-slate-900' : 'text-white'}`}
+            aria-label={`${t('navigation.favorites')}${favoriteItems.length > 0 ? ` (${favoriteItems.length})` : ''}`}
+            onClick={() => navigate('/favorites')}
+          >
             <Heart size={20} />
+            {favoriteItems.length > 0 && (
+              <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
+                {favoriteItems.length > 99 ? '99+' : favoriteItems.length}
+              </span>
+            )}
           </button>
           <button
             className={`${actionBtn} relative ${isSolidHeader ? 'text-slate-900' : 'text-white'}`}
-            aria-label={t('navigation.cart')}
+            aria-label={`${t('navigation.cart')}${totalQuantity > 0 ? ` (${totalQuantity})` : ''}`}
+            onClick={() => navigate('/cart')}
           >
             <ShoppingBag size={20} />
-            <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
-              1
-            </span>
+            {totalQuantity > 0 && (
+              <span
+                className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white"
+                aria-live="polite"
+              >
+                {totalQuantity > 99 ? '99+' : totalQuantity}
+              </span>
+            )}
           </button>
           <div ref={languageMenuRef} className="relative">
             <button

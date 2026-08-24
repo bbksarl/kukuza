@@ -5,6 +5,8 @@ import Header from '../components/portal/Header';
 import Footer from '../components/portal/Footer';
 import { defaultBestSeller, getBestSellerBySlug } from '../data/bestSellers';
 import { useLanguage } from '@/core/i18n';
+import { useCart } from '@/providers/CartProvider';
+import { useFavorites } from '@/providers/FavoritesProvider';
 
 function parsePrice(value: string) {
   const parsed = Number(value.replace(/[^0-9,.-]/g, '').replace(',', '.'));
@@ -15,6 +17,8 @@ export default function BestSellerDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  const { addItem } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const product = slug ? getBestSellerBySlug(slug) : defaultBestSeller;
   const [selectedColor, setSelectedColor] = useState(product?.colors[0]?.hex ?? '');
   const [selectedSize, setSelectedSize] = useState(product?.sizes[0] ?? '');
@@ -44,6 +48,20 @@ export default function BestSellerDetail() {
   const price = parsePrice(product.price);
   const oldPrice = parsePrice(product.oldPrice);
   const showOldPrice = price !== null && oldPrice !== null && oldPrice > price;
+  const selectedImage = product.colors.find((color) => color.hex === selectedColor)?.image ?? product.src;
+  const favoriteId = `best-seller:${product.id}`;
+  const liked = isFavorite(favoriteId);
+  const addBestSellerToCart = () => {
+    addItem({
+      id: `best-seller:${product.id}:${selectedColor}:${selectedSize}`,
+      name: t(product.titleKey),
+      price: price ?? 0,
+      image: selectedImage,
+      size: selectedSize || undefined,
+      color: selectedColor || undefined,
+    }, quantity);
+    setIsAdded(true);
+  };
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50">
@@ -62,7 +80,7 @@ export default function BestSellerDetail() {
           <section className="grid overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm lg:min-h-[670px] lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
             <div className="relative min-h-[380px] bg-slate-100 sm:min-h-[520px] lg:min-h-[670px]">
               <img
-                src={product.src}
+                src={selectedImage}
                 alt={product.alt}
                 width="900"
                 height="1100"
@@ -85,10 +103,15 @@ export default function BestSellerDetail() {
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 rounded-full border border-slate-200 p-2.5 text-slate-500 transition hover:border-teal-700 hover:text-teal-700"
-                  aria-label={t('navigation.favorites')}
+                  className={`shrink-0 rounded-full border p-2.5 transition ${liked ? 'border-red-500 bg-red-50 text-red-500' : 'border-slate-200 text-slate-500 hover:border-teal-700 hover:text-teal-700'}`}
+                  aria-label={liked ? t('favorites.remove') : t('catalog.addToFavorites')}
+                  aria-pressed={liked}
+                  onClick={() => toggleFavorite({
+                    id: favoriteId, name: t(product.titleKey), price: price ?? 0,
+                    image: selectedImage, href: `/best-sellers/${product.slug}`,
+                  })}
                 >
-                  <Heart size={18} aria-hidden="true" />
+                  <Heart size={18} fill={liked ? 'currentColor' : 'none'} aria-hidden="true" />
                 </button>
               </div>
 
@@ -182,7 +205,7 @@ export default function BestSellerDetail() {
                 <button
                   type="button"
                   className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-teal-700"
-                  onClick={() => setIsAdded(true)}
+                  onClick={addBestSellerToCart}
                 >
                   {isAdded ? <Check size={18} aria-hidden="true" /> : <ShoppingBag size={18} aria-hidden="true" />}
                   {isAdded ? t('product.addedToCart') : t('product.addToCart')}

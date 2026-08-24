@@ -145,12 +145,12 @@ export const RegisterPage: FC = () => {
                   htmlFor="isBoutique" 
                   className="relative flex items-center justify-center w-4.5 h-4.5 xs:w-5 xs:h-5 sm:w-6 sm:h-6 rounded-md cursor-pointer transition-all duration-300
                     bg-white/10 backdrop-blur-md border border-white/20
-                    peer-checked:bg-[#287460]/20 peer-checked:border-[#287460] peer-checked:shadow-[0_0_12px_rgba(40,116,96,0.3)]
+                    peer-checked:bg-[#297560]/20 peer-checked:border-[#297560] peer-checked:shadow-[0_0_12px_rgba(41,117,96,0.3)]
                     hover:bg-white/15 hover:border-white/30
-                    peer-focus-visible:ring-2 peer-focus-visible:ring-[#287460]/50 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-transparent"
+                    peer-focus-visible:ring-2 peer-focus-visible:ring-[#297560]/50 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-transparent"
                 >
                   <svg 
-                    className={`w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-[#287460] transition-all duration-300 ${
+                    className={`w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-[#297560] transition-all duration-300 ${
                       isBoutique ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
                     }`}
                     fill="none" 

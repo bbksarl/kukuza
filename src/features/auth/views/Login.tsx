@@ -30,7 +30,10 @@ export const LoginPage = () => {
   const handleLogin = async (formValues: typeof initialValues) => {
     try {
       const result = await login(formValues);
-      window.location.assign(result.redirectUrl ?? config.routes.storefrontUrl);
+      const destination = result.role === 'admin'
+        ? '/admin/dashboard'
+        : (result.redirectUrl ?? config.routes.storefrontUrl);
+      window.location.assign(destination);
     } catch {
     }
   };

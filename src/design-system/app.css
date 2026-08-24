@@ -45,7 +45,7 @@
   }
 
   :focus-visible {
-    outline: 3px solid color-mix(in srgb, #287460 70%, white);
+    outline: 3px solid color-mix(in srgb, #297560 70%, white);
     outline-offset: 2px;
   }
 }

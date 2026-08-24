@@ -1,6 +1,7 @@
 export type BestSellerColor = {
   name: string;
   hex: string;
+  image?: string;
 };
 
 export type BestSellerItem = {
@@ -63,8 +64,8 @@ export const bestSellers: BestSellerItem[] = [
     shippingNote: "Frais d'expedition calcules a l'etape de paiement.",
     shippingKey: 'bestSellers.shipping',
     colors: [
-      { name: 'Rouge bordeaux', hex: '#7d1117' },
-      { name: 'Noir intense', hex: '#171717' },
+      { name: 'Rouge bordeaux', hex: '#7d1117', image: '/assets/mVentes/im1.png' },
+      { name: 'Noir intense', hex: '#171717', image: '/assets/mVentes/im1-noir.png' },
     ],
     sizes: ['XL', 'S', 'M', 'L'],
     featured: true,

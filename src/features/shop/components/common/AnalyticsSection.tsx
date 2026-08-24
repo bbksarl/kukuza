@@ -37,7 +37,7 @@ const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({ stats, isLoading, e
   }
 
   return (
-    <div className="mb-6 md:mb-8">
+    <div>
       <AnalyticsCards stats={stats} />
     </div>
   );

@@ -5,6 +5,8 @@ import Header from '../components/portal/Header';
 import Footer from '../components/portal/Footer';
 import { getProducts } from '@/repositories/portal/catalogRepository';
 import { useLanguage } from '@/core/i18n';
+import { useCart } from '@/providers/CartProvider';
+import { useFavorites } from '@/providers/FavoritesProvider';
 import {
   formatFilterLabel,
   getPortalProductById,
@@ -21,6 +23,8 @@ export default function ProductDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t, language, translateCatalogLabel } = useLanguage();
+  const { addItem } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const routeState = (location.state as ProductRouteState | null) ?? null;
   const stateProduct = routeState?.product && String(routeState.product.id) === productId
     ? routeState.product
@@ -106,6 +110,18 @@ export default function ProductDetail() {
   const category = translateCatalogLabel(formatFilterLabel(product.category));
   const subcategory = translateCatalogLabel(formatFilterLabel(product.subcategory));
   const creator = product.brand || product.creator_name;
+  const favoriteId = `product:${product.id}`;
+  const liked = isFavorite(favoriteId);
+  const addProductToCart = () => {
+    addItem({
+      id: `product:${product.id}:${selectedSize || 'default'}`,
+      name: product.name,
+      price: product.price,
+      image: product.image_url,
+      size: selectedSize || undefined,
+    });
+    setIsAdded(true);
+  };
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50">
@@ -149,10 +165,15 @@ export default function ProductDetail() {
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 rounded-full border border-slate-200 p-2.5 text-slate-500 transition hover:border-teal-700 hover:text-teal-700"
-                  aria-label={t('navigation.favorites')}
+                  className={`shrink-0 rounded-full border p-2.5 transition ${liked ? 'border-red-500 bg-red-50 text-red-500' : 'border-slate-200 text-slate-500 hover:border-teal-700 hover:text-teal-700'}`}
+                  aria-label={liked ? t('favorites.remove') : t('catalog.addToFavorites')}
+                  aria-pressed={liked}
+                  onClick={() => toggleFavorite({
+                    id: favoriteId, name: product.name, price: product.price,
+                    image: product.image_url, href: `/products/${product.id}`,
+                  })}
                 >
-                  <Heart size={18} aria-hidden="true" />
+                  <Heart size={18} fill={liked ? 'currentColor' : 'none'} aria-hidden="true" />
                 </button>
               </div>
 
@@ -231,7 +252,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-teal-700"
-                  onClick={() => setIsAdded(true)}
+                  onClick={addProductToCart}
                 >
                   {isAdded ? <Check size={18} aria-hidden="true" /> : <ShoppingBag size={18} aria-hidden="true" />}
                   {isAdded ? t('product.addedToCart') : t('sections.shopNow')}

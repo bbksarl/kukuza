@@ -48,18 +48,18 @@ const DashboardPage: React.FC = () => {
 
   return (
     <DashboardLayout activePath="/shop/dashboard">
-      <div className="space-y-6 md:space-y-8">
+      <div className="shop-dashboard space-y-6">
         <AnalyticsSection
           stats={stats}
           isLoading={isDashboardLoading}
           error={dashboardError}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
-          <div className="md:col-span-2 lg:col-span-2">
+        <div className="shop-dashboard-charts grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 min-w-0">
             <SalesChart data={salesData} />
           </div>
-          <div className="md:col-span-1 lg:col-span-1">
+          <div className="lg:col-span-1 min-w-0">
             <VisitsChart data={visitsData} />
           </div>
         </div>

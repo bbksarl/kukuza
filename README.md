@@ -10,3 +10,7 @@ npm run dev
 ```
 
 La frontière réseau unique est [`facade/`](facade/), conçue pour attendre le BFF/microservice C#.
+
+## Configuration locale
+
+Les comptes de démonstration sont chargés depuis des variables d’environnement locales. Copiez `.env.example` vers `.env.local`, puis renseignez vos propres valeurs. `.env.local` est ignoré par Git et ne doit jamais être publié.

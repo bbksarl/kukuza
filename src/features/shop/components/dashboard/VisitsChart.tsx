@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import Card from '../common/Card';
 import type { VisitsData } from '../../types';
 import { useLanguage } from '@/core/i18n';
@@ -12,7 +12,7 @@ interface VisitsChartProps {
 const VisitsChart: React.FC<VisitsChartProps> = ({ data, title = 'Visites' }) => {
   const { t } = useLanguage();
   return (
-    <Card>
+    <Card className="dashboard-chart-card">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-(--color-text-primary)">
           {title === 'Visites' ? t('shop.visits') : title}
@@ -20,14 +20,9 @@ const VisitsChart: React.FC<VisitsChartProps> = ({ data, title = 'Visites' }) =>
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <BarChart data={data} barCategoryGap="36%">
           <XAxis 
             dataKey="day" 
-            stroke="#6b7280" 
-            style={{ fontSize: '12px' }}
-          />
-          <YAxis 
             stroke="#6b7280" 
             style={{ fontSize: '12px' }}
           />
@@ -42,8 +37,9 @@ const VisitsChart: React.FC<VisitsChartProps> = ({ data, title = 'Visites' }) =>
           />
           <Bar 
             dataKey="visits" 
-            fill="#90EE90" 
-            radius={[8, 8, 0, 0]}
+            fill="#4f6b51"
+            radius={[6, 6, 6, 6]}
+            maxBarSize={18}
           />
         </BarChart>
       </ResponsiveContainer>

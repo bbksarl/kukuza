@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import Card from '../common/Card';
 import type { ChartDataPoint } from '../../types';
 import { useLanguage } from '@/core/i18n';
@@ -25,9 +25,9 @@ const SalesChart: React.FC<SalesChartProps> = ({ data, title = 'Rapport' }) => {
   };
 
   return (
-    <Card>
+    <Card className="dashboard-chart-card">
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-4">
             <h3 className="text-lg font-semibold text-(--color-text-primary)">
               {title === 'Rapport' ? t('shop.report') : title}
@@ -43,13 +43,13 @@ const SalesChart: React.FC<SalesChartProps> = ({ data, title = 'Rapport' }) => {
             </select>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-1 overflow-x-auto">
             {filters.map((filter) => (
               <button
                 key={filter}
-                className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                   activeFilter === filter
-                    ? 'bg-(--color-primary) text-white'
+                    ? 'text-(--color-primary)'
                     : 'text-(--color-text-secondary) hover:bg-(--color-surface-hover)'
                 }`}
                 onClick={() => setActiveFilter(filter)}
@@ -65,8 +65,8 @@ const SalesChart: React.FC<SalesChartProps> = ({ data, title = 'Rapport' }) => {
         <AreaChart data={data}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#90EE90" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#90EE90" stopOpacity={0.1}/>
+              <stop offset="5%" stopColor="#b9ded3" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#b9ded3" stopOpacity={0.1}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -92,7 +92,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ data, title = 'Rapport' }) => {
           <Area 
             type="monotone" 
             dataKey="value" 
-            stroke="#287460" 
+            stroke="#297560"
             strokeWidth={2}
             fill="url(#colorValue)" 
           />

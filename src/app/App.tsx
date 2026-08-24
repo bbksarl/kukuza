@@ -5,6 +5,9 @@ import ProductsList from '@/features/portal/pages/ProductsList';
 import BestSellerDetail from '@/features/portal/pages/BestSellerDetail';
 import OutfitDetail from '@/features/portal/pages/OutfitDetail';
 import PortalProductDetail from '@/features/portal/pages/ProductDetail';
+import CartPage from '@/features/portal/pages/CartPage';
+import FavoritesPage from '@/features/portal/pages/FavoritesPage';
+import AdminRoute from '@/features/admin/components/AdminRoute';
 import { useLanguage } from '@/core/i18n';
 
 const LoginPage = lazy(() =>
@@ -20,6 +23,11 @@ const DashboardPage = lazy(() => import('@/features/shop/pages/Dashboard'));
 const SalesPage = lazy(() => import('@/features/shop/pages/Sales'));
 const ProductsPage = lazy(() => import('@/features/shop/pages/Products'));
 const AddProductPage = lazy(() => import('@/features/shop/pages/AddProduct'));
+const AdminDashboard = lazy(() => import('@/features/admin/pages/AdminDashboard'));
+const AdminShopsPage = lazy(() => import('@/features/admin/pages/AdminResources').then((module) => ({ default: module.AdminShopsPage })));
+const AdminUsersPage = lazy(() => import('@/features/admin/pages/AdminResources').then((module) => ({ default: module.AdminUsersPage })));
+const AdminProductsPage = lazy(() => import('@/features/admin/pages/AdminResources').then((module) => ({ default: module.AdminProductsPage })));
+const AdminSalesPage = lazy(() => import('@/features/admin/pages/AdminResources').then((module) => ({ default: module.AdminSalesPage })));
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -86,6 +94,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<ProductsList />} />
           <Route path="/products/:productId" element={<PortalProductDetail />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/outfits/:outfitId" element={<OutfitDetail />} />
           <Route path="/best-sellers/:slug" element={<BestSellerDetail />} />
 
@@ -100,6 +110,13 @@ export default function App() {
           <Route path="/catalog/product/:productId" element={<ProductDetail />} />
           <Route path="/catalog/search" element={<CatalogSearch />} />
           <Route path="/product/:productId" element={<ProductAliasRedirect />} />
+
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/shops" element={<AdminRoute><AdminShopsPage /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+          <Route path="/admin/products" element={<AdminRoute><AdminProductsPage /></AdminRoute>} />
+          <Route path="/admin/sales" element={<AdminRoute><AdminSalesPage /></AdminRoute>} />
 
           <Route path="/shop" element={<Navigate to="/shop/dashboard" replace />} />
           <Route path="/shop/dashboard" element={<DashboardPage />} />

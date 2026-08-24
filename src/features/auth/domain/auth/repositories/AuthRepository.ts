@@ -5,6 +5,8 @@ import { logger } from '../../../utils/logger';
 import { z } from 'zod';
 import type { AuthResult, RegisterData } from '../types';
 import { facadeClient, FacadeHttpError } from '@/api/client';
+import { getDevelopmentAdmin } from '../../../config/defaultAdmin';
+import { getDevelopmentBoutique } from '../../../config/defaultBoutique';
 
 const roleSchema = z.enum(['customer', 'creator', 'admin']);
 
@@ -61,6 +63,11 @@ class AuthRepository {
 
   async login(credentials: Credentials): Promise<AuthResult> {
     const email = credentials.email.toString();
+    const developmentAdmin = getDevelopmentAdmin(email, credentials.password.toString());
+    if (developmentAdmin) return developmentAdmin;
+    const developmentBoutique = getDevelopmentBoutique(email, credentials.password.toString());
+    if (developmentBoutique) return developmentBoutique;
+
     try {
       const data = await facadeClient.post<unknown>('/auth/login', {
         email,

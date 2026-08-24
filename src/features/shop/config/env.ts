@@ -29,8 +29,10 @@ const parseBoolean = (value: string | undefined, fallback: boolean): boolean => 
   return fallback;
 };
 
+const isDevelopmentBuild = Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
+
 export const shopEnv = {
   apiBaseUrl: normalizeBaseUrl(runtimeEnv.REACT_APP_API_URL ?? runtimeEnv.VITE_API_BASE_URL),
-  enableApiMocks: parseBoolean(runtimeEnv.REACT_APP_ENABLE_API_MOCKS ?? runtimeEnv.VITE_ENABLE_API_MOCKS, false),
+  enableApiMocks: parseBoolean(runtimeEnv.REACT_APP_ENABLE_API_MOCKS ?? runtimeEnv.VITE_ENABLE_API_MOCKS, isDevelopmentBuild),
   requestTimeoutMs: 10000,
 };

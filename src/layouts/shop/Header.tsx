@@ -2,6 +2,7 @@ import React from 'react';
 import { Bell, User, Menu } from 'lucide-react';
 import logo from '@/assets/shop/logo.png';
 import { useLanguage } from '@/core/i18n';
+import { DEFAULT_BOUTIQUE } from '@/features/shop/data/defaultBoutique';
 
 interface HeaderProps {
   userName?: string;
@@ -11,14 +12,14 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  userName = 'Dealport', 
-  userEmail = 'Mark@thedesigner...',
+  userName = DEFAULT_BOUTIQUE.name,
+  userEmail = DEFAULT_BOUTIQUE.ownerEmail,
   notificationCount = 0,
   onMenuClick = () => {}
 }) => {
   const { t, language, setLanguage } = useLanguage();
   return (
-    <header className="sticky top-0 h-16 md:h-20 bg-white border-b border-(--color-border) flex items-center justify-between px-4 md:px-8 z-50 gap-4">
+    <header className="shop-dashboard-header sticky top-0 h-16 md:h-[100px] bg-white border-b border-(--color-border) flex items-center justify-between px-4 md:px-8 z-40 gap-4">
       {/* Menu Button for Mobile */}
       <button 
         onClick={onMenuClick}
@@ -30,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({
       </button>
 
       {/* Logo */}
-      <div className="flex items-center flex-shrink-0">
+      <div className="shop-header-logo flex items-center flex-shrink-0">
         <img 
           src={logo} 
           alt="KUKUZA" 
@@ -56,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({
         <select
           value={language}
           onChange={(event) => setLanguage(event.target.value as typeof language)}
-          className="rounded-md border border-(--color-border) bg-white px-2 py-1 text-xs font-semibold text-(--color-text-secondary)"
+          className="hidden lg:block rounded-md border border-(--color-border) bg-white px-2 py-1 text-xs font-semibold text-(--color-text-secondary)"
           aria-label={t('language.choose')}
         >
           <option value="fr">FR</option>

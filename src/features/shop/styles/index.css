@@ -2,11 +2,22 @@
 
 @theme inline {
   /* Primary Colors - Green palette matching KUKUZA brand */
-  --color-primary: #287460;
-  --color-primary-hover: #1c6350;
-  --color-primary-light: #34a085;
-  --color-primary-lighter: #90EE90;
-  --color-primary-lightest: #e8f5e9;
+  --color-primary: #297560;
+  --color-primary-hover: #205d4c;
+  --color-primary-light: #3d967d;
+  --color-primary-lighter: #b9ded3;
+  --color-primary-lightest: #e8f3ef;
+
+  /* Shared KUKUZA brand scale for Tailwind teal utilities. */
+  --color-teal-50: #eef7f4;
+  --color-teal-100: #dceee8;
+  --color-teal-300: #8bc9b6;
+  --color-teal-500: #3d967d;
+  --color-teal-600: #2f826a;
+  --color-teal-700: #297560;
+  --color-teal-800: #205d4c;
+  --color-teal-900: #164539;
+  --color-teal-950: #0d2a22;
   
   /* Secondary Colors */
   --color-secondary: #f5f5f5;
@@ -33,9 +44,9 @@
   --color-info: #3b82f6;
   
   /* Chart Colors */
-  --color-chart-primary: #90EE90;
-  --color-chart-secondary: #34a085;
-  --color-chart-accent: #287460;
+  --color-chart-primary: #b9ded3;
+  --color-chart-secondary: #3d967d;
+  --color-chart-accent: #297560;
   
   /* Shadows */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -130,6 +141,116 @@
 
   .card:hover {
     box-shadow: var(--shadow-md);
+  }
+
+  .shop-dashboard-main {
+    padding: 1.5rem 2rem 2.5rem;
+    background: #fff;
+  }
+
+  .shop-dashboard {
+    width: min(100%, 1500px);
+    margin-inline: auto;
+    font-family: var(--font-sans);
+  }
+
+  .shop-dashboard h1,
+  .shop-dashboard h2,
+  .shop-dashboard h3 {
+    font-family: var(--font-sans);
+  }
+
+  .dashboard-analytics {
+    width: min(100%, 1280px);
+    margin-inline: auto;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(4, minmax(220px, 246px));
+    justify-content: space-between;
+  }
+
+  .shop-header-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .dashboard-stat-card {
+    min-height: 126px;
+    justify-content: center;
+  }
+
+  .dashboard-stat-card .stat-card-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    flex: 0 0 auto;
+    border-radius: 9999px;
+  }
+
+  .dashboard-chart-card {
+    min-height: 390px;
+    border-color: #edf0ee;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+  }
+
+  .dashboard-product-tabs {
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 0 1.75rem 0.5rem;
+    padding: 0.25rem;
+    overflow-x: auto;
+    border-radius: 0.625rem;
+    background: var(--color-primary-lightest);
+  }
+
+  .dashboard-product-tabs .tabs {
+    gap: 0;
+    border: 0;
+  }
+
+  .dashboard-product-tabs .tab {
+    min-width: 150px;
+    padding: 0.6rem 1rem;
+    color: var(--color-text-primary);
+    border: 0;
+    border-radius: 0.5rem;
+    white-space: nowrap;
+  }
+
+  .dashboard-product-tabs .tab.active {
+    color: var(--color-text-primary);
+    background: #fff;
+  }
+
+  .product-action-menu {
+    position: absolute;
+    right: 100%;
+    top: 0;
+    z-index: 20;
+    min-width: 130px;
+    padding: 0.35rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.625rem;
+    background: #fff;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .product-action-menu button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.65rem;
+    border: 0;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xs);
+  }
+
+  .product-action-menu button:hover {
+    background: var(--color-primary-lightest);
   }
 
   /* Stat Card Component */
@@ -319,9 +440,23 @@
     background-color: var(--color-surface);
     border-radius: var(--radius-xl);
     padding: 0;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
     border: 1px solid var(--color-border);
     overflow: hidden;
+  }
+
+  .dashboard-products-section .table-container {
+    border: 1px solid #cfd4d1;
+    border-radius: 1rem;
+  }
+
+  .dashboard-products-section .table td,
+  .dashboard-products-section .table th {
+    padding: 0.85rem 1.25rem;
+  }
+
+  .dashboard-products-section .table tbody tr {
+    height: 58px;
   }
 
   .table {
@@ -330,7 +465,7 @@
   }
 
   .table thead {
-    background-color: var(--color-secondary);
+    background-color: #fff;
   }
 
   .table th {
@@ -338,15 +473,15 @@
     text-align: left;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
-    border-bottom: 1px solid var(--color-border);
+    color: #07363b;
+    border-bottom: 0;
   }
 
   .table td {
     padding: 1rem;
     font-size: var(--font-size-sm);
     color: var(--color-text-primary);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 0;
   }
 
   .table tbody tr:hover {
@@ -485,6 +620,10 @@
     padding: var(--spacing-md);
   }
 
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .table th,
   .table td {
     padding: 0.75rem;
@@ -500,6 +639,19 @@
   .card {
     padding: var(--spacing-md);
     border-radius: var(--radius-lg);
+  }
+
+  .shop-dashboard-main {
+    padding: 1rem;
+  }
+
+  .shop-header-logo {
+    position: static;
+    transform: none;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr;
   }
 
   .btn {

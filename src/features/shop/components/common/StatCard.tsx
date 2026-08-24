@@ -22,23 +22,23 @@ const StatCard: React.FC<StatCardProps> = ({
   const isNegative = change && change < 0;
 
   return (
-    <Card className="stat-card">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="text-sm text-(--color-text-secondary) mb-2">
-            {label}
-          </div>
-          <div className="text-3xl font-bold text-(--color-text-primary) mb-2">
-            {value}
-          </div>
-          {change !== undefined && (
-            <div className={`stat-card-change ${isPositive ? 'positive' : isNegative ? 'negative' : ''}`}>
-              {isPositive ? '+' : ''}{change}% {changeLabel}
-            </div>
-          )}
-        </div>
+    <Card className="stat-card dashboard-stat-card">
+      <div className="flex items-center gap-4">
         <div className={`stat-card-icon ${iconBgColor}`}>
           {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm text-(--color-text-tertiary) mb-1">
+            {label}
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold text-(--color-text-primary)">{value}</div>
+            {change !== undefined && (
+              <div className={`stat-card-change ${isPositive ? 'positive' : isNegative ? 'negative' : ''}`}>
+                {isPositive ? '+' : ''}{change}% {changeLabel}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Card>
