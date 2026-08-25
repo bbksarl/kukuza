@@ -1,4 +1,5 @@
-import React, { InputHTMLAttributes, ReactNode } from 'react';
+import React, { InputHTMLAttributes, ReactNode, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from '@/core/i18n';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -28,9 +29,12 @@ export const Input = ({
   ...props
 }: InputProps) => {
   const { translateText } = useLanguage();
+  const [showPassword, setShowPassword] = useState(false);
   const baseClasses = 'auth-input';
   const errorClasses = 'ring-2 ring-red-500 focus:ring-red-500 border-red-500';
   const hasError = error && touched;
+  const isPassword = type === 'password';
+  const inputType = isPassword && showPassword ? 'text' : type;
   
   return (
     <div className="space-y-0.5 xs:space-y-1 sm:space-y-1.5">
@@ -39,17 +43,30 @@ export const Input = ({
           {hasError ? translateText(error) : label}
         </label>
       )}
-      <input
-        type={type}
-        id={name}
-        name={name}
-        value={value}
-        onChange={onChange}
-        onBlur={onBlur}
-        placeholder={hasError ? '' : placeholder}
-        className={`${baseClasses} ${hasError ? errorClasses : ''} ${className}`}
-        {...props}
-      />
+      <div className={isPassword ? 'relative' : undefined}>
+        <input
+          type={inputType}
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          placeholder={hasError ? '' : placeholder}
+          className={`${baseClasses} ${isPassword ? 'pr-10' : ''} ${hasError ? errorClasses : ''} ${className}`}
+          {...props}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword((visible) => !visible)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-white/60 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-[#297560]"
+            aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+          </button>
+        )}
+      </div>
     </div>
   );
 };
