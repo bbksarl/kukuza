@@ -50,6 +50,16 @@
   }
 }
 
+.auth-error-alert {
+  background: rgba(220, 38, 38, 0.2) !important;
+  border-color: #f87171 !important;
+  color: #ffffff !important;
+}
+
+.auth-error-alert * {
+  color: #ffffff !important;
+}
+
 /* Catalog screens do not need a second Tailwind entry point, but keep its scrollbar UX. */
 @layer base {
   ::-webkit-scrollbar {
