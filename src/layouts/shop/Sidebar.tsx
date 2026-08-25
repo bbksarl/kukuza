@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Plus, Package, LogOut, Settings, X } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Plus, Package, LogOut, X } from 'lucide-react';
 import { useLanguage } from '@/core/i18n';
 import { DEFAULT_BOUTIQUE } from '@/features/shop/data/defaultBoutique';
 
@@ -59,21 +59,24 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
       )}
 
       {/* Sidebar - Desktop Fixed */}
-      <aside className={`shop-dashboard-sidebar fixed left-0 top-0 h-screen w-[116px] bg-white border-r border-(--color-border) flex flex-col items-center py-5 z-50 transition-transform duration-300 md:translate-x-0 ${
+      <aside className={`shop-dashboard-sidebar fixed left-0 top-0 h-screen w-[80px] bg-white border-r border-(--color-border) flex flex-col items-center z-50 transition-transform duration-300 md:translate-x-0 ${
         isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
-        {/* Logo */}
-        <div className="mb-10 flex items-center justify-center w-full px-2">
+        {/* Boutique identity */}
+        <div className="shop-sidebar-profile flex w-full flex-col items-center justify-center">
           <div
-            className="w-12 h-12 bg-black rounded-full flex items-center justify-center"
+            className="w-10 h-10 bg-(--color-primary) rounded-full flex items-center justify-center"
             title={DEFAULT_BOUTIQUE.name}
             aria-label={DEFAULT_BOUTIQUE.name}
           >
-            <span className="text-white text-xs font-bold text-center">{DEFAULT_BOUTIQUE.initials}</span>
+            <span className="text-white text-[10px] font-semibold text-center">{DEFAULT_BOUTIQUE.initials}</span>
           </div>
+          <span className="shop-sidebar-owner mt-2 text-center text-[11px] font-semibold leading-[1.2] text-(--color-text-primary)">
+            {DEFAULT_BOUTIQUE.ownerName}
+          </span>
           <button
             onClick={onClose}
-            className="md:hidden text-(--color-text-secondary) hover:text-(--color-text-primary)"
+            className="absolute right-2 top-3 md:hidden text-(--color-text-secondary) hover:text-(--color-text-primary)"
             title={t('shop.close')}
             aria-label={t('shop.close')}
           >
@@ -83,14 +86,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
 
         {/* Navigation Items */}
         <nav className="flex-1 w-full">
-          <ul className="space-y-4">
+          <ul className="space-y-0">
             {navItems.map((item) => {
               const isActive = activePath === item.path;
               return (
                 <li key={item.path}>
                   <button
                     onClick={() => handleNavigation(item.path)}
-                    className={`w-full flex flex-col items-center gap-2 py-3 px-2 transition-colors ${
+                    className={`shop-sidebar-nav-item w-full flex flex-col items-center gap-1 py-3 px-1 transition-colors ${
                       isActive
                         ? 'text-(--color-primary) bg-(--color-primary-lightest)'
                         : 'text-(--color-text-secondary) hover:text-(--color-text-primary) hover:bg-(--color-surface-hover)'
@@ -100,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
                     <span className={isActive ? 'text-(--color-primary)' : ''}>
                       {item.icon}
                     </span>
-                    <span className="text-2xs text-center font-medium break-words max-w-[80px] leading-tight">
+                    <span className="text-2xs text-center font-medium break-words max-w-[74px] leading-tight">
                       {item.label}
                     </span>
                   </button>
@@ -111,15 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
         </nav>
 
         <button
-          className="w-full flex flex-col items-center gap-2 py-3 px-2 text-(--color-primary) hover:bg-(--color-primary-lightest) transition-colors"
-          title={t('shop.settings')}
-          aria-label={t('shop.settings')}
-        >
-          <Settings size={20} />
-        </button>
-
-        <button
-          className="w-full flex flex-col items-center gap-2 py-3 px-2 text-(--color-text-secondary) hover:text-(--color-error) hover:bg-red-50 transition-colors rounded-lg"
+          className="shop-sidebar-logout w-full flex flex-col items-center gap-2 py-3 px-2 text-(--color-text-secondary) hover:text-(--color-error) hover:bg-red-50 transition-colors"
           title={t('shop.logout')}
           aria-label={t('shop.logout')}
         >

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { EllipsisVertical, Eye, Pencil } from 'lucide-react';
+import { EllipsisVertical, Eye, Pencil, Search } from 'lucide-react';
 import Tabs, { Tab } from '../common/Tabs';
 import Pagination from '../common/Pagination';
 import type { Product, ProductFilter } from '../../types';
@@ -21,6 +21,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
   const tabs: Tab[] = [
     { id: 'all', label: t('shop.tabProducts'), count: products.length },
     { id: 'in_stock', label: t('shop.inStock'), count: products.filter(p => p.status === 'in_stock').length },
+    { id: 'low_stock', label: t('shop.lowStock'), count: products.filter(p => p.status === 'low_stock').length },
     { id: 'out_of_stock', label: t('shop.outOfStock'), count: products.filter(p => p.status === 'out_of_stock').length }
   ];
 
@@ -62,20 +63,30 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
   };
 
   return (
-    <div className="dashboard-products-section">
-      <div className="dashboard-product-tabs">
-        <div className="flex-1 min-w-0">
-          <Tabs 
-            tabs={tabs} 
-            activeTab={activeTab} 
-            onTabChange={(tabId) => setActiveTab(tabId as ProductFilter)} 
+    <section className="dashboard-products-section shop-products-panel">
+      <div className="shop-products-toolbar">
+        <div className="dashboard-product-tabs">
+          <Tabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={(tabId) => setActiveTab(tabId as ProductFilter)}
+          />
+        </div>
+        <div className="shop-products-search">
+          <Search size={17} aria-hidden="true" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder={t('shop.search')}
+            aria-label={t('shop.search')}
           />
         </div>
       </div>
 
       <div className="table-container overflow-x-auto table-responsive">
-        <table className="table">
-          <thead>
+          <table className="table">
+          {paginatedProducts.length > 0 && <thead>
             <tr>
               <th className="text-xs md:text-sm">{t('shop.references')}</th>
               <th className="hidden sm:table-cell text-xs md:text-sm">{t('shop.product')}</th>
@@ -84,7 +95,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
               <th className="hidden lg:table-cell text-xs md:text-sm">{t('shop.stockStatus')}</th>
               <th className="text-xs md:text-sm">{t('shop.action')}</th>
             </tr>
-          </thead>
+          </thead>}
           <tbody>
             {paginatedProducts.length === 0 ? (
               <tr>
@@ -156,7 +167,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products }) => {
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

@@ -116,14 +116,14 @@ const SalesPage: React.FC = () => {
 
   return (
     <DashboardLayout activePath="/shop/ventes">
-      <div className="space-y-6 md:space-y-8">
+      <div className="shop-dashboard shop-sales-page space-y-6 md:space-y-8">
         <AnalyticsSection
           stats={stats}
           isLoading={isDashboardLoading}
           error={dashboardError}
         />
 
-        <Card>
+        <Card className="shop-sales-panel">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-(--color-border) mb-6 pb-0 gap-4">
             <div className="flex-1 w-full md:w-auto">
               <Tabs

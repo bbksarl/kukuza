@@ -19,8 +19,9 @@ const VisitsChart: React.FC<VisitsChartProps> = ({ data, title = 'Visites' }) =>
         </h3>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} barCategoryGap="36%">
+      {data.length === 0 ? <div className="dashboard-empty-chart" aria-label="Aucune donnée de visites" /> : (
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={data} barCategoryGap="36%">
           <XAxis 
             dataKey="day" 
             stroke="#6b7280" 
@@ -41,8 +42,9 @@ const VisitsChart: React.FC<VisitsChartProps> = ({ data, title = 'Visites' }) =>
             radius={[6, 6, 6, 6]}
             maxBarSize={18}
           />
-        </BarChart>
-      </ResponsiveContainer>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
     </Card>
   );
 };

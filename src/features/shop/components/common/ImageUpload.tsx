@@ -65,7 +65,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   };
 
   return (
-    <div>
+    <div className="shop-image-upload">
       <div className="flex items-start gap-4">
         {/* Zone d'upload */}
         <div className="flex-1">

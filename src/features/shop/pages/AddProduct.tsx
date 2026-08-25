@@ -109,7 +109,7 @@ const AddProductPage: React.FC = () => {
 
   return (
     <DashboardLayout activePath="/shop/produits/ajouter">
-      <div className="max-w-7xl mx-auto px-0">
+      <div className="shop-dashboard shop-add-product max-w-7xl mx-auto px-0">
         <h1 className="text-xl md:text-2xl font-bold text-(--color-text-primary) mb-6 md:mb-8">
           {t('shop.addProductsTitle')}
         </h1>
@@ -171,16 +171,22 @@ const AddProductPage: React.FC = () => {
                   <label className="block text-sm font-medium text-(--color-text-primary) mb-2">
                     {t('shop.itemPrice')} <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(event) => handleInputChange('price', event.target.value)}
-                    className={`w-full px-3 md:px-4 py-2 md:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-all ${
-                      errors.price ? 'border-red-500' : 'border-(--color-border)'
-                    }`}
-                    placeholder="0.00"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(event) => handleInputChange('price', event.target.value)}
+                      className={`min-w-0 flex-1 px-3 md:px-4 py-2 md:py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-all ${
+                        errors.price ? 'border-red-500' : 'border-(--color-border)'
+                      }`}
+                      placeholder="0.00"
+                    />
+                    <select className="w-28 px-3 border border-(--color-border) rounded-lg bg-white text-sm text-(--color-text-secondary) focus:outline-none focus:ring-2 focus:ring-(--color-primary)" aria-label="Devise">
+                      <option>XOF</option>
+                    </select>
+                  </div>
+                  <p className="mt-1 text-[11px] text-(--color-text-tertiary)">Devise sélectionnée : Franc CFA (F Cfa)</p>
                   {errors.price && <p className="text-xs text-red-500 mt-1">{translateText(errors.price)}</p>}
                 </div>
 
@@ -295,7 +301,7 @@ const AddProductPage: React.FC = () => {
             </Card>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 shop-product-preview">
             <Card>
               <h3 className="text-base md:text-lg font-semibold text-(--color-text-primary) mb-4">
                 {t('shop.previewMain')}

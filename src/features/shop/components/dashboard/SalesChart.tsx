@@ -49,7 +49,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ data, title = 'Rapport' }) => {
                 key={filter}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                   activeFilter === filter
-                    ? 'text-(--color-primary)'
+                    ? 'bg-(--color-primary) text-white rounded-md'
                     : 'text-(--color-text-secondary) hover:bg-(--color-surface-hover)'
                 }`}
                 onClick={() => setActiveFilter(filter)}
@@ -61,8 +61,9 @@ const SalesChart: React.FC<SalesChartProps> = ({ data, title = 'Rapport' }) => {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={data}>
+      {data.length === 0 ? <div className="dashboard-empty-chart" aria-label="Aucune donnée de ventes" /> : (
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={data}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#b9ded3" stopOpacity={0.8}/>
@@ -96,8 +97,9 @@ const SalesChart: React.FC<SalesChartProps> = ({ data, title = 'Rapport' }) => {
             strokeWidth={2}
             fill="url(#colorValue)" 
           />
-        </AreaChart>
-      </ResponsiveContainer>
+          </AreaChart>
+        </ResponsiveContainer>
+      )}
     </Card>
   );
 };

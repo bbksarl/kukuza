@@ -132,7 +132,7 @@
   /* Card Component */
   .card {
     background-color: var(--color-surface);
-    border-radius: var(--radius-xl);
+    border-radius: 0.65rem;
     padding: var(--spacing-lg);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--color-border);
@@ -144,14 +144,37 @@
   }
 
   .shop-dashboard-main {
-    padding: 1.5rem 2rem 2.5rem;
-    background: #fff;
+    min-height: calc(100vh - 74px);
+    padding: 1.75rem 1.6rem 2.5rem;
+    background: var(--color-background);
   }
 
   .shop-dashboard {
-    width: min(100%, 1500px);
+    width: 100%;
     margin-inline: auto;
     font-family: var(--font-sans);
+  }
+
+  .shop-add-product {
+    width: min(100%, 1075px);
+  }
+
+  .shop-product-preview .card {
+    padding: 1.25rem;
+  }
+
+  .dashboard-chart-card .recharts-responsive-container {
+    height: 220px !important;
+  }
+
+  .dashboard-empty-chart {
+    height: 220px;
+    margin: 0.5rem 0 0 3rem;
+    border: 1px dashed #edf0ee;
+  }
+
+  .shop-products-panel .tabs {
+    min-width: max-content;
   }
 
   .shop-dashboard h1,
@@ -161,47 +184,44 @@
   }
 
   .dashboard-analytics {
-    width: min(100%, 1280px);
-    margin-inline: auto;
+    width: 100%;
   }
 
   .dashboard-stats-grid {
-    grid-template-columns: repeat(4, minmax(220px, 246px));
-    justify-content: space-between;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .shop-header-logo {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    position: static;
+    transform: none;
   }
 
   .dashboard-stat-card {
-    min-height: 126px;
-    justify-content: center;
+    min-height: 124px;
+    justify-content: flex-start;
   }
 
   .dashboard-stat-card .stat-card-icon {
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
     flex: 0 0 auto;
-    border-radius: 9999px;
+    border-radius: 0.45rem;
   }
 
   .dashboard-chart-card {
-    min-height: 390px;
+    min-height: 348px;
     border-color: #edf0ee;
-    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
   }
 
   .dashboard-product-tabs {
-    width: fit-content;
+    width: auto;
     max-width: 100%;
-    margin: 0 0 1.75rem 0.5rem;
-    padding: 0.25rem;
+    margin: 0;
+    padding: 0;
     overflow-x: auto;
-    border-radius: 0.625rem;
-    background: var(--color-primary-lightest);
+    border-radius: 0;
+    background: transparent;
   }
 
   .dashboard-product-tabs .tabs {
@@ -210,17 +230,82 @@
   }
 
   .dashboard-product-tabs .tab {
-    min-width: 150px;
-    padding: 0.6rem 1rem;
-    color: var(--color-text-primary);
+    min-width: 0;
+    padding: 0.9rem 0.8rem 0.75rem;
+    color: var(--color-text-secondary);
     border: 0;
-    border-radius: 0.5rem;
     white-space: nowrap;
   }
 
   .dashboard-product-tabs .tab.active {
+    color: var(--color-primary);
+    background: transparent;
+  }
+
+  .shop-dashboard-sidebar {
+    border-top: 0;
+  }
+
+  .shop-sidebar-profile {
+    height: 138px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .shop-sidebar-owner {
+    max-width: 72px;
+  }
+
+  .shop-sidebar-nav-item {
+    min-height: 72px;
+  }
+
+  .shop-sidebar-logout {
+    margin-bottom: 1rem;
+  }
+
+  .shop-products-panel {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 0.65rem;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shop-products-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 69px;
+    padding: 0 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .shop-products-search {
+    display: flex;
+    align-items: center;
+    width: 270px;
+    height: 33px;
+    flex: 0 0 auto;
+    gap: 0.5rem;
+    padding: 0 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.45rem;
+    color: var(--color-text-tertiary);
+  }
+
+  .shop-products-search input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
     color: var(--color-text-primary);
-    background: #fff;
+    font-size: 0.75rem;
+  }
+
+  .shop-products-table {
+    border: 0;
+    border-radius: 0;
   }
 
   .product-action-menu {
@@ -746,5 +831,305 @@
   textarea,
   select {
     font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/*
+ * The storefront stylesheet also defines global typography and resets. Keep
+ * the shop shell isolated so its dashboard spacing and sans-serif hierarchy
+ * remain stable regardless of import/layer order.
+ */
+.shop-dashboard-main,
+.shop-dashboard,
+.shop-dashboard-header,
+.shop-dashboard-sidebar {
+  font-family: var(--font-sans) !important;
+}
+
+.shop-dashboard-main {
+  padding: 1.75rem 1.6rem 2.5rem !important;
+}
+
+.shop-dashboard h1,
+.shop-dashboard h2,
+.shop-dashboard h3,
+.shop-dashboard h4,
+.shop-dashboard h5,
+.shop-dashboard h6 {
+  font-family: var(--font-sans) !important;
+}
+
+.shop-dashboard .dashboard-analytics > h2,
+.shop-dashboard .dashboard-analytics h2 {
+  margin-bottom: 1rem !important;
+}
+
+.shop-dashboard .shop-products-panel {
+  border: 1px solid var(--color-border) !important;
+  border-radius: 0.65rem !important;
+}
+
+.shop-dashboard .shop-products-toolbar {
+  min-height: 69px !important;
+  padding: 0 1rem !important;
+  border-bottom: 1px solid var(--color-border) !important;
+}
+
+.shop-dashboard .shop-products-search {
+  width: 270px !important;
+  height: 33px !important;
+  padding: 0 0.65rem !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 0.45rem !important;
+}
+
+.shop-dashboard .dashboard-empty-chart {
+  height: 220px !important;
+  margin: 0.5rem 0 0 3rem !important;
+  border: 1px dashed #edf0ee !important;
+}
+
+@media (max-width: 768px) {
+  .shop-dashboard-main {
+    padding: 1rem !important;
+  }
+}
+
+/* KPI cards: fixed proportions from the boutique dashboard reference. */
+.shop-dashboard .dashboard-stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 20px !important;
+}
+
+.shop-dashboard .dashboard-stat-card {
+  height: 124px !important;
+  min-height: 124px !important;
+  padding: 20px !important;
+  border-radius: 10px !important;
+}
+
+.shop-dashboard .dashboard-stat-card .stat-card-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 7px !important;
+}
+
+.shop-dashboard .dashboard-stat-card .stat-card-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+@media (max-width: 1024px) {
+  .shop-dashboard .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .shop-dashboard .dashboard-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Chart cards: keep the header and empty-state frames inside the card. */
+.shop-dashboard .dashboard-chart-card {
+  height: 348px !important;
+  min-height: 348px !important;
+  padding: 20px !important;
+  border-radius: 10px !important;
+}
+
+.shop-dashboard .dashboard-chart-card h3 {
+  font-family: var(--font-sans) !important;
+}
+
+.shop-dashboard .dashboard-chart-card .dashboard-empty-chart {
+  height: 220px !important;
+  margin: 0.5rem 7px 0 50px !important;
+}
+
+/* Sales history panel: match the compact desktop reference layout. */
+.shop-dashboard .shop-sales-panel {
+  height: 254px !important;
+  min-height: 254px !important;
+  padding: 20px !important;
+  border-radius: 10px !important;
+}
+
+.shop-dashboard .shop-sales-panel > div:first-child {
+  min-height: 43px;
+  margin-bottom: 24px !important;
+}
+
+.shop-dashboard .shop-sales-panel .tabs {
+  gap: 0 !important;
+  border-bottom: 0 !important;
+}
+
+.shop-dashboard .shop-sales-panel .tab {
+  padding: 0 14px 11px !important;
+  border-bottom: 2px solid transparent !important;
+  font-family: var(--font-sans) !important;
+  white-space: nowrap;
+}
+
+.shop-dashboard .shop-sales-panel .tab:first-child {
+  padding-left: 0 !important;
+}
+
+.shop-dashboard .shop-sales-panel .tab.active {
+  color: var(--color-primary) !important;
+  border-bottom-color: var(--color-primary) !important;
+}
+
+.shop-dashboard .shop-sales-panel h2,
+.shop-dashboard .shop-sales-panel th,
+.shop-dashboard .shop-sales-panel td {
+  font-family: var(--font-sans) !important;
+}
+
+.shop-dashboard .shop-sales-panel h2 {
+  margin-bottom: 16px !important;
+}
+
+.shop-dashboard .shop-sales-panel .relative.w-full {
+  width: 270px !important;
+  margin-bottom: 0 !important;
+}
+
+.shop-dashboard .shop-sales-panel .relative.w-full input {
+  height: 33px;
+  border-radius: 7px;
+}
+
+.shop-sales-page > * + * {
+  margin-top: 26px !important;
+}
+
+/* Add-product form: apply the same compact geometry as the reference. */
+.shop-dashboard.shop-add-product > h1 {
+  margin-bottom: 24px !important;
+  font-size: 24px !important;
+  font-family: var(--font-sans) !important;
+}
+
+.shop-dashboard.shop-add-product > .grid {
+  grid-template-columns: minmax(0, 707px) minmax(0, 341px) !important;
+  gap: 26px !important;
+}
+
+.shop-dashboard.shop-add-product > .grid > div:first-child,
+.shop-dashboard.shop-add-product > .grid > div:last-child {
+  grid-column: auto !important;
+}
+
+.shop-dashboard.shop-add-product > .grid > div > .card {
+  padding: 20px !important;
+  border-radius: 10px !important;
+}
+
+.shop-dashboard.shop-add-product > .grid > div:first-child > .card {
+  height: 621px !important;
+}
+
+.shop-dashboard.shop-add-product > .grid > div:first-child > .card > .border-t {
+  margin-top: 20px !important;
+  padding-top: 28px !important;
+}
+
+.shop-dashboard.shop-add-product > .grid > div:first-child > .card > div:last-child {
+  margin-top: 20px !important;
+}
+
+.shop-dashboard.shop-add-product .shop-product-preview > .card {
+  height: 431px !important;
+}
+
+.shop-dashboard.shop-add-product > .grid > div:first-child .grid {
+  gap: 20px !important;
+}
+
+.shop-dashboard.shop-add-product label {
+  margin-bottom: 8px !important;
+  font-size: 12px !important;
+  line-height: 16px;
+}
+
+.shop-dashboard.shop-add-product input,
+.shop-dashboard.shop-add-product select {
+  height: 35px !important;
+  min-height: 35px !important;
+  padding: 0 12px !important;
+  border-radius: 7px !important;
+  font-size: 12px !important;
+}
+
+.shop-dashboard.shop-add-product .shop-product-preview .aspect-square {
+  width: 100% !important;
+  height: 296px !important;
+  aspect-ratio: auto !important;
+  border-radius: 10px !important;
+}
+
+.shop-dashboard.shop-add-product .shop-product-preview > .card > button {
+  height: 35px !important;
+  margin-top: 20px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+}
+
+.shop-dashboard.shop-add-product .shop-image-upload .w-32.h-32 {
+  width: 107px !important;
+  height: 107px !important;
+}
+
+.shop-dashboard.shop-add-product .btn-primary,
+.shop-dashboard.shop-add-product .btn-secondary {
+  height: 35px !important;
+  min-height: 35px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+}
+
+.shop-dashboard.shop-add-product .btn-primary {
+  background-color: var(--color-primary) !important;
+  color: #fff !important;
+  border: 0 !important;
+}
+
+.shop-dashboard.shop-add-product .btn-primary:hover {
+  background-color: var(--color-primary-hover) !important;
+}
+
+.shop-dashboard.shop-add-product .btn-secondary {
+  background-color: #f5f5f5 !important;
+  color: var(--color-text-primary) !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.shop-dashboard.shop-add-product .btn-secondary:hover,
+.shop-dashboard.shop-add-product .btn-secondary:focus,
+.shop-dashboard.shop-add-product .btn-secondary:focus-visible {
+  background-color: #e5e7eb !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 767px) {
+  .shop-dashboard.shop-add-product > .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .shop-dashboard.shop-add-product > .grid > div:first-child,
+  .shop-dashboard.shop-add-product > .grid > div:last-child {
+    grid-column: auto !important;
+  }
+
+  .shop-dashboard.shop-add-product > .grid > div:first-child > .card,
+  .shop-dashboard.shop-add-product .shop-product-preview > .card {
+    height: auto !important;
   }
 }

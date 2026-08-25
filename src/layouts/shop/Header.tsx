@@ -12,14 +12,14 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  userName = DEFAULT_BOUTIQUE.name,
-  userEmail = DEFAULT_BOUTIQUE.ownerEmail,
+  userName = DEFAULT_BOUTIQUE.ownerName,
+  userEmail = DEFAULT_BOUTIQUE.ownerName,
   notificationCount = 0,
   onMenuClick = () => {}
 }) => {
   const { t, language, setLanguage } = useLanguage();
   return (
-    <header className="shop-dashboard-header sticky top-0 h-16 md:h-[100px] bg-white border-b border-(--color-border) flex items-center justify-between px-4 md:px-8 z-40 gap-4">
+    <header className="shop-dashboard-header sticky top-0 h-[74px] bg-white border-b border-(--color-border) flex items-center justify-between px-4 md:px-7 z-40 gap-4">
       {/* Menu Button for Mobile */}
       <button 
         onClick={onMenuClick}
@@ -35,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({
         <img 
           src={logo} 
           alt="KUKUZA" 
-          className="h-8 md:h-10 object-contain"
+          className="h-7 md:h-8 w-auto object-contain"
         />
       </div>
 

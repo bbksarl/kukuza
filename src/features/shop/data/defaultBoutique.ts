@@ -16,10 +16,10 @@ export interface BoutiqueProfile {
 
 export const DEFAULT_BOUTIQUE: Readonly<BoutiqueProfile> = Object.freeze({
   id: 'boutique-default',
-  name: 'KUKUZA Boutique Démo',
-  ownerName: 'Équipe KUKUZA',
-  ownerEmail: import.meta.env.VITE_DEFAULT_BOUTIQUE_EMAIL ?? 'boutique@example.local',
-  initials: 'KD',
+  name: 'Abdoulaye Diallo',
+  ownerName: 'Abdoulaye Diallo',
+  ownerEmail: import.meta.env.VITE_DEFAULT_BOUTIQUE_EMAIL ?? 'Abdoulaye Diallo',
+  initials: 'AD',
   logo: '/assets/logo.png',
   status: 'active',
 });
