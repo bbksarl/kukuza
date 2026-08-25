@@ -5,11 +5,9 @@ import { useAdminOverview } from '../hooks/useAdminOverview';
 import { useLanguage } from '@/core/i18n';
 
 function formatCurrency(value: number, language: 'fr' | 'en') {
-  return new Intl.NumberFormat(language === 'en' ? 'en-US' : 'fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
+  return `${new Intl.NumberFormat('fr-FR', {
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(value)} F CFA`;
 }
 
 function getStatusClass(status: string) {

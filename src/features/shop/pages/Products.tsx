@@ -37,7 +37,7 @@ const ProductsPage: React.FC = () => {
 
   return (
     <DashboardLayout activePath="/shop/produits">
-      <div className="overflow-hidden">
+      <div className="shop-dashboard shop-products-page overflow-hidden">
         <ProductsTable products={products} />
       </div>
     </DashboardLayout>

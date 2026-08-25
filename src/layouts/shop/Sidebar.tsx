@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ShoppingBag, Plus, Package, LogOut, X } from 'lucide-react';
 import { useLanguage } from '@/core/i18n';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { DEFAULT_BOUTIQUE } from '@/features/shop/data/defaultBoutique';
 
 interface SidebarProps {
@@ -19,6 +20,7 @@ interface NavItem {
 const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpen = false, onClose = () => {} }) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { logout } = useAuth();
 
   const navItems: NavItem[] = [
     {
@@ -46,6 +48,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
   const handleNavigation = (path: string) => {
     navigate(path);
     onClose();
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    onClose();
+    navigate('/auth/login', { replace: true });
   };
 
   return (
@@ -114,6 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
         </nav>
 
         <button
+          onClick={() => void handleLogout()}
           className="shop-sidebar-logout w-full flex flex-col items-center gap-2 py-3 px-2 text-(--color-text-secondary) hover:text-(--color-error) hover:bg-red-50 transition-colors"
           title={t('shop.logout')}
           aria-label={t('shop.logout')}

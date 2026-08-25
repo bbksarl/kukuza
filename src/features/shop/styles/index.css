@@ -1013,6 +1013,50 @@
   font-family: var(--font-sans) !important;
 }
 
+/* Products page: compact empty-state panel from the reference. */
+.shop-products-page .shop-products-panel {
+  min-height: 141px !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 10px !important;
+}
+
+.shop-products-page .shop-products-toolbar {
+  height: 69px !important;
+  min-height: 69px !important;
+}
+
+.shop-products-page .dashboard-product-tabs .tabs {
+  height: 69px !important;
+  align-items: flex-end;
+}
+
+.shop-products-page .dashboard-product-tabs .tab {
+  height: 39px !important;
+  padding: 0 13px 11px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+}
+
+.shop-products-page .dashboard-product-tabs .tab:first-child {
+  padding-left: 13px !important;
+}
+
+.shop-products-page .dashboard-product-tabs .tab.active {
+  color: var(--color-primary) !important;
+  border-bottom: 2px solid var(--color-primary) !important;
+}
+
+.shop-products-page .shop-products-table tbody tr {
+  height: 70px !important;
+}
+
+.shop-products-page .shop-products-table td {
+  padding: 0 !important;
+  text-align: center;
+  font-size: 12px !important;
+  color: var(--color-text-secondary) !important;
+}
+
 .shop-dashboard.shop-add-product > .grid {
   grid-template-columns: minmax(0, 707px) minmax(0, 341px) !important;
   gap: 26px !important;

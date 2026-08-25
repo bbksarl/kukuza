@@ -183,10 +183,10 @@ const AddProductPage: React.FC = () => {
                       placeholder="0.00"
                     />
                     <select className="w-28 px-3 border border-(--color-border) rounded-lg bg-white text-sm text-(--color-text-secondary) focus:outline-none focus:ring-2 focus:ring-(--color-primary)" aria-label="Devise">
-                      <option>XOF</option>
+                      <option>F CFA</option>
                     </select>
                   </div>
-                  <p className="mt-1 text-[11px] text-(--color-text-tertiary)">Devise sélectionnée : Franc CFA (F Cfa)</p>
+                  <p className="mt-1 text-[11px] text-(--color-text-tertiary)">Devise sélectionnée : Franc CFA (F CFA)</p>
                   {errors.price && <p className="text-xs text-red-500 mt-1">{translateText(errors.price)}</p>}
                 </div>
 
