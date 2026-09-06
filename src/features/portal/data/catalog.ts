@@ -1,3 +1,5 @@
+import { getMarketplaceProducts, type MarketplaceProductRecord } from '@/services/products/marketplaceProductStore';
+
 export type DropdownType =
   | 'nouveautes'
   | 'createurs'
@@ -23,12 +25,14 @@ export type NavItem = {
 };
 
 export type PortalProduct = {
-  id: number;
+  id: number | string;
   name: string;
   price: number;
   image_url: string;
   brand: string;
   creator_name: string;
+  boutique_id?: string;
+  boutique_name?: string;
   category: 'vetements' | 'chaussures' | 'decor' | 'sacs' | 'accessoires' | 'bijoux';
   subcategory: string;
   sizes: string[];
@@ -403,9 +407,10 @@ export const mockProducts: PortalProduct[] = [
  * numeric ids, while route params are always strings.
  */
 export function getPortalProductById(productId: number | string | null | undefined) {
-  const id = typeof productId === 'number' ? productId : Number(productId);
-  if (!Number.isFinite(id)) return undefined;
-  return mockProducts.find((product) => product.id === id);
+  if (productId == null) return undefined;
+  const localProduct = getMarketplaceProducts().find((product) => String(product.id) === String(productId));
+  if (localProduct) return normalizeProduct(localProduct);
+  return mockProducts.find((product) => String(product.id) === String(productId));
 }
 
 export function normalizeText(value: string | null | undefined) {
@@ -418,21 +423,54 @@ export function normalizeText(value: string | null | undefined) {
 }
 
 export function normalizeProduct(raw: Record<string, unknown>): PortalProduct {
-  const image = typeof raw.image_url === 'string' && raw.image_url ? raw.image_url : '/assets/products/p1.png';
-  const brand = typeof raw.brand === 'string' && raw.brand ? raw.brand : 'Boutique Premium';
-  const creator = typeof raw.creator_name === 'string' && raw.creator_name ? raw.creator_name : brand;
+  const image = typeof raw.image_url === 'string' && raw.image_url
+    ? raw.image_url
+    : typeof raw.image === 'string' && raw.image
+      ? raw.image
+      : typeof raw.imageUrl === 'string' && raw.imageUrl
+        ? raw.imageUrl
+        : '/assets/products/p1.png';
+  const boutique = (raw.boutique ?? raw.shop ?? raw.creator) as Record<string, unknown> | undefined;
+  const boutiqueId = raw.boutique_id
+    ?? raw.boutiqueId
+    ?? raw.shop_id
+    ?? raw.shopId
+    ?? raw.creator_id
+    ?? raw.creatorId
+    ?? boutique?.id;
+  const boutiqueName = typeof raw.boutique_name === 'string' && raw.boutique_name
+    ? raw.boutique_name
+    : typeof raw.boutiqueName === 'string' && raw.boutiqueName
+      ? raw.boutiqueName
+      : typeof raw.shop_name === 'string' && raw.shop_name
+        ? raw.shop_name
+        : typeof raw.shopName === 'string' && raw.shopName
+        ? raw.shopName
+          : typeof boutique?.name === 'string' && boutique.name
+            ? boutique.name
+          : undefined;
+  const brand = typeof raw.brand === 'string' && raw.brand ? raw.brand : boutiqueName || 'Boutique Premium';
+  const creator = typeof raw.creator_name === 'string' && raw.creator_name
+    ? raw.creator_name
+    : typeof raw.creatorName === 'string' && raw.creatorName
+      ? raw.creatorName
+      : brand;
+  const rawId = raw.id;
+  const id = typeof rawId === 'string' || typeof rawId === 'number' ? rawId : Date.now();
   const categoryValue = normalizeText(typeof raw.category === 'string' ? raw.category : '') as PortalProduct['category'];
   const category = ['vetements', 'chaussures', 'decor', 'sacs', 'accessoires', 'bijoux'].includes(categoryValue)
     ? categoryValue
     : 'vetements';
 
   return {
-    id: Number(raw.id ?? Date.now()),
+    id,
     name: typeof raw.name === 'string' && raw.name ? raw.name : 'Produit Kukuza',
     price: typeof raw.price === 'number' ? raw.price : Number(raw.price ?? 0),
     image_url: image,
     brand,
     creator_name: creator,
+    boutique_id: boutiqueId == null ? undefined : String(boutiqueId),
+    boutique_name: boutiqueName || brand,
     category,
     subcategory: typeof raw.subcategory === 'string' && raw.subcategory ? raw.subcategory : categoryLabelMap[category],
     sizes: Array.isArray(raw.sizes) ? raw.sizes.filter((size): size is string => typeof size === 'string') : [],
@@ -443,6 +481,16 @@ export function normalizeProduct(raw: Record<string, unknown>): PortalProduct {
     recency: raw.recency === 'Semaine précédente' ? 'Semaine précédente' : 'Cette semaine',
     isPromoted: Boolean(raw.isPromoted),
   };
+}
+
+export function mergeMarketplaceProducts(products: PortalProduct[]): PortalProduct[] {
+  const localProducts = getMarketplaceProducts().map((product: MarketplaceProductRecord) => normalizeProduct(product));
+  const knownIds = new Set(localProducts.map((product) => String(product.id)));
+
+  return [
+    ...localProducts,
+    ...products.filter((product) => !knownIds.has(String(product.id))),
+  ];
 }
 
 function matchesSearch(product: PortalProduct, search: string) {

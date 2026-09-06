@@ -16,8 +16,7 @@ export default function Products() {
   };
   const visibleProducts = React.useMemo(() => {
     if (!products) return products;
-    if (products.length <= 2) return products;
-    return products.slice(0, products.length - 2);
+    return products.slice(0, 10);
   }, [products]);
   const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
   const lastScrollY = React.useRef(0);
@@ -103,7 +102,7 @@ export default function Products() {
             <div className="product-overlay">
               <div className="product-info">
                 <h3 className="product-name">{product.name}</h3>
-                <p className="product-brand">{product.brand || product.creator_name || 'Boutique'}</p>
+            <p className="product-brand">{product.boutique_name || product.brand || product.creator_name || 'Boutique'}</p>
               </div>
             </div>
             <button
@@ -123,7 +122,7 @@ export default function Products() {
 
       {/* Load more / show less button */}
       <div className="load-more-container">
-        {products && products.length > 2 && (
+        {products && products.length > 10 && (
           <button
             className="load-more-btn"
             onClick={() => navigate('/products')}

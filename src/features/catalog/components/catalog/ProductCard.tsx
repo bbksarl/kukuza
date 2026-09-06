@@ -35,9 +35,15 @@ export const ProductCard: FC<ProductCardProps> = ({ product, onClick, onAddToCar
       {/* Content */}
       <div className="p-4">
         {/* Name */}
-          <button type="button" className="truncate text-left text-lg font-semibold text-gray-800 hover:text-primary" onClick={() => onClick?.(product.id)}>
+        <button type="button" className="truncate text-left text-lg font-semibold text-gray-800 hover:text-primary" onClick={() => onClick?.(product.id)}>
             {product.name}
           </button>
+
+        {product.boutiqueName && (
+          <p className="mt-1 truncate text-xs font-medium uppercase tracking-wide text-gray-500">
+            {product.boutiqueName}
+          </p>
+        )}
 
         {/* Description */}
         <p className="text-sm text-gray-600 line-clamp-2 mt-1">

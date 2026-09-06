@@ -109,6 +109,18 @@ export const mapProduct = (input: unknown): Product => {
     status: normalizeProductStatus(source.status, stock),
     createdAt: parseDate(source.createdAt ?? source.created_at),
     updatedAt: parseDate(source.updatedAt ?? source.updated_at),
+    boutiqueId: source.boutiqueId == null && source.shopId == null && source.creatorId == null
+      ? undefined
+      : String(source.boutiqueId ?? source.shopId ?? source.creatorId),
+    boutiqueName: typeof source.boutiqueName === 'string'
+      ? source.boutiqueName
+      : typeof source.shopName === 'string'
+        ? source.shopName
+        : typeof source.creatorName === 'string'
+          ? source.creatorName
+        : typeof source.brand === 'string'
+          ? source.brand
+          : undefined,
   };
 };
 

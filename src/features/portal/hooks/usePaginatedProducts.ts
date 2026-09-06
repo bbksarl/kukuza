@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getProducts } from '@/repositories/portal/catalogRepository';
-import { applyProductFilters, mockProducts, normalizeProduct, type PortalProduct, type ProductFilters } from '../data/catalog';
+import { applyProductFilters, mergeMarketplaceProducts, mockProducts, normalizeProduct, type PortalProduct, type ProductFilters } from '../data/catalog';
+import { subscribeToMarketplaceProducts } from '@/services/products/marketplaceProductStore';
 
 export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters: ProductFilters = {}) {
   const [allItems, setAllItems] = useState<PortalProduct[]>([]);
@@ -17,21 +18,24 @@ export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters
       try {
         const res = await getProducts(1, 1000);
         if (res && Array.isArray(res.items)) {
-          setAllItems(res.items.map((item: Record<string, unknown>) => normalizeProduct(item)));
+          setAllItems(mergeMarketplaceProducts(res.items.map((item: Record<string, unknown>) => normalizeProduct(item))));
         } else {
-          setAllItems(mockProducts);
+          setAllItems(mergeMarketplaceProducts(mockProducts));
         }
       } catch {
         // Keep the catalogue usable while the BFF is unavailable. The UI can
         // still render the local catalogue and apply search/filter parameters.
         setError(null);
-        setAllItems(mockProducts);
+        setAllItems(mergeMarketplaceProducts(mockProducts));
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
+    return subscribeToMarketplaceProducts(() => {
+      fetchProducts();
+    });
   }, []);
 
   useEffect(() => {
@@ -59,5 +63,5 @@ export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters
     setPage(initialPage);
   };
 
-  return { items, loading, error, page, limit, total, loadMore, refresh } as const;
+  return { items, allItems, loading, error, page, limit, total, loadMore, refresh } as const;
 }

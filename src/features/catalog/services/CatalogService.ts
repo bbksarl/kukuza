@@ -4,6 +4,7 @@
  */
 
 import { facadeClient } from '@/api/client';
+import { getMarketplaceProducts, type MarketplaceProductRecord } from '@/services/products/marketplaceProductStore';
 
 export interface Product {
   id: string;
@@ -15,6 +16,8 @@ export interface Product {
   creatorId: string;
   rating: number;
   reviewCount: number;
+  boutiqueId?: string;
+  boutiqueName?: string;
 }
 
 export interface Category {
@@ -35,6 +38,24 @@ export interface Review {
 }
 
 class CatalogService {
+  private mapMarketplaceProduct(product: MarketplaceProductRecord): Product {
+    const boutiqueId = product.boutiqueId ?? product.creatorId;
+
+    return {
+      id: String(product.id),
+      name: product.name,
+      description: product.description ?? '',
+      price: product.price,
+      image: product.image_url ?? product.image ?? '',
+      categoryId: product.category ?? '',
+      creatorId: boutiqueId == null ? '' : String(boutiqueId),
+      rating: product.rating ?? 0,
+      reviewCount: product.reviewCount ?? 0,
+      boutiqueId: boutiqueId == null ? undefined : String(boutiqueId),
+      boutiqueName: product.boutiqueName ?? product.creatorName ?? product.creator_name ?? product.brand,
+    };
+  }
+
   /**
    * Récupérer tous les produits
    */
@@ -50,9 +71,18 @@ class CatalogService {
     if (filters?.page) params.append('page', String(filters.page));
     if (filters?.limit) params.append('limit', String(filters.limit));
 
-    return facadeClient.get<{ products: Product[]; total: number }>(
+    const response = await facadeClient.get<{ products: Product[]; total: number }>(
       `/catalog/products?${params.toString()}`
     );
+
+    const localProducts = getMarketplaceProducts().map((product) => this.mapMarketplaceProduct(product));
+    const remoteIds = new Set(response.products.map((product) => String(product.id)));
+    const localOnlyProducts = localProducts.filter((product) => !remoteIds.has(product.id));
+
+    return {
+      products: [...localOnlyProducts, ...response.products],
+      total: response.total + localOnlyProducts.length,
+    };
   }
 
   /**

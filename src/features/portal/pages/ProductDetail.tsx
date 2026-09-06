@@ -10,9 +10,11 @@ import { useFavorites } from '@/providers/FavoritesProvider';
 import {
   formatFilterLabel,
   getPortalProductById,
+  mergeMarketplaceProducts,
   normalizeProduct,
   type PortalProduct,
 } from '../data/catalog';
+import Seo from '@/components/seo/Seo';
 
 type ProductRouteState = {
   product?: PortalProduct;
@@ -48,7 +50,7 @@ export default function ProductDetail() {
     getProducts(1, 1000)
       .then((response) => {
         if (cancelled) return;
-        const products = response?.items?.map((item) => normalizeProduct(item)) ?? [];
+        const products = mergeMarketplaceProducts(response?.items?.map((item) => normalizeProduct(item)) ?? []);
         setRemoteProduct(products.find((item) => String(item.id) === productId));
       })
       .finally(() => {
@@ -109,7 +111,7 @@ export default function ProductDetail() {
 
   const category = translateCatalogLabel(formatFilterLabel(product.category));
   const subcategory = translateCatalogLabel(formatFilterLabel(product.subcategory));
-  const creator = product.brand || product.creator_name;
+  const creator = product.boutique_name || product.brand || product.creator_name;
   const favoriteId = `product:${product.id}`;
   const liked = isFavorite(favoriteId);
   const addProductToCart = () => {
@@ -125,6 +127,20 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50">
+      <Seo
+        title={`${product.name} | KUKUZA`}
+        description={product.description || `Découvrez ${product.name} sur KUKUZA.`}
+        path={`/products/${product.id}`}
+        image={product.image_url}
+        type="product"
+        product={{
+          name: product.name,
+          description: product.description,
+          image: product.image_url,
+          price: product.price,
+          boutiqueName: product.boutique_name || product.brand || product.creator_name,
+        }}
+      />
       <Header />
       <main className="px-4 pb-16 pt-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[960px]">
@@ -184,7 +200,7 @@ export default function ProductDetail() {
                 <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 text-xs sm:text-sm">
                   <div>
                     <dt className="text-slate-500">{t('product.creator')}</dt>
-                    <dd className="mt-1 font-semibold text-slate-900">{product.creator_name || creator}</dd>
+                    <dd className="mt-1 font-semibold text-slate-900">{product.boutique_name || product.creator_name || creator}</dd>
                   </div>
                   <div>
                     <dt className="text-slate-500">{t('product.category')}</dt>

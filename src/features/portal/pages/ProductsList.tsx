@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/portal/Header';
@@ -6,8 +6,9 @@ import Footer from '../components/portal/Footer';
 import { usePaginatedProducts } from '../hooks/usePaginatedProducts';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useLanguage } from '@/core/i18n';
-import { formatFilterLabel, getNavTitle } from '../data/catalog';
+import { formatFilterLabel, getNavTitle, normalizeText } from '../data/catalog';
 import type { PortalProduct } from '../data/catalog';
+import Seo from '@/components/seo/Seo';
 
 function ProductGridSkeleton() {
   const { t } = useLanguage();
@@ -30,7 +31,7 @@ function ProductGridSkeleton() {
 
 function ProductResultCard({ product, onOpen }: { product: PortalProduct; onOpen: (product: PortalProduct) => void }) {
   const { t, language, translateCatalogLabel } = useLanguage();
-  const creator = product.brand || product.creator_name || 'Boutique';
+  const creator = product.boutique_name || product.brand || product.creator_name || 'Boutique';
   const currencyFormatter = new Intl.NumberFormat(language === 'en' ? 'en-US' : 'fr-FR', {
     style: 'currency',
     currency: 'EUR',
@@ -93,17 +94,71 @@ export default function ProductsList() {
   const nav = searchParams.get('nav');
   const filter = searchParams.get('filter');
   const [query, setQuery] = useState(search);
-  const { items: products, loading, error, loadMore, total } = usePaginatedProducts(1, 12, {
+  const { items: products, allItems: catalogProducts, loading, error, loadMore, total } = usePaginatedProducts(1, 12, {
     search,
     nav,
     filter,
   });
   const [sectionRef, isVisible] = useScrollAnimation();
   const hasActiveFilters = Boolean(search || nav || filter);
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(0);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setQuery(search);
   }, [search]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target as Node)) {
+        setIsSuggestionsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const suggestions = useMemo(() => {
+    const normalizedQuery = normalizeText(query.trim());
+    if (!normalizedQuery) return [];
+
+    return catalogProducts
+      .map((product) => {
+        const searchableFields = [
+          product.name,
+          product.boutique_name,
+          product.brand,
+          product.creator_name,
+          product.category,
+          product.subcategory,
+        ].filter(Boolean).map((value) => normalizeText(value));
+        const name = normalizeText(product.name);
+        const boutique = normalizeText(product.boutique_name || product.brand || product.creator_name);
+        const searchableText = searchableFields.join(' ');
+
+        if (!searchableText.includes(normalizedQuery)) return null;
+
+        const score = name.startsWith(normalizedQuery)
+          ? 0
+          : boutique.startsWith(normalizedQuery)
+            ? 1
+            : name.includes(normalizedQuery)
+              ? 2
+              : 3;
+
+        return { product, score };
+      })
+      .filter((suggestion): suggestion is { product: PortalProduct; score: number } => suggestion !== null)
+      .sort((left, right) => left.score - right.score || left.product.name.localeCompare(right.product.name))
+      .slice(0, 6)
+      .map(({ product }) => product);
+  }, [catalogProducts, query]);
+
+  useEffect(() => {
+    setActiveSuggestion(0);
+  }, [query]);
 
   const heading = useMemo(() => {
     if (search) return t('catalog.searchResults', { value: search });
@@ -112,7 +167,10 @@ export default function ProductsList() {
     return t('catalog.allProducts');
   }, [filter, nav, search, t, translateCatalogLabel]);
 
-  const clearFilters = () => setSearchParams({});
+  const clearFilters = () => {
+    setSearchParams({});
+    setIsSuggestionsOpen(false);
+  };
   const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextParams = new URLSearchParams(searchParams);
@@ -122,6 +180,36 @@ export default function ProductsList() {
     else nextParams.delete('q');
 
     setSearchParams(nextParams);
+    setIsSuggestionsOpen(false);
+  };
+
+  const selectSuggestion = (product: PortalProduct) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('q', product.name);
+    setQuery(product.name);
+    setSearchParams(nextParams);
+    setIsSuggestionsOpen(false);
+  };
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isSuggestionsOpen || suggestions.length === 0) {
+      if (event.key === 'Escape') setIsSuggestionsOpen(false);
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveSuggestion((current) => (current + 1) % suggestions.length);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveSuggestion((current) => (current - 1 + suggestions.length) % suggestions.length);
+    } else if (event.key === 'Enter' && suggestions[activeSuggestion]) {
+      event.preventDefault();
+      selectSuggestion(suggestions[activeSuggestion]);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      setIsSuggestionsOpen(false);
+    }
   };
   const openProduct = (product: PortalProduct) => {
     navigate(`/products/${product.id}`, { state: { product } });
@@ -129,6 +217,13 @@ export default function ProductsList() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-portal-bg">
+      <Seo
+        title={`${heading} | KUKUZA`}
+        description={search
+          ? `Découvrez les produits KUKUZA correspondant à « ${search} ».`
+          : 'Parcourez le catalogue KUKUZA : mode, accessoires, décoration et produits de créateurs africains.'}
+        path={search || nav || filter ? `/products${search ? `?q=${encodeURIComponent(search)}` : ''}` : '/products'}
+      />
       <Header />
       <main className="min-h-[calc(100vh-52px)] bg-slate-50 pt-16">
         <section ref={sectionRef} className={`products-section px-4 py-8 sm:px-6 lg:px-8 lg:py-12 ${isVisible ? 'fade-in' : ''}`}>
@@ -145,16 +240,68 @@ export default function ProductsList() {
 
                 <form className="flex w-full max-w-xl flex-col gap-2 sm:flex-row" onSubmit={submitSearch} role="search">
                   <label className="sr-only" htmlFor="products-search">{t('catalog.searchLabel')}</label>
-                  <div className="flex min-h-12 flex-1 items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 transition focus-within:border-teal-700 focus-within:bg-white focus-within:ring-2 focus-within:ring-teal-700/10">
-                    <Search size={18} aria-hidden="true" className="shrink-0 text-slate-400" />
-                    <input
-                      id="products-search"
-                      type="search"
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      placeholder={t('search.placeholder')}
-                      className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                    />
+                  <div ref={searchBoxRef} className="relative flex-1">
+                    <div className="flex min-h-12 items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 transition focus-within:border-teal-700 focus-within:bg-white focus-within:ring-2 focus-within:ring-teal-700/10">
+                      <Search size={18} aria-hidden="true" className="shrink-0 text-slate-400" />
+                      <input
+                        id="products-search"
+                        type="search"
+                        value={query}
+                        onChange={(event) => {
+                          setQuery(event.target.value);
+                          setIsSuggestionsOpen(true);
+                        }}
+                        onFocus={() => setIsSuggestionsOpen(Boolean(query.trim()))}
+                        onKeyDown={handleSearchKeyDown}
+                        placeholder={t('search.placeholder')}
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={isSuggestionsOpen && suggestions.length > 0}
+                        aria-controls="catalog-search-suggestions"
+                        aria-activedescendant={isSuggestionsOpen && suggestions[activeSuggestion] ? `catalog-suggestion-${suggestions[activeSuggestion].id}` : undefined}
+                        className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                      />
+                    </div>
+
+                    {isSuggestionsOpen && suggestions.length > 0 && (
+                      <div
+                        id="catalog-search-suggestions"
+                        role="listbox"
+                        className="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+                      >
+                        <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                          {t('catalog.suggestions')}
+                        </p>
+                        {suggestions.map((product, index) => (
+                          <button
+                            key={product.id}
+                            id={`catalog-suggestion-${product.id}`}
+                            type="button"
+                            role="option"
+                            aria-selected={index === activeSuggestion}
+                            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition ${index === activeSuggestion ? 'bg-teal-50' : 'hover:bg-slate-50'}`}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onMouseEnter={() => setActiveSuggestion(index)}
+                            onClick={() => selectSuggestion(product)}
+                          >
+                            <img
+                              src={product.image_url}
+                              alt=""
+                              className="h-10 w-10 rounded-lg bg-slate-100 object-cover"
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-semibold text-slate-900">{product.name}</span>
+                              <span className="block truncate text-xs text-slate-500">
+                                {product.boutique_name || product.brand || product.creator_name}
+                              </span>
+                            </span>
+                            <span className="shrink-0 text-xs font-semibold text-teal-700">
+                              {translateCatalogLabel(formatFilterLabel(product.category))}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <button
                     type="submit"

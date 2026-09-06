@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getProducts } from '@/repositories/portal/catalogRepository';
-import { mockProducts, normalizeProduct, type PortalProduct } from '../data/catalog';
+import { mergeMarketplaceProducts, mockProducts, normalizeProduct, type PortalProduct } from '../data/catalog';
+import { subscribeToMarketplaceProducts } from '@/services/products/marketplaceProductStore';
 
 export function useProducts() {
   const [products, setProducts] = useState<PortalProduct[]>([]);
@@ -12,23 +13,26 @@ export function useProducts() {
       try {
         const data = await getProducts(1, 1000); // fetch many for non-paginated use
         if (data && Array.isArray(data.items)) {
-          setProducts(data.items.map((item) => normalizeProduct(item)));
+          setProducts(mergeMarketplaceProducts(data.items.map((item) => normalizeProduct(item))));
         } else if (Array.isArray(data)) {
-          setProducts((data as Record<string, unknown>[]).map((item) => normalizeProduct(item)));
+          setProducts(mergeMarketplaceProducts((data as Record<string, unknown>[]).map((item) => normalizeProduct(item))));
         }
-        else setProducts(mockProducts);
+        else setProducts(mergeMarketplaceProducts(mockProducts));
       } catch (err: unknown) {
         // The local catalogue is an intentional fallback while the BFF is
         // unavailable, so it should remain usable instead of replacing the
         // product grid with an error state.
         setError(null);
-        setProducts(mockProducts);
+        setProducts(mergeMarketplaceProducts(mockProducts));
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    void fetchProducts();
+    return subscribeToMarketplaceProducts(() => {
+      void fetchProducts();
+    });
   }, []);
 
   return { products, loading, error } as const;

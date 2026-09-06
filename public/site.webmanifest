@@ -1,0 +1,17 @@
+{
+  "name": "KUKUZA — Marketplace africaine",
+  "short_name": "KUKUZA",
+  "description": "La marketplace africaine des créateurs et boutiques premium.",
+  "lang": "fr-FR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#287460",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

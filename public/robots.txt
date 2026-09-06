@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /auth/
+Disallow: /shop/
+Disallow: /admin/
+Disallow: /cart
+Disallow: /favorites
+Disallow: /forbidden
+Disallow: /catalog/search
+
+Sitemap: https://kukuza.com/sitemap.xml

@@ -27,6 +27,8 @@ export interface Product {
   status: ProductStatus;
   createdAt: Date;
   updatedAt: Date;
+  boutiqueId?: string;
+  boutiqueName?: string;
 }
 
 export interface DashboardStats {

@@ -61,6 +61,11 @@ export const ProductDetail: FC = () => {
               <p className="text-gray-600 mt-2 text-lg">
                 {product.description}
               </p>
+              {product.boutiqueName && (
+                <p className="text-gray-500 mt-2 text-sm font-medium">
+                  {product.boutiqueName}
+                </p>
+              )}
             </div>
 
             {/* Rating */}

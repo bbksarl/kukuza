@@ -8,6 +8,12 @@ import {
   getMockSales,
 } from '../../utils/mockData';
 import { mapDashboardOverview, mapProduct, mapSaleItem } from './shopMappers';
+import {
+  getCurrentBoutique,
+  getMarketplaceProducts,
+  saveMarketplaceProduct,
+  type MarketplaceProductRecord,
+} from '@/services/products/marketplaceProductStore';
 
 const withFallback = async <T>(
   operation: string,
@@ -42,6 +48,47 @@ const createProductPayload = (input: CreateProductInput): FormData => {
   return payload;
 };
 
+const extractList = (response: unknown): unknown[] => {
+  if (Array.isArray(response)) return response;
+
+  const source = (response ?? {}) as Record<string, unknown>;
+  if (Array.isArray(source.data)) return source.data;
+  if (Array.isArray(source.products)) return source.products;
+  if (Array.isArray(source.items)) return source.items;
+  return [];
+};
+
+const extractProduct = (response: unknown): unknown => {
+  const source = (response ?? {}) as Record<string, unknown>;
+  return source.product ?? source.data ?? response;
+};
+
+const saveProductForMarketplace = (product: Product): Product => {
+  const boutique = getCurrentBoutique();
+  const productWithBoutique: Product = {
+    ...product,
+    boutiqueId: product.boutiqueId ?? boutique.id,
+    boutiqueName: product.boutiqueName ?? boutique.name,
+  };
+
+  const record: MarketplaceProductRecord = {
+    ...productWithBoutique,
+    image_url: productWithBoutique.image,
+    boutiqueId: productWithBoutique.boutiqueId,
+    boutiqueName: productWithBoutique.boutiqueName,
+    creatorId: productWithBoutique.boutiqueId,
+    creatorName: productWithBoutique.boutiqueName,
+    creator_name: productWithBoutique.boutiqueName,
+    brand: productWithBoutique.boutiqueName,
+    stock: productWithBoutique.stock,
+    createdAt: productWithBoutique.createdAt.toISOString(),
+    updatedAt: productWithBoutique.updatedAt.toISOString(),
+  };
+
+  saveMarketplaceProduct(record);
+  return productWithBoutique;
+};
+
 export const shopService = {
   async getDashboardOverview(): Promise<DashboardOverview> {
     return withFallback(
@@ -59,15 +106,18 @@ export const shopService = {
       'getProducts',
       async () => {
         const response = await requestJson<unknown>('/products');
-        const list = Array.isArray(response)
-          ? response
-          : Array.isArray((response as { data?: unknown[] })?.data)
-            ? (response as { data: unknown[] }).data
-            : [];
-
-        return list.map(mapProduct);
+        const remoteProducts = extractList(response).map(mapProduct);
+        const localProducts = getMarketplaceProducts().map(mapProduct);
+        const remoteIds = new Set(remoteProducts.map((product) => product.id));
+        return [
+          ...localProducts.filter((product) => !remoteIds.has(product.id)),
+          ...remoteProducts,
+        ];
       },
-      () => getMockProducts()
+      () => [
+        ...getMarketplaceProducts().map(mapProduct),
+        ...getMockProducts(),
+      ]
     );
   },
 
@@ -97,9 +147,9 @@ export const shopService = {
           body: createProductPayload(input),
         });
 
-        return mapProduct(response);
+        return saveProductForMarketplace(mapProduct(extractProduct(response)));
       },
-      () => buildMockCreatedProduct(input)
+      () => saveProductForMarketplace(buildMockCreatedProduct(input))
     );
   },
 };
