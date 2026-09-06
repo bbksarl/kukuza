@@ -7,6 +7,7 @@ import { defaultBestSeller, getBestSellerBySlug } from '../data/bestSellers';
 import { useLanguage } from '@/core/i18n';
 import { useCart } from '@/providers/CartProvider';
 import { useFavorites } from '@/providers/FavoritesProvider';
+import Seo from '@/components/seo/Seo';
 
 function parsePrice(value: string) {
   const parsed = Number(value.replace(/[^0-9,.-]/g, '').replace(',', '.'));
@@ -65,6 +66,20 @@ export default function BestSellerDetail() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50">
+      <Seo
+        title={`${t(product.titleKey)} | KUKUZA`}
+        description={t(product.descriptionKey)}
+        path={`/best-sellers/${product.slug}`}
+        image={product.src}
+        type="product"
+        product={{
+          name: t(product.titleKey),
+          description: t(product.descriptionKey),
+          image: product.src,
+          price: price ?? undefined,
+          boutiqueName: 'KUKUZA',
+        }}
+      />
       <Header />
       <main className="px-4 pb-16 pt-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[960px]">

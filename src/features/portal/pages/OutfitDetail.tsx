@@ -5,6 +5,7 @@ import Header from '../components/portal/Header';
 import Footer from '../components/portal/Footer';
 import { useLanguage } from '@/core/i18n';
 import { getOutfitById } from '../data/outfits';
+import Seo from '@/components/seo/Seo';
 
 type OutfitRouteState = {
   imageIndex?: number;
@@ -34,6 +35,12 @@ export default function OutfitDetail() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50">
+      <Seo
+        title={`${t(outfit.titleKey)} | KUKUZA`}
+        description={t(outfit.descriptionKey)}
+        path={`/outfits/${outfit.id}`}
+        image={outfit.images[0].src}
+      />
       <Header />
       <main className="px-4 pb-20 pt-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">

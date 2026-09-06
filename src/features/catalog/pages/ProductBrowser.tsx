@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../hooks/useProducts';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { useLanguage } from '@/core/i18n';
+import Seo from '@/components/seo/Seo';
 
 const PRODUCTS_PER_PAGE = 20;
 
@@ -71,6 +72,11 @@ export const ProductBrowser: FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Seo
+        title="Catalogue produits | KUKUZA"
+        description="Explorez le catalogue KUKUZA et découvrez les produits proposés par nos boutiques et créateurs."
+        path="/catalog"
+      />
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-6">

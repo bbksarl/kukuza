@@ -9,10 +9,16 @@ import BestSellers from '../components/portal/BestSellers';
 import Offre from '../components/portal/Offre';
 import InspirationSection from '../components/portal/InspirationSection';
 import Footer from '../components/portal/Footer';
+import Seo from '@/components/seo/Seo';
 
 export default function Home(){
   return (
     <div className="bg-portal-bg min-h-screen overflow-x-hidden">
+      <Seo
+        title="KUKUZA — La marketplace africaine des créateurs"
+        description="Découvrez des produits premium, des créateurs africains et des boutiques indépendantes sur KUKUZA."
+        path="/"
+      />
       <Header />
       <main className="min-h-[calc(100vh-52px)] flex flex-col bg-gray-50 w-full overflow-x-hidden">
         <Banner showCategories={true} logoSrc="/assets/logo.png" />
