@@ -15,7 +15,6 @@ const DashboardLayout = ({ children, activePath }: DashboardLayoutProps) => {
       <Sidebar activePath={activePath} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className={`md:ml-[80px] transition-all duration-300 ${isSidebarOpen ? 'md:opacity-100 opacity-0 pointer-events-none' : 'opacity-100'}`}>
         <Header 
-          notificationCount={1} 
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
         />
         <main className="shop-dashboard-main min-h-screen">

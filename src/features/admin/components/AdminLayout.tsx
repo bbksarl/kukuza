@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BarChart3, Boxes, Building2, LayoutDashboard, LogOut, Menu, ShieldCheck, Users, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/core/i18n';
+import NotificationsButton from '@/components/notifications/NotificationsButton';
 
 const developmentAdminEmail = import.meta.env.VITE_DEFAULT_ADMIN_EMAIL ?? 'Compte administrateur local';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -99,6 +100,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <p className="mt-1 text-sm text-slate-500">{t('admin.globalMonitoring')}</p>
             </div>
             <div className="ml-auto flex items-center gap-3">
+              <NotificationsButton role="admin" />
               <button
                 type="button"
                 className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-teal-600 hover:text-teal-700"

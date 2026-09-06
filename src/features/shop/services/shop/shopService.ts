@@ -81,6 +81,8 @@ const saveProductForMarketplace = (product: Product): Product => {
     creator_name: productWithBoutique.boutiqueName,
     brand: productWithBoutique.boutiqueName,
     stock: productWithBoutique.stock,
+    gender: productWithBoutique.gender,
+    ageRange: productWithBoutique.ageRange,
     createdAt: productWithBoutique.createdAt.toISOString(),
     updatedAt: productWithBoutique.updatedAt.toISOString(),
   };

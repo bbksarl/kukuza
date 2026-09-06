@@ -29,6 +29,8 @@ export interface Product {
   updatedAt: Date;
   boutiqueId?: string;
   boutiqueName?: string;
+  gender?: string;
+  ageRange?: string;
 }
 
 export interface DashboardStats {

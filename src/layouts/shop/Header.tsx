@@ -1,20 +1,19 @@
 import React from 'react';
-import { Bell, User, Menu } from 'lucide-react';
+import { User, Menu } from 'lucide-react';
 import logo from '@/assets/shop/logo.png';
 import { useLanguage } from '@/core/i18n';
 import { DEFAULT_BOUTIQUE } from '@/features/shop/data/defaultBoutique';
+import NotificationsButton from '@/components/notifications/NotificationsButton';
 
 interface HeaderProps {
   userName?: string;
   userEmail?: string;
-  notificationCount?: number;
   onMenuClick?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   userName = DEFAULT_BOUTIQUE.ownerName,
   userEmail = DEFAULT_BOUTIQUE.ownerName,
-  notificationCount = 0,
   onMenuClick = () => {}
 }) => {
   const { t, language, setLanguage } = useLanguage();
@@ -45,14 +44,7 @@ const Header: React.FC<HeaderProps> = ({
       {/* Right side - Notifications and User */}
       <div className="flex items-center gap-4 md:gap-6">
         {/* Notifications */}
-        <button className="icon-btn relative" title={t('shop.notifications')} aria-label={t('shop.notifications')}>
-          <Bell size={20} />
-          {notificationCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-(--color-error) text-white text-2xs font-semibold rounded-full flex items-center justify-center">
-              {notificationCount}
-            </span>
-          )}
-        </button>
+        <NotificationsButton role="boutique" />
 
         <select
           value={language}

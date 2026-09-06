@@ -91,16 +91,18 @@ export default function ProductsList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('q')?.trim() ?? '';
+  const gender = searchParams.get('gender')?.trim() ?? '';
   const nav = searchParams.get('nav');
   const filter = searchParams.get('filter');
   const [query, setQuery] = useState(search);
   const { items: products, allItems: catalogProducts, loading, error, loadMore, total } = usePaginatedProducts(1, 12, {
     search,
+    gender,
     nav,
     filter,
   });
   const [sectionRef, isVisible] = useScrollAnimation();
-  const hasActiveFilters = Boolean(search || nav || filter);
+  const hasActiveFilters = Boolean(search || gender || nav || filter);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const searchBoxRef = useRef<HTMLDivElement>(null);
@@ -162,10 +164,21 @@ export default function ProductsList() {
 
   const heading = useMemo(() => {
     if (search) return t('catalog.searchResults', { value: search });
+    if (gender) {
+      const genderLabels: Record<string, string> = {
+        femme: t('catalog.women'),
+        women: t('catalog.women'),
+        homme: t('catalog.men'),
+        men: t('catalog.men'),
+        enfant: t('catalog.children'),
+        children: t('catalog.children'),
+      };
+      return genderLabels[normalizeText(gender)] ?? gender;
+    }
     if (filter) return translateCatalogLabel(formatFilterLabel(filter));
     if (nav) return translateCatalogLabel(getNavTitle(nav));
     return t('catalog.allProducts');
-  }, [filter, nav, search, t, translateCatalogLabel]);
+  }, [filter, gender, nav, search, t, translateCatalogLabel]);
 
   const clearFilters = () => {
     setSearchParams({});
@@ -223,7 +236,7 @@ export default function ProductsList() {
           ? `Découvrez les produits KUKUZA correspondant à « ${search} ».`
           : 'Parcourez le catalogue KUKUZA : mode, accessoires, décoration et produits de créateurs africains.'}
         path="/products"
-        noIndex={Boolean(search || nav || filter)}
+        noIndex={Boolean(search || gender || nav || filter)}
       />
       <Header />
       <main className="min-h-[calc(100vh-52px)] bg-slate-50 pt-16">
@@ -317,6 +330,11 @@ export default function ProductsList() {
                     {search && (
                       <span className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">
                         {t('catalog.searchChip')} : {search}
+                      </span>
+                    )}
+                    {gender && (
+                      <span className="rounded-full bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-800 ring-1 ring-violet-700/10">
+                        {t('catalog.gender')} : {heading}
                       </span>
                     )}
                     {nav && (

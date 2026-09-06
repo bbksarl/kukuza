@@ -49,6 +49,8 @@ export const buildMockCreatedProduct = (input: CreateProductInput): Product => {
     stock: input.quantity,
     image: input.images[0] ? URL.createObjectURL(input.images[0]) : undefined,
     status: input.quantity === 0 ? 'out_of_stock' : input.quantity <= 10 ? 'low_stock' : 'in_stock',
+    gender: input.gender,
+    ageRange: input.ageRange,
     createdAt: now,
     updatedAt: now
   };

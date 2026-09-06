@@ -121,6 +121,12 @@ export const mapProduct = (input: unknown): Product => {
         : typeof source.brand === 'string'
           ? source.brand
           : undefined,
+    gender: typeof source.gender === 'string' ? source.gender : undefined,
+    ageRange: typeof source.ageRange === 'string'
+      ? source.ageRange
+      : typeof source.age_range === 'string'
+        ? source.age_range
+        : undefined,
   };
 };
 

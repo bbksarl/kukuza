@@ -7,6 +7,8 @@ export interface MarketplaceProductRecord {
   image_url?: string;
   category?: string;
   subcategory?: string;
+  gender?: string;
+  ageRange?: string;
   description?: string;
   stock?: number;
   quantity?: number;

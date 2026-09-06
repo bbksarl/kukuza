@@ -2,10 +2,12 @@ import React from 'react';
 import { useCategories } from '../../hooks/useCategories';
 import type { CatalogCategory } from '@/types';
 import { useLanguage } from '@/core/i18n';
+import { useNavigate } from 'react-router-dom';
 
 export default function Banner({ showCategories = true, logoSrc = '/assets/logo.png' }) {
   const { categories } = useCategories();
   const { t, translateCatalogLabel } = useLanguage();
+  const navigate = useNavigate();
 
   return (
     <section
@@ -58,13 +60,14 @@ export default function Banner({ showCategories = true, logoSrc = '/assets/logo.
         <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-10">
           <div className="pointer-events-auto flex w-full max-w-[36rem] flex-nowrap justify-center gap-2 px-4">
             {categories.map((category: CatalogCategory) => (
-              <a
+              <button
                 key={category.id}
-                href={`#${category.name.toLowerCase()}`}
+                type="button"
                 className="shrink-0 whitespace-nowrap rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-[12px] font-semibold uppercase tracking-wider text-white shadow transition hover:-translate-y-0.5 hover:bg-white/20 hover:shadow-lg"
+                onClick={() => navigate(`/products?gender=${encodeURIComponent(category.name)}`)}
               >
                 {translateCatalogLabel(category.name)}
-              </a>
+              </button>
             ))}
           </div>
         </div>

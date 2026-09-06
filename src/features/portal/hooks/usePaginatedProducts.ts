@@ -40,11 +40,11 @@ export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters
 
   useEffect(() => {
     setPage(initialPage);
-  }, [initialPage, filters.search, filters.nav, filters.filter]);
+  }, [initialPage, filters.search, filters.gender, filters.nav, filters.filter]);
 
   const filteredItems = useMemo(
     () => applyProductFilters(allItems, filters),
-    [allItems, filters.search, filters.nav, filters.filter]
+    [allItems, filters.search, filters.gender, filters.nav, filters.filter]
   );
 
   const items = useMemo(

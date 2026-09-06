@@ -36,6 +36,8 @@ export type PortalProduct = {
   boutique_name?: string;
   category: 'vetements' | 'chaussures' | 'decor' | 'sacs' | 'accessoires' | 'bijoux';
   subcategory: string;
+  gender?: string;
+  ageRange?: string;
   sizes: string[];
   style?: string;
   material?: string;
@@ -47,6 +49,7 @@ export type PortalProduct = {
 
 export type ProductFilters = {
   search?: string;
+  gender?: string | null;
   nav?: string | null;
   filter?: string | null;
 };
@@ -187,6 +190,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p1.png',
     brand: 'Maison Nene',
     creator_name: 'Nene Yayah',
+    gender: 'Femme',
     category: 'vetements',
     subcategory: 'Robes',
     sizes: ['S', 'M', 'L'],
@@ -204,6 +208,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p2.png',
     brand: 'Atelier Rabbal',
     creator_name: 'Atelier Rabbal',
+    gender: 'Femme',
     category: 'vetements',
     subcategory: 'Tops',
     sizes: ['XS', 'S', 'M'],
@@ -220,6 +225,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p3.png',
     brand: 'BTOURE',
     creator_name: 'BTOURE',
+    gender: 'Femme',
     category: 'vetements',
     subcategory: 'Pantalons',
     sizes: ['M', 'L', 'XL'],
@@ -237,6 +243,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p4.png',
     brand: 'ByMakan',
     creator_name: 'ByMakan',
+    gender: 'Homme',
     category: 'vetements',
     subcategory: 'Vestes & Manteaux',
     sizes: ['M', 'L'],
@@ -253,6 +260,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p5.png',
     brand: 'Owens',
     creator_name: 'Owens',
+    gender: 'Homme',
     category: 'chaussures',
     subcategory: 'Sneakers',
     sizes: ['40', '41', '42'],
@@ -269,6 +277,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p6.png',
     brand: 'Colle Sow Ardo',
     creator_name: 'Colle Sow Ardo',
+    gender: 'Femme',
     category: 'chaussures',
     subcategory: 'Sandales',
     sizes: ['38', '39', '40'],
@@ -284,6 +293,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p7.png',
     brand: 'Jeyna A',
     creator_name: 'Jeyna A',
+    gender: 'Femme',
     category: 'chaussures',
     subcategory: 'Escarpins',
     sizes: ['37', '38', '39'],
@@ -299,6 +309,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p8.png',
     brand: 'Algueye',
     creator_name: 'Algueye',
+    gender: 'Femme',
     category: 'sacs',
     subcategory: 'Tote',
     sizes: ['Unique'],
@@ -314,6 +325,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p9.png',
     brand: 'Sokoundou',
     creator_name: 'Sokoundou',
+    gender: 'Femme',
     category: 'sacs',
     subcategory: 'Clutch',
     sizes: ['Unique'],
@@ -330,6 +342,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p10.png',
     brand: 'Maison Lumiere',
     creator_name: 'Bellesansmaquillage',
+    gender: 'Unisexe',
     category: 'decor',
     subcategory: 'Luminaires',
     sizes: ['Unique'],
@@ -346,6 +359,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p11.png',
     brand: 'Textile Dakar',
     creator_name: 'Bellesansmaquillage',
+    gender: 'Unisexe',
     category: 'decor',
     subcategory: 'Textiles & Literie',
     sizes: ['Unique'],
@@ -362,6 +376,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p12.png',
     brand: 'Maison Nene',
     creator_name: 'Nene Yayah',
+    gender: 'Femme',
     category: 'accessoires',
     subcategory: 'Ceintures',
     sizes: ['S', 'M', 'L'],
@@ -378,6 +393,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p3.png',
     brand: 'ByMakan',
     creator_name: 'ByMakan',
+    gender: 'Homme',
     category: 'accessoires',
     subcategory: 'Lunettes',
     sizes: ['Unique'],
@@ -393,6 +409,7 @@ export const mockProducts: PortalProduct[] = [
     image_url: '/assets/products/p6.png',
     brand: 'Atelier Rabbal',
     creator_name: 'Atelier Rabbal',
+    gender: 'Femme',
     category: 'accessoires',
     subcategory: 'Bijoux fins',
     sizes: ['Unique'],
@@ -475,6 +492,12 @@ export function normalizeProduct(raw: Record<string, unknown>): PortalProduct {
     boutique_name: boutiqueName || brand,
     category,
     subcategory: typeof raw.subcategory === 'string' && raw.subcategory ? raw.subcategory : categoryLabelMap[category],
+    gender: typeof raw.gender === 'string' ? raw.gender : undefined,
+    ageRange: typeof raw.ageRange === 'string'
+      ? raw.ageRange
+      : typeof raw.age_range === 'string'
+        ? raw.age_range
+        : undefined,
     sizes: Array.isArray(raw.sizes) ? raw.sizes.filter((size): size is string => typeof size === 'string') : [],
     style: typeof raw.style === 'string' ? raw.style : undefined,
     material: typeof raw.material === 'string' ? raw.material : undefined,
@@ -589,13 +612,49 @@ function matchesDropdownFilter(product: PortalProduct, nav: NavType, filter: str
   return true;
 }
 
+function matchesGender(product: PortalProduct, gender: string) {
+  const normalizedGender = normalizeText(product.gender);
+  const normalizedAgeRange = normalizeText(product.ageRange);
+  const normalizedFilter = normalizeText(gender);
+
+  if (normalizedFilter === 'enfant' || normalizedFilter === 'children') {
+    return normalizedAgeRange === 'enfant'
+      || normalizedAgeRange === 'children'
+      || normalizedGender.includes('fille')
+      || normalizedGender.includes('garcon')
+      || normalizedGender.includes('child');
+  }
+
+  if (normalizedFilter === 'femme' || normalizedFilter === 'women') {
+    return normalizedGender.includes('femme')
+      || normalizedGender.includes('female')
+      || normalizedGender.includes('woman')
+      || normalizedGender.includes('fille')
+      || normalizedGender.includes('unisexe')
+      || normalizedGender.includes('unisex');
+  }
+
+  if (normalizedFilter === 'homme' || normalizedFilter === 'men') {
+    return normalizedGender.includes('homme')
+      || normalizedGender.includes('male')
+      || normalizedGender.includes('man')
+      || normalizedGender.includes('garcon')
+      || normalizedGender.includes('unisexe')
+      || normalizedGender.includes('unisex');
+  }
+
+  return normalizedGender === normalizedFilter || normalizedAgeRange === normalizedFilter;
+}
+
 export function applyProductFilters(products: PortalProduct[], filters: ProductFilters) {
   const search = filters.search?.trim() ?? '';
   const nav = (filters.nav as NavType | null) ?? null;
   const filter = filters.filter?.trim() ?? '';
+  const gender = filters.gender?.trim() ?? '';
 
   return products.filter((product) => {
     if (!matchesSearch(product, search)) return false;
+    if (gender && !matchesGender(product, gender)) return false;
     if (!nav) return true;
     if (!filter) {
       if (nav === 'promotion') return product.isPromoted || product.price <= 100;
