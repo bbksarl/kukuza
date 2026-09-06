@@ -222,7 +222,8 @@ export default function ProductsList() {
         description={search
           ? `Découvrez les produits KUKUZA correspondant à « ${search} ».`
           : 'Parcourez le catalogue KUKUZA : mode, accessoires, décoration et produits de créateurs africains.'}
-        path={search || nav || filter ? `/products${search ? `?q=${encodeURIComponent(search)}` : ''}` : '/products'}
+        path="/products"
+        noIndex={Boolean(search || nav || filter)}
       />
       <Header />
       <main className="min-h-[calc(100vh-52px)] bg-slate-50 pt-16">

@@ -27,6 +27,7 @@ export type NavItem = {
 export type PortalProduct = {
   id: number | string;
   name: string;
+  description?: string;
   price: number;
   image_url: string;
   brand: string;
@@ -465,6 +466,7 @@ export function normalizeProduct(raw: Record<string, unknown>): PortalProduct {
   return {
     id,
     name: typeof raw.name === 'string' && raw.name ? raw.name : 'Produit Kukuza',
+    description: typeof raw.description === 'string' ? raw.description : undefined,
     price: typeof raw.price === 'number' ? raw.price : Number(raw.price ?? 0),
     image_url: image,
     brand,
