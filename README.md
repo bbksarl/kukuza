@@ -40,6 +40,14 @@ Les données fictives nécessitent `VITE_ENABLE_API_MOCKS=true`. Les comptes adm
 
 Les comptes de démonstration n'autorisent aucune opération sur le backend. Le backend reste responsable des rôles, des boutiques accessibles et des permissions.
 
+## Organisation du catalogue
+
+`ProductsList.tsx` gère les filtres dans l'URL et compose les composants de `components/catalog/` : recherche, carte produit et chargement. La sélection des suggestions est isolée dans `utils/productSuggestions.ts` ; les suggestions utilisent uniquement les produits déjà chargés. La recherche complète est envoyée à l'API lors de la validation.
+
+`Header.tsx` compose les éléments de `components/header/`. Le hook `useHeaderNavigation` centralise la navigation et le panneau ouvert (menu, filtres, recherche ou langue), ainsi que sa fermeture au clavier ou lors d'un changement de route.
+
+Les appels réseau restent dans les services et la façade HTTP. `usePaginatedProducts` gère l'annulation des anciennes recherches, conserve les produits pendant le chargement suivant et permet de réessayer la page en échec.
+
 ## Contrôles
 
 ```bash
@@ -52,6 +60,12 @@ npm run check
 ```
 
 ESLint vérifie notamment les règles des hooks et leurs dépendances. Les tests couvrent la session, les formulaires, les commandes, la pagination, les erreurs réseau et l'interface. La CI exécute le lint, TypeScript, les tests et le build.
+
+Les parcours de `ProductsList.test.tsx` simulent les réponses de `fetch` en conservant la vraie façade HTTP, les services et les validations Zod. Ils couvrent la recherche et le retour navigateur, les suggestions au clavier, la pagination avec reprise après erreur, les réponses invalides et les résultats vides. Les exemples de réponses sont dans `tests/fixtures/catalog.ts`. Aucun serveur C# ni mode de démonstration n'est nécessaire pour les exécuter :
+
+```bash
+npm test -- src/features/portal/pages/ProductsList.test.tsx src/features/portal/components/portal/Header.test.tsx
+```
 
 ## Docker / Nginx
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ZodError } from 'zod';
 import { getProducts } from '@/repositories/portal/catalogRepository';
 import { applyProductFilters, mergeMarketplaceProducts, mockProducts, normalizeProduct, type PortalProduct, type ProductFilters } from '../data/catalog';
 import { subscribeToMarketplaceProducts } from '@/services/products/marketplaceProductStore';
@@ -13,7 +14,8 @@ export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters
   const controller = useRef<AbortController | null>(null);
   const busy = useRef(false);
   const nextPage = useRef(initialPage);
-  const hasMore = useRef(true);
+  const [hasMore, setHasMore] = useState(true);
+  const failedRequest = useRef<{ page: number; reset: boolean } | null>(null);
   const limit = Math.min(100, Math.max(1, initialLimit));
   const { search, gender, nav, filter } = filters;
 
@@ -24,7 +26,12 @@ export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters
     busy.current = true;
     setLoading(true);
     setError(null);
-    if (reset) { setItems([]); setTotal(0); }
+    failedRequest.current = null;
+    if (reset) {
+      setItems([]);
+      setTotal(0);
+      setPage(requestedPage);
+    }
     try {
       let data;
       try {
@@ -43,9 +50,14 @@ export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters
       setTotal(data.total);
       setPage(data.page);
       nextPage.current = data.page + 1;
-      hasMore.current = data.items.length > 0 && data.page * data.limit < data.total;
+      setHasMore(data.items.length > 0 && data.page * data.limit < data.total);
     } catch (error) {
-      if (!request.signal.aborted) setError(error instanceof Error ? error.message : 'Catalogue indisponible.');
+      if (!request.signal.aborted) {
+        failedRequest.current = { page: requestedPage, reset };
+        setError(error instanceof ZodError
+          ? 'Les produits ne peuvent pas être affichés pour le moment.'
+          : error instanceof Error ? error.message : 'Catalogue indisponible.');
+      }
     } finally {
       if (!request.signal.aborted) { busy.current = false; setLoading(false); }
     }
@@ -53,7 +65,7 @@ export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters
 
   const refresh = useCallback(() => {
     nextPage.current = initialPage;
-    hasMore.current = true;
+    setHasMore(true);
     void fetchPage(initialPage, true);
   }, [fetchPage, initialPage]);
 
@@ -64,7 +76,11 @@ export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters
   }, [refresh]);
 
   const loadMore = () => {
-    if (!busy.current && hasMore.current) void fetchPage(nextPage.current, false);
+    if (!busy.current && hasMore) void fetchPage(nextPage.current, false);
   };
-  return { items, allItems: items, loading, error, page, limit, total, loadMore, refresh } as const;
+  const retry = () => {
+    const failed = failedRequest.current;
+    if (!busy.current && failed) void fetchPage(failed.page, failed.reset);
+  };
+  return { items, allItems: items, loading, error, page, limit, total, hasMore, loadMore, refresh, retry } as const;
 }
