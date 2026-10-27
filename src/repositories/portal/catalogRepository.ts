@@ -2,6 +2,7 @@ export {
   getCategories,
   getCreators,
   getProducts,
+  getProduct,
 } from '@/features/portal/services/api';
 export type {
   CatalogCategory,

@@ -5,7 +5,6 @@ import { useForm } from '../hooks/useForm';
 import { useAuth } from '../hooks/useAuth';
 import { boutiqueValidationSchema } from '../utils/validation';
 import { AuthLayout } from '@/layouts/auth/AuthLayout';
-import { config } from '../config/environment';
 import type { BoutiqueProfileData } from '../domain/auth/types';
 import { useLanguage } from '@/core/i18n';
 
@@ -51,7 +50,7 @@ const COUNTRIES: string[] = [
 ];
 
 interface BoutiqueRegisterPageProps {
-  userData: { name: string; email: string; password: string };
+  userData: { name: string; username: string; email: string; password: string };
   onBack: () => void;
 }
 
@@ -84,7 +83,7 @@ export const BoutiqueRegisterPage: FC<BoutiqueRegisterPageProps> = ({ userData, 
         logo: logoFile,
       };
       const result = await register({ ...userData, isBoutique: true, boutique });
-      window.location.assign(result.redirectUrl ?? config.routes.storefrontUrl);
+      window.location.assign(result.redirectUrl ?? '/shop/dashboard');
     } catch {
     }
   };

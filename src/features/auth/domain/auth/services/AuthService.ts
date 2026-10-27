@@ -3,12 +3,11 @@ import { Credentials } from '../entities/Credentials';
 import { User } from '../entities/User';
 import { logger } from '../../../utils/logger';
 import { errorMonitor } from '../../../utils/errorMonitor';
-import { validatePasswordStrength } from '../../../utils/passwordSecurity';
+import { registerInputSchema } from '../schemas';
 import type { AuthResult, RegisterData } from '../types';
-import { getDevelopmentBoutique } from '../../../config/defaultBoutique';
 
 interface AuthServiceInterface {
-  login(credentialsData: { email: string; password: string }): Promise<AuthResult>;
+  login(credentialsData: { username?: string; email?: string; password: string }): Promise<AuthResult>;
   register(userData: RegisterData): Promise<AuthResult>;
 }
 
@@ -27,15 +26,15 @@ class AuthService implements AuthServiceInterface {
       action,
     });
     logger.error(`${action} failed`, error instanceof Error ? error : new Error(errorMessage));
-    return new Error(errorMessage || fallbackMessage || 'Une erreur est survenue');
+    return error instanceof Error ? error : new Error(errorMessage || fallbackMessage || 'Une erreur est survenue');
   }
 
-  private normalizeLoginData(credentialsData: { email: string; password: string }): {
-    email: string;
+  private normalizeLoginData(credentialsData: { username?: string; email?: string; password: string }): {
+    username: string;
     password: string;
   } {
     return {
-      email: credentialsData.email.trim().toLowerCase(),
+      username: (credentialsData.username ?? credentialsData.email ?? '').trim(),
       password: credentialsData.password,
     };
   }
@@ -43,23 +42,18 @@ class AuthService implements AuthServiceInterface {
   private normalizeRegisterData(userData: RegisterData): RegisterData {
     return {
       ...userData,
+      username: userData.username?.trim(),
       email: userData.email.trim().toLowerCase(),
       password: userData.password,
       name: userData.name.trim(),
     };
   }
 
-  async login(credentialsData: { email: string; password: string }): Promise<AuthResult> {
+  async login(credentialsData: { username?: string; email?: string; password: string }): Promise<AuthResult> {
     try {
       const normalizedData = this.normalizeLoginData(credentialsData);
 
-      // Le compte boutique de démonstration est vérifié avant la Value Object
-      // Password afin d'accepter exactement le mot de passe fourni pour le
-      // compte local, sans modifier les règles de validation des autres comptes.
-      const developmentBoutique = getDevelopmentBoutique(normalizedData.email, normalizedData.password);
-      if (developmentBoutique) return developmentBoutique;
-
-      const credentials = new Credentials(normalizedData.email, normalizedData.password);
+      const credentials = new Credentials(normalizedData.username, normalizedData.password);
       const result = await this.repository.login(credentials);
       return result;
     } catch (error) {
@@ -71,10 +65,7 @@ class AuthService implements AuthServiceInterface {
     try {
       const normalizedData = this.normalizeRegisterData(userData);
 
-      const passwordStrength = validatePasswordStrength(normalizedData.password);
-      if (!passwordStrength.isStrong) {
-        throw new Error(`Mot de passe faible. ${passwordStrength.feedback.join('. ')}`);
-      }
+      registerInputSchema.parse({ ...normalizedData, username: normalizedData.username ?? normalizedData.name });
 
       return await this.repository.register(normalizedData);
     } catch (error) {
@@ -83,28 +74,11 @@ class AuthService implements AuthServiceInterface {
   }
 
   async logout(): Promise<void> {
-    try {
-      logger.info('User logout');
-      await this.repository.logout();
-      logger.info('Logout successful');
-    } catch (error) {
-      logger.error('Logout error', error instanceof Error ? error : new Error('Unknown logout error'));
-    } finally {
-    }
+    await this.repository.logout();
   }
 
   async getCurrentUser(): Promise<User> {
-    try {
-      const user = await this.repository.getCurrentUser();
-      return user;
-    } catch (error) {
-      throw this.handleServiceError(
-        error,
-        'AuthService',
-        'getCurrentUser',
-        'Échec de récupération de l\'utilisateur'
-      );
-    }
+    return this.repository.getCurrentUser();
   }
 }
 

@@ -9,6 +9,7 @@ import { useLanguage } from '@/core/i18n';
 import { formatFilterLabel, getNavTitle, normalizeText } from '../data/catalog';
 import type { PortalProduct } from '../data/catalog';
 import Seo from '@/components/seo/Seo';
+import { runtimeConfig } from '@/config/runtime';
 
 function ProductGridSkeleton() {
   const { t } = useLanguage();
@@ -34,7 +35,7 @@ function ProductResultCard({ product, onOpen }: { product: PortalProduct; onOpen
   const creator = product.boutique_name || product.brand || product.creator_name || 'Boutique';
   const currencyFormatter = new Intl.NumberFormat(language === 'en' ? 'en-US' : 'fr-FR', {
     style: 'currency',
-    currency: 'EUR',
+    currency: runtimeConfig.currency,
     maximumFractionDigits: 0,
   });
 

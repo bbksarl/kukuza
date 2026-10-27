@@ -91,7 +91,7 @@ class LoggerAsync {
     });
   }
 
-  private sendToLoggingService(entry: LogEntry): void {
+  private sendToLoggingService(_entry: LogEntry): void {
   }
 
   debug(message: string, context?: Record<string, unknown>): void {

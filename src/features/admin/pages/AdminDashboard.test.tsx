@@ -11,7 +11,7 @@ describe('admin dashboard', () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
-  it('shows the global marketplace overview in development', async () => {
+  it('shows a clear error when the admin API is unavailable', async () => {
     render(
       <LanguageProvider>
         <MemoryRouter initialEntries={['/admin/dashboard']}>
@@ -20,10 +20,6 @@ describe('admin dashboard', () => {
       </LanguageProvider>,
     );
 
-    expect(await screen.findByRole('heading', { name: 'Vue globale' })).toBeVisible();
-    expect(screen.getByText('Boutiques les plus performantes')).toBeVisible();
-    expect(screen.getByText('Produits les plus vendus')).toBeVisible();
-    expect(screen.getByText('Utilisateurs récents')).toBeVisible();
+    expect(await screen.findByText('La vue globale est momentanément indisponible.')).toBeVisible();
   });
 });
-

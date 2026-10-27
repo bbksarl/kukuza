@@ -31,7 +31,10 @@ export default defineConfig({
     name: 'unified-app',
     environment: 'jsdom',
     setupFiles: [path.resolve(appRoot, 'tests/setup.ts')],
-    include: [path.resolve(appRoot, 'src/**/*.test.tsx')],
+    include: [
+      path.resolve(appRoot, 'src/**/*.test.{ts,tsx}'),
+      path.resolve(appRoot, 'facade/**/*.test.{ts,tsx}'),
+    ],
     globals: true,
   },
 });

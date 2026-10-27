@@ -19,7 +19,6 @@ export default function Products() {
     return products.slice(0, 10);
   }, [products]);
   const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
-  const lastScrollY = React.useRef(0);
 
   React.useEffect(() => {
     const handleScroll = () => {

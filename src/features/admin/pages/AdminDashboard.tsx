@@ -3,11 +3,14 @@ import { ArrowUpRight, CircleAlert, PackageCheck, Store, UsersRound } from 'luci
 import AdminLayout from '../components/AdminLayout';
 import { useAdminOverview } from '../hooks/useAdminOverview';
 import { useLanguage } from '@/core/i18n';
+import { runtimeConfig } from '@/config/runtime';
 
 function formatCurrency(value: number, language: 'fr' | 'en') {
-  return `${new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat(language === 'en' ? 'en-US' : 'fr-FR', {
+    style: 'currency',
+    currency: runtimeConfig.currency,
     maximumFractionDigits: 0,
-  }).format(value)} F CFA`;
+  }).format(value);
 }
 
 function getStatusClass(status: string) {

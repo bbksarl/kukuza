@@ -1,38 +1,13 @@
-const DEFAULT_API_URL = '/api';
+import { runtimeConfig } from '@/config/runtime';
 
-const runtimeEnv: Record<string, string | undefined> =
-  (globalThis as typeof globalThis & {
-    process?: { env?: Record<string, string | undefined> };
-  }).process?.env ??
-  (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env ??
-  {};
-
-const normalizeBaseUrl = (value: string | undefined): string => {
-  const resolved = value?.trim() || DEFAULT_API_URL;
-  return resolved.replace(/\/+$/, '');
-};
-
-const parseBoolean = (value: string | undefined, fallback: boolean): boolean => {
-  if (value === undefined) {
-    return fallback;
-  }
-
-  const normalized = value.trim().toLowerCase();
-  if (['1', 'true', 'yes', 'on'].includes(normalized)) {
-    return true;
-  }
-
-  if (['0', 'false', 'no', 'off'].includes(normalized)) {
-    return false;
-  }
-
-  return fallback;
-};
-
-const isDevelopmentBuild = Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
-
+const env = import.meta.env;
 export const shopEnv = {
-  apiBaseUrl: normalizeBaseUrl(runtimeEnv.REACT_APP_API_URL ?? runtimeEnv.VITE_API_BASE_URL),
-  enableApiMocks: parseBoolean(runtimeEnv.REACT_APP_ENABLE_API_MOCKS ?? runtimeEnv.VITE_ENABLE_API_MOCKS, isDevelopmentBuild),
-  requestTimeoutMs: 10000,
+  enableApiMocks: runtimeConfig.enableApiMocks,
+  endpoints: {
+    brandMetrics: env.VITE_BRAND_METRICS_PATH ?? '/brands/{brandId}/metrics',
+    brandProducts: env.VITE_BRAND_PRODUCTS_PATH ?? '/brands/{brandId}/products',
+    product: env.VITE_PRODUCT_PATH ?? '/Product/{productId}',
+    brandCategories: env.VITE_BRAND_CATEGORIES_PATH ?? '/brands/{brandId}/categories',
+    category: env.VITE_CATEGORY_PATH ?? '/Category/{categoryId}',
+  },
 };

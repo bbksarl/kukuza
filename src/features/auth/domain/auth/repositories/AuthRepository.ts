@@ -1,143 +1,78 @@
 import { User } from '../entities/User';
 import { Credentials } from '../entities/Credentials';
-import { getSafeErrorMessage, getDetailedErrorLog } from '../constants/ApiErrors';
-import { logger } from '../../../utils/logger';
-import { z } from 'zod';
 import type { AuthResult, RegisterData } from '../types';
 import { facadeClient, FacadeHttpError } from '@/api/client';
+import { authResponseSchema, sessionUserSchema, type SessionUserDto } from '@/api/contracts/auth';
+import { authApiConfig } from '../../../config/authApiConfig';
 import { getDevelopmentAdmin } from '../../../config/defaultAdmin';
 import { getDevelopmentBoutique } from '../../../config/defaultBoutique';
+import { clearStoredSession, readStoredAuthUser } from '@/core/auth/sessionStorage';
 
-const roleSchema = z.enum(['customer', 'creator', 'admin']);
+const toUser = (user: SessionUserDto): User => new User(
+  user.id, user.username, user.email, user.role, user.createdAt, user.brandId ?? undefined,
+);
 
-const sessionResponseSchema = z.object({
-  user: z.object({
-    id: z.coerce.number(),
-    username: z.string().min(1).optional(),
-    name: z.string().min(1).optional(),
-    email: z.string().email(),
-    role: roleSchema,
-    createdAt: z.string().min(1),
-  }),
-  redirectUrl: z.string().min(1).optional(),
-});
+/** Les comptes locaux restent limités au serveur de développement. */
+const getDevelopmentSession = (): User | null => {
+  if (!import.meta.env.DEV) return null;
+  const stored = readStoredAuthUser();
+  if (!stored) return null;
+  const candidates = [
+    getDevelopmentAdmin(import.meta.env.VITE_DEFAULT_ADMIN_EMAIL ?? '', import.meta.env.VITE_DEFAULT_ADMIN_PASSWORD ?? ''),
+    getDevelopmentBoutique(import.meta.env.VITE_DEFAULT_BOUTIQUE_EMAIL ?? '', import.meta.env.VITE_DEFAULT_BOUTIQUE_PASSWORD ?? ''),
+  ];
+  return candidates.find((candidate) => candidate != null && candidate.user.id === stored.id
+    && candidate.user.email.toString() === stored.email && candidate.user.role === stored.role)?.user ?? null;
+};
 
-const currentUserResponseSchema = z.object({
-  id: z.coerce.number(),
-  username: z.string().min(1).optional(),
-  name: z.string().min(1).optional(),
-  email: z.string().email(),
-  role: roleSchema,
-  createdAt: z.string().min(1),
-});
-
-class AuthRepository {
-  private mapFacadeError(error: unknown, fallbackMessage: string): Error {
-    const facadeError = error instanceof FacadeHttpError ? error : null;
-    const backendMessage = facadeError?.details?.message ?? null;
-    const safeMessage = getSafeErrorMessage(facadeError?.status ?? 0, backendMessage, fallbackMessage);
-    const logMessage = getDetailedErrorLog(facadeError?.status ?? 0, backendMessage);
-    logger.warn('Facade request failed', {
-      status: facadeError?.status ?? 0,
-      correlationId: facadeError?.correlationId,
-      error: logMessage,
-    });
-    return new Error(safeMessage);
-  }
-
+export class AuthRepository {
   private toAuthResult(data: unknown): AuthResult {
-    const parsed = sessionResponseSchema.parse(data);
-    const { user } = parsed;
-    const name = user.username ?? user.name;
-
-    if (!name) {
-      throw new Error('Réponse de session invalide : nom utilisateur manquant');
-    }
-
-    return {
-      user: new User(user.id, name, user.email, user.role, user.createdAt),
-      role: user.role,
-      redirectUrl: parsed.redirectUrl,
-    };
+    const parsed = authResponseSchema.parse(data);
+    return { user: toUser(parsed.user), role: parsed.user.role, token: parsed.token ?? undefined };
   }
 
   async login(credentials: Credentials): Promise<AuthResult> {
-    const email = credentials.email.toString();
-    const developmentAdmin = getDevelopmentAdmin(email, credentials.password.toString());
-    if (developmentAdmin) return developmentAdmin;
-    const developmentBoutique = getDevelopmentBoutique(email, credentials.password.toString());
-    if (developmentBoutique) return developmentBoutique;
-
-    try {
-      const data = await facadeClient.post<unknown>('/auth/login', {
-        email,
-        password: credentials.password.toString(),
-      });
-      return this.toAuthResult(data);
-    } catch (error) {
-      throw this.mapFacadeError(error, 'Authentification échouée');
-    }
+    const username = credentials.username;
+    const password = credentials.password;
+    const development = getDevelopmentAdmin(username, password) ?? getDevelopmentBoutique(username, password);
+    if (development) return development;
+    return this.toAuthResult(await facadeClient.post<unknown>(authApiConfig.endpoints.login,
+      { username, password }, { skipRedirect: true }));
   }
 
   async register(userData: RegisterData): Promise<AuthResult> {
-    const hasLogo = userData.boutique?.logo instanceof File;
-    const body = hasLogo ? this.toRegistrationFormData(userData) : JSON.stringify(userData);
-    try {
-      return this.toAuthResult(await facadeClient.post<unknown>('/auth/register', body));
-    } catch (error) {
-      throw this.mapFacadeError(error, 'Inscription échouée');
+    const { boutique, ...account } = userData;
+    if (account.isBoutique && !boutique) throw new Error('Les informations de boutique sont requises.');
+    const payload = new FormData();
+    payload.set('username', account.username?.trim() || account.name.trim());
+    payload.set('name', account.name);
+    payload.set('email', account.email);
+    payload.set('password', account.password);
+    payload.set('role', account.isBoutique ? 'brand' : 'customer');
+    if (account.isBoutique && boutique) {
+      const { logo, ...profile } = boutique;
+      Object.entries(profile).forEach(([key, value]) => payload.set(`boutique.${key}`, value));
+      if (logo) payload.set('boutique.logo', logo);
     }
+    return this.toAuthResult(await facadeClient.post<unknown>(authApiConfig.endpoints.register,
+      payload, { skipRedirect: true }));
   }
 
   async logout(): Promise<void> {
-    try {
-      await facadeClient.post<void>('/auth/logout');
-    } catch (error) {
-      throw this.mapFacadeError(error, 'Déconnexion impossible');
+    if (!getDevelopmentSession()) {
+      try {
+        await facadeClient.post(authApiConfig.endpoints.logout, undefined, { skipRedirect: true });
+      } catch (error) {
+        if (!(error instanceof FacadeHttpError && error.status === 401)) throw error;
+      }
     }
+    clearStoredSession();
   }
 
   async getCurrentUser(): Promise<User> {
-    try {
-      const user = currentUserResponseSchema.parse(await facadeClient.get<unknown>('/auth/me'));
-      const name = user.username ?? user.name;
-      if (!name) {
-        throw new Error('Réponse utilisateur invalide : nom utilisateur manquant');
-      }
-      return new User(user.id, name, user.email, user.role, user.createdAt);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        throw new Error('Réponse utilisateur invalide');
-      }
-      throw this.mapFacadeError(error, 'Impossible de récupérer l\'utilisateur');
-    }
-  }
-
-  private toRegistrationFormData(userData: RegisterData): FormData {
-    const formData = new FormData();
-    formData.append('name', userData.name);
-    formData.append('email', userData.email);
-    formData.append('password', userData.password);
-    formData.append('isBoutique', String(Boolean(userData.isBoutique)));
-
-    if (userData.boutique) {
-      Object.entries(userData.boutique).forEach(([key, value]) => {
-        if (value instanceof File) {
-          formData.append(key, value);
-        } else if (value != null) {
-          formData.append(key, value);
-        }
-      });
-    }
-
-    return formData;
-  }
-
-  async getCreator(userId: number): Promise<null> {
-    // TODO: Implémenter getCreator si nécessaire pour l'avenir
-    // Pour l'instant, non utilisé dans l'auth
-    return null;
+    const development = getDevelopmentSession();
+    if (development) return development;
+    const response = await facadeClient.get<unknown>(authApiConfig.endpoints.me, { skipRedirect: true });
+    return toUser(sessionUserSchema.parse(response));
   }
 }
-
-export { AuthRepository };

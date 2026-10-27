@@ -1,28 +1,18 @@
-import { Email, Password } from '../value-objects';
+import { loginInputSchema } from '../schemas';
 
-class Credentials {
-  readonly email: Email;
-  readonly password: Password;
+/** La politique de création du mot de passe ne doit pas bloquer une connexion existante. */
+export class Credentials {
+  readonly username: string;
+  readonly password: string;
 
-  constructor(email: string, password: string) {
-    this.email = new Email(email);
-    this.password = new Password(password);
+  constructor(username: string, password: string) {
+    const parsed = loginInputSchema.parse({ username, password });
+    this.username = parsed.username;
+    this.password = parsed.password;
     Object.freeze(this);
   }
 
-  async equals(other: unknown): Promise<boolean> {
-    if (!(other instanceof Credentials)) return false;
-    const emailEqual = this.email.equals(other.email);
-    const passwordEqual = await this.password.equals(other.password);
-    return emailEqual && passwordEqual;
-  }
-
   toJSON(): Record<string, string> {
-    return {
-      email: this.email.toString(),
-      password: this.password.toString(),
-    };
+    return { username: this.username, password: this.password };
   }
 }
-
-export { Credentials };

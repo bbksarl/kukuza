@@ -1,4 +1,4 @@
-import React, { ImgHTMLAttributes } from 'react';
+import React from 'react';
 import logoSrc from '@/assets/auth/logo.png';
 
 interface KukuzaLogoProps {

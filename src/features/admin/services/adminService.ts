@@ -1,20 +1,26 @@
 import { facadeClient } from '@/api/client';
+import { adminOverviewSchema } from '@/api/contracts/admin';
 import { mockAdminOverview } from '../data/adminData';
 import type { AdminOverview } from '../types';
-
-const isDevelopment = Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
+import { runtimeConfig } from '@/config/runtime';
 
 export const adminService = {
   async getOverview(): Promise<AdminOverview> {
     try {
-      return await facadeClient.get<AdminOverview>('/admin/overview');
+      const { totals, ...overview } = adminOverviewSchema.parse(await facadeClient.get<unknown>('/admin/overview'));
+      const revenue = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: runtimeConfig.currency, maximumFractionDigits: 0 }).format(totals.revenue);
+      return {
+        ...overview,
+        kpis: [
+          { id: 'revenue', labelKey: 'admin.kpi.revenue', value: revenue, trend: '', trendPositive: true },
+          ...(['boutiques', 'users', 'products'] as const).map((id) => ({
+            id, labelKey: `admin.kpi.${id}`, value: String(totals[id]), trend: '', trendPositive: true,
+          })),
+        ],
+      };
     } catch (error) {
-      if (isDevelopment) {
-        console.warn('[adminService] API unavailable, using development overview data.', error);
-        return mockAdminOverview;
-      }
+      if (runtimeConfig.enableApiMocks) return mockAdminOverview;
       throw error;
     }
   },
 };
-

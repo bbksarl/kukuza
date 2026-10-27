@@ -43,7 +43,9 @@ class Logger {
       } : undefined,
     };
 
-    const formattedMessage = this.formatLogEntry(entry);
+    if (!this.isDevelopment && level !== LogLevel.WARN && level !== LogLevel.ERROR) return;
+    const output = level === LogLevel.ERROR ? console.error : level === LogLevel.WARN ? console.warn : console.info;
+    output(this.formatLogEntry(entry));
 
   }
 

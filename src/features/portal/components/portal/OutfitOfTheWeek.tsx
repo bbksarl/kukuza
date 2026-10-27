@@ -20,7 +20,7 @@ export default function OutfitOfTheWeek() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isPaused, outfits.length]);
+  }, [isPaused]);
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index);

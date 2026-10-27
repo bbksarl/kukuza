@@ -8,13 +8,15 @@ class User {
   readonly email: Email;
   readonly role: UserRole;
   readonly createdAt: string;
+  readonly brandId?: number;
 
-  constructor(id: number, username: string, email: string, role: UserRole, createdAt: string) {
+  constructor(id: number, username: string, email: string, role: UserRole, createdAt: string, brandId?: number) {
     this.id = id;
     this.username = username;
     this.email = new Email(email);
     this.role = role; // 'customer', 'creator', 'admin'
     this.createdAt = createdAt;
+    this.brandId = brandId;
     Object.freeze(this);
   }
 
@@ -41,6 +43,7 @@ class User {
       email: this.email.toString(),
       role: this.role,
       createdAt: this.createdAt,
+      brandId: this.brandId,
     };
   }
 }

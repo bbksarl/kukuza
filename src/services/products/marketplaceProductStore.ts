@@ -1,3 +1,5 @@
+import { readStoredAuthUser } from '@/core/auth/sessionStorage';
+
 export interface MarketplaceProductRecord {
   [key: string]: unknown;
   id: string | number;
@@ -41,15 +43,25 @@ const DEFAULT_BOUTIQUE: BoutiqueIdentity = {
   name: 'Boutique KUKUZA',
 };
 
-let memoryProducts: MarketplaceProductRecord[] = [];
+const memoryProductsByScope = new Map<string, MarketplaceProductRecord[]>();
 
 const canUseStorage = () => typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 
+const getStorageScope = (): string => {
+  if (!canUseStorage()) return 'memory';
+  const user = readStoredAuthUser();
+  return user?.id == null ? 'anonymous' : String(user.id).replace(/[^a-zA-Z0-9_-]/g, '_');
+};
+
+const getProductsStorageKey = (): string => `${MARKETPLACE_PRODUCTS_KEY}:${getStorageScope()}`;
+
 const readProducts = (): MarketplaceProductRecord[] => {
+  const scope = getStorageScope();
+  const memoryProducts = memoryProductsByScope.get(scope) ?? [];
   if (!canUseStorage()) return memoryProducts;
 
   try {
-    const stored = window.localStorage.getItem(MARKETPLACE_PRODUCTS_KEY);
+    const stored = window.localStorage.getItem(getProductsStorageKey());
     if (!stored) return memoryProducts;
 
     const parsed: unknown = JSON.parse(stored);
@@ -65,10 +77,8 @@ export const getCurrentBoutique = (): BoutiqueIdentity => {
   if (!canUseStorage()) return DEFAULT_BOUTIQUE;
 
   try {
-    const storedUser = window.localStorage.getItem('kukuza-auth-user');
-    if (!storedUser) return DEFAULT_BOUTIQUE;
-
-    const user = JSON.parse(storedUser) as Record<string, unknown>;
+    const user = readStoredAuthUser();
+    if (!user) return DEFAULT_BOUTIQUE;
     const id = user.id;
     const name = user.username ?? user.name;
 
@@ -82,13 +92,14 @@ export const getCurrentBoutique = (): BoutiqueIdentity => {
 };
 
 export const saveMarketplaceProduct = (product: MarketplaceProductRecord): void => {
+  const scope = getStorageScope();
   const products = readProducts().filter((item) => String(item.id) !== String(product.id));
   const nextProducts = [product, ...products];
-  memoryProducts = nextProducts;
+  memoryProductsByScope.set(scope, nextProducts);
 
   if (canUseStorage()) {
     try {
-      window.localStorage.setItem(MARKETPLACE_PRODUCTS_KEY, JSON.stringify(nextProducts));
+      window.localStorage.setItem(getProductsStorageKey(), JSON.stringify(nextProducts));
       window.dispatchEvent(new CustomEvent(MARKETPLACE_PRODUCTS_EVENT));
     } catch {
       // The in-memory value still keeps the current SPA session usable.
@@ -100,7 +111,7 @@ export const subscribeToMarketplaceProducts = (listener: () => void): (() => voi
   if (typeof window === 'undefined') return () => undefined;
 
   const handleStorage = (event: StorageEvent) => {
-    if (event.key === MARKETPLACE_PRODUCTS_KEY) listener();
+    if (event.key === getProductsStorageKey()) listener();
   };
   const handleUpdate = () => listener();
 

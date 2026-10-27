@@ -6,6 +6,7 @@ export interface FacadeOptions {
   authPath?: string;
   forbiddenPath?: string;
   redirectOnAuthFailure?: boolean;
+  getAccessToken?: () => string | null;
 }
 
 export interface FacadeRequestOptions extends Omit<RequestInit, 'body'> {

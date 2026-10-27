@@ -171,6 +171,17 @@ export default function Header({ logoSrc = '/assets/logo.png', logoAlt = 'KUKUZA
   };
 
   const handleNavClick = (item: NavItem) => {
+    if (item.navType === 'skincare') {
+      navigateToProducts((params) => {
+        params.set('nav', 'skincare');
+        params.delete('filter');
+      });
+      setIsMenuOpen(false);
+      setActiveDropdown(null);
+      setIsSearchOpen(false);
+      return;
+    }
+
     const dropdownType = item.dropdownType;
     if (item.hasDropdown && dropdownType) {
       setActiveDropdown((prev) => (prev === dropdownType ? null : dropdownType));

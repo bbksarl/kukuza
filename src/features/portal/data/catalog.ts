@@ -9,7 +9,7 @@ export type DropdownType =
   | 'sacs'
   | 'accessoires';
 
-export type NavType = DropdownType | 'promotion';
+export type NavType = DropdownType | 'promotion' | 'skincare';
 
 export type FilterOption = {
   label: string;
@@ -34,7 +34,7 @@ export type PortalProduct = {
   creator_name: string;
   boutique_id?: string;
   boutique_name?: string;
-  category: 'vetements' | 'chaussures' | 'decor' | 'sacs' | 'accessoires' | 'bijoux';
+  category: 'vetements' | 'chaussures' | 'decor' | 'sacs' | 'accessoires' | 'bijoux' | 'skincare';
   subcategory: string;
   gender?: string;
   ageRange?: string;
@@ -60,8 +60,8 @@ export const NAV_ITEMS: NavItem[] = [
   { hash: '#vetements', title: 'VETEMENTS', hasDropdown: true, dropdownType: 'vetements', navType: 'vetements' },
   { hash: '#chaussures', title: 'CHAUSSURES', hasDropdown: true, dropdownType: 'chaussures', navType: 'chaussures' },
   { hash: '#decor', title: 'DECOR ET LIFESTYLE', hasDropdown: true, dropdownType: 'decor', navType: 'decor' },
-  { hash: '#sacs', title: 'SACS', hasDropdown: true, dropdownType: 'sacs', navType: 'sacs' },
   { hash: '#accessoires', title: 'ACCESSOIRES', hasDropdown: true, dropdownType: 'accessoires', navType: 'accessoires' },
+  { hash: '#skincare', title: 'SKINCARE', hasDropdown: false, navType: 'skincare' },
   { hash: '#promotion', title: 'PROMOTION', hasDropdown: false, navType: 'promotion' },
 ];
 
@@ -151,6 +151,7 @@ export const FILTERS_BY_TYPE: Record<DropdownType, FilterOption[]> = {
   ],
   accessoires: [
     { label: 'Tous les accessoires', category: 'Categorie' },
+    { label: 'Sacs', category: 'Categorie' },
     { label: 'Ceintures', category: 'Categorie' },
     { label: 'Echarpes', category: 'Categorie' },
     { label: 'Chapeaux', category: 'Categorie' },
@@ -180,6 +181,7 @@ const categoryLabelMap: Record<PortalProduct['category'], string> = {
   sacs: 'Sacs',
   accessoires: 'Accessoires',
   bijoux: 'Bijoux',
+  skincare: 'Skincare',
 };
 
 export const mockProducts: PortalProduct[] = [
@@ -448,8 +450,9 @@ export function normalizeProduct(raw: Record<string, unknown>): PortalProduct {
       : typeof raw.imageUrl === 'string' && raw.imageUrl
         ? raw.imageUrl
         : '/assets/products/p1.png';
-  const boutique = (raw.boutique ?? raw.shop ?? raw.creator) as Record<string, unknown> | undefined;
-  const boutiqueId = raw.boutique_id
+  const boutique = (raw.boutique ?? raw.shop ?? raw.creator ?? (typeof raw.brand === 'object' ? raw.brand : undefined)) as Record<string, unknown> | undefined;
+  const boutiqueId = raw.brandId
+    ?? raw.boutique_id
     ?? raw.boutiqueId
     ?? raw.shop_id
     ?? raw.shopId
@@ -475,9 +478,19 @@ export function normalizeProduct(raw: Record<string, unknown>): PortalProduct {
       : brand;
   const rawId = raw.id;
   const id = typeof rawId === 'string' || typeof rawId === 'number' ? rawId : Date.now();
-  const categoryValue = normalizeText(typeof raw.category === 'string' ? raw.category : '') as PortalProduct['category'];
-  const category = ['vetements', 'chaussures', 'decor', 'sacs', 'accessoires', 'bijoux'].includes(categoryValue)
-    ? categoryValue
+  const rawCategory = typeof raw.category === 'string'
+    ? raw.category
+    : typeof raw.category === 'object' && raw.category !== null
+      ? String((raw.category as Record<string, unknown>).name ?? '')
+      : typeof raw.categoryName === 'string'
+        ? raw.categoryName
+        : '';
+  const categoryValue = normalizeText(rawCategory);
+  const normalizedCategory = ['soin', 'soins', 'beaute', 'beauty', 'cosmetique', 'cosmetics'].includes(categoryValue)
+    ? 'skincare'
+    : categoryValue;
+  const category = ['vetements', 'chaussures', 'decor', 'sacs', 'accessoires', 'bijoux', 'skincare'].includes(normalizedCategory)
+    ? normalizedCategory as PortalProduct['category']
     : 'vetements';
 
   return {
@@ -556,6 +569,8 @@ function matchesPriceFilter(price: number, label: string) {
 function matchesDropdownFilter(product: PortalProduct, nav: NavType, filter: string) {
   const normalizedFilter = normalizeText(filter);
 
+  if (nav === 'skincare') return product.category === 'skincare';
+
   if (nav === 'promotion') {
     return product.isPromoted || product.price <= 100;
   }
@@ -582,6 +597,10 @@ function matchesDropdownFilter(product: PortalProduct, nav: NavType, filter: str
   }
 
   if (nav === 'vetements' || nav === 'chaussures' || nav === 'decor' || nav === 'sacs' || nav === 'accessoires') {
+    if (nav === 'accessoires' && normalizedFilter === 'sacs') {
+      return product.category === 'sacs';
+    }
+
     if (product.category !== nav) return false;
 
     if (normalizedFilter.startsWith('prix:')) {
@@ -659,6 +678,7 @@ export function applyProductFilters(products: PortalProduct[], filters: ProductF
     if (!filter) {
       if (nav === 'promotion') return product.isPromoted || product.price <= 100;
       if (nav === 'createurs' || nav === 'nouveautes') return true;
+      if (nav === 'skincare') return product.category === 'skincare';
       return product.category === nav;
     }
     return matchesDropdownFilter(product, nav, filter);

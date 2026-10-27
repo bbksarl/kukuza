@@ -1,20 +1,6 @@
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
-
-const hasAdminSession = () => {
-  if (typeof window === 'undefined') return false;
-
-  try {
-    const stored = window.localStorage.getItem('kukuza-auth-user');
-    if (!stored) return false;
-    const user = JSON.parse(stored) as { role?: string };
-    return user.role === 'admin';
-  } catch {
-    return false;
-  }
-};
+import { AuthenticatedRoute } from '@/features/auth/components/AuthenticatedRoute';
 
 export default function AdminRoute({ children }: { children: ReactNode }) {
-  return hasAdminSession() ? children : <Navigate to="/auth/login" replace />;
+  return <AuthenticatedRoute roles={['admin']}>{children}</AuthenticatedRoute>;
 }
-

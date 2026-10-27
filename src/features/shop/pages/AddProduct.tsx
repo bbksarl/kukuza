@@ -4,16 +4,16 @@ import DashboardLayout from '@/layouts/shop/DashboardLayout';
 import Card from '../components/common/Card';
 import ImageUpload from '../components/common/ImageUpload';
 import type { ProductFormValues } from '../types';
-import { shopService } from '@/services/shop';
+import { shopService, type ShopCategory } from '@/services/shop';
 import {
   createEmptyProductForm,
   getGenderOptions,
   PRODUCT_AGE_RANGES,
-  PRODUCT_CATEGORIES,
   toCreateProductInput,
   validateProductForm,
 } from '../utils/productForm';
 import { useLanguage } from '@/core/i18n';
+import { runtimeConfig } from '@/config/runtime';
 
 const AddProductPage: React.FC = () => {
   const { t, translateCatalogLabel, translateText } = useLanguage();
@@ -23,6 +23,25 @@ const AddProductPage: React.FC = () => {
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [mainPreviewUrl, setMainPreviewUrl] = useState<string | null>(null);
+  const [categories, setCategories] = useState<ShopCategory[]>([]);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    shopService.getCategories()
+      .then((data) => {
+        if (!cancelled) setCategories(data);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setCategoriesError(error instanceof Error ? error.message : t('shop.saveError'));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
 
   const handleInputChange = (field: keyof ProductFormValues, value: string) => {
     setFormData((previous) => {
@@ -158,13 +177,14 @@ const AddProductPage: React.FC = () => {
                     }`}
                   >
                     <option value="">{t('shop.selectCategory')}</option>
-                    {PRODUCT_CATEGORIES.map((category) => (
-                      <option key={category} value={category}>
-                        {translateCatalogLabel(category)}
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.name}>
+                        {translateCatalogLabel(category.name)}
                       </option>
                     ))}
                   </select>
                   {errors.category && <p className="text-xs text-red-500 mt-1">{translateText(errors.category)}</p>}
+                  {categoriesError && <p className="text-xs text-red-500 mt-1">{categoriesError}</p>}
                 </div>
 
                 <div>
@@ -183,10 +203,10 @@ const AddProductPage: React.FC = () => {
                       placeholder="0.00"
                     />
                     <select className="w-28 px-3 border border-(--color-border) rounded-lg bg-white text-sm text-(--color-text-secondary) focus:outline-none focus:ring-2 focus:ring-(--color-primary)" aria-label="Devise">
-                      <option>F CFA</option>
+                      <option>{runtimeConfig.currency}</option>
                     </select>
                   </div>
-                  <p className="mt-1 text-[11px] text-(--color-text-tertiary)">Devise sélectionnée : Franc CFA (F CFA)</p>
+                  <p className="mt-1 text-[11px] text-(--color-text-tertiary)">Devise sélectionnée : {runtimeConfig.currency}</p>
                   {errors.price && <p className="text-xs text-red-500 mt-1">{translateText(errors.price)}</p>}
                 </div>
 

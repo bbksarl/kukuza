@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
 import { useForm } from '../hooks/useForm';
@@ -10,12 +10,12 @@ import { config } from '../config/environment';
 import { useLanguage } from '@/core/i18n';
 
 const initialValues = {
-  email: '',
+  username: '',
   password: '',
 };
 
 export const LoginPage = () => {
-  const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { t, translateText } = useLanguage();
   const { login, loading, error: authError } = useAuth();
   const {
@@ -30,9 +30,11 @@ export const LoginPage = () => {
   const handleLogin = async (formValues: typeof initialValues) => {
     try {
       const result = await login(formValues);
-      const destination = result.role === 'admin'
-        ? '/admin/dashboard'
-        : (result.redirectUrl ?? config.routes.storefrontUrl);
+      const returnUrl = params.get('returnUrl');
+      const safeReturn = returnUrl?.startsWith('/') && !returnUrl.startsWith('//') && !returnUrl.includes('\\') && [...returnUrl].every((char) => char.charCodeAt(0) > 32);
+      const destination = safeReturn ? returnUrl : result.role === 'admin'
+        ? '/admin/dashboard' : result.role === 'creator' ? '/shop/dashboard'
+          : config.routes.storefrontUrl;
       window.location.assign(destination);
     } catch {
     }
@@ -55,15 +57,15 @@ export const LoginPage = () => {
         <form className="mt-1.5 xs:mt-2 sm:mt-3 space-y-1.5 xs:space-y-2 sm:space-y-3" onSubmit={handleSubmit(handleLogin)}>
           <div className="space-y-1.5 xs:space-y-2 sm:space-y-3">
             <Input
-              label={t('auth.email')}
-              type="email"
-              name="email"
-              value={values.email}
+              label={t('auth.username')}
+              type="text"
+              name="username"
+              value={values.username}
               onChange={handleChange}
               onBlur={handleBlur}
-              error={errors.email}
-              touched={touched.email}
-              placeholder={t('auth.emailPlaceholder')}
+              error={errors.username}
+              touched={touched.username}
+              placeholder={t('auth.usernamePlaceholder')}
             />
 
             <Input

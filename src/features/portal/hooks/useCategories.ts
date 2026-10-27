@@ -1,3 +1,4 @@
+import { runtimeConfig } from '@/config/runtime';
 import { useState, useEffect } from 'react';
 import { getCategories, type CatalogCategory } from '@/repositories/portal/catalogRepository';
 
@@ -15,20 +16,22 @@ export function useCategories() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchCategories = async () => {
       try {
-        const data = await getCategories();
-        if (data) setCategories(data);
-        else setCategories(mockCategories);
+        const data = await getCategories(controller.signal);
+        if (!controller.signal.aborted) setCategories(data);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : String(err));
-        setCategories(mockCategories);
+        if (controller.signal.aborted) return;
+        setError(runtimeConfig.enableApiMocks ? null : (err instanceof Error ? err.message : String(err)));
+        setCategories(runtimeConfig.enableApiMocks ? mockCategories : []);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
-    fetchCategories();
+    void fetchCategories();
+    return () => controller.abort();
   }, []);
 
   return { categories, loading, error } as const;

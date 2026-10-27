@@ -4,6 +4,7 @@ import Header from '../components/portal/Header';
 import Footer from '../components/portal/Footer';
 import { useLanguage } from '@/core/i18n';
 import { useFavorites } from '@/providers/FavoritesProvider';
+import { runtimeConfig } from '@/config/runtime';
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ export default function FavoritesPage() {
   const { items, removeFavorite } = useFavorites();
   const formatter = new Intl.NumberFormat(language === 'en' ? 'en-US' : 'fr-FR', {
     style: 'currency',
-    currency: 'EUR',
+    currency: runtimeConfig.currency,
     maximumFractionDigits: 2,
   });
 

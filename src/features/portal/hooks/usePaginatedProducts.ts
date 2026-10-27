@@ -1,67 +1,70 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getProducts } from '@/repositories/portal/catalogRepository';
 import { applyProductFilters, mergeMarketplaceProducts, mockProducts, normalizeProduct, type PortalProduct, type ProductFilters } from '../data/catalog';
 import { subscribeToMarketplaceProducts } from '@/services/products/marketplaceProductStore';
+import { runtimeConfig } from '@/config/runtime';
 
 export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters: ProductFilters = {}) {
-  const [allItems, setAllItems] = useState<PortalProduct[]>([]);
+  const [items, setItems] = useState<PortalProduct[]>([]);
   const [page, setPage] = useState(initialPage);
-  const limit = initialLimit;
-  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const controller = useRef<AbortController | null>(null);
+  const busy = useRef(false);
+  const nextPage = useRef(initialPage);
+  const hasMore = useRef(true);
+  const limit = Math.min(100, Math.max(1, initialLimit));
+  const { search, gender, nav, filter } = filters;
 
-  useEffect(() => {
+  const fetchPage = useCallback(async (requestedPage: number, reset: boolean) => {
+    controller.current?.abort();
+    const request = new AbortController();
+    controller.current = request;
+    busy.current = true;
     setLoading(true);
     setError(null);
-
-    const fetchProducts = async () => {
+    if (reset) { setItems([]); setTotal(0); }
+    try {
+      let data;
       try {
-        const res = await getProducts(1, 1000);
-        if (res && Array.isArray(res.items)) {
-          setAllItems(mergeMarketplaceProducts(res.items.map((item: Record<string, unknown>) => normalizeProduct(item))));
-        } else {
-          setAllItems(mergeMarketplaceProducts(mockProducts));
-        }
-      } catch {
-        // Keep the catalogue usable while the BFF is unavailable. The UI can
-        // still render the local catalogue and apply search/filter parameters.
-        setError(null);
-        setAllItems(mergeMarketplaceProducts(mockProducts));
-      } finally {
-        setLoading(false);
+        data = await getProducts(requestedPage, limit, request.signal, { search, gender, nav, filter });
+      } catch (error) {
+        if (request.signal.aborted || !runtimeConfig.enableApiMocks) throw error;
+        const matching = applyProductFilters(mergeMarketplaceProducts(mockProducts), { search, gender, nav, filter });
+        data = { items: matching.slice((requestedPage - 1) * limit, requestedPage * limit), total: matching.length, page: requestedPage, limit };
       }
-    };
+      if (request.signal.aborted) return;
+      const products = data.items.map((item) => normalizeProduct(item));
+      setItems((previous) => {
+        const combined = reset ? products : [...previous, ...products];
+        return [...new Map(combined.map((product) => [String(product.id), product])).values()];
+      });
+      setTotal(data.total);
+      setPage(data.page);
+      nextPage.current = data.page + 1;
+      hasMore.current = data.items.length > 0 && data.page * data.limit < data.total;
+    } catch (error) {
+      if (!request.signal.aborted) setError(error instanceof Error ? error.message : 'Catalogue indisponible.');
+    } finally {
+      if (!request.signal.aborted) { busy.current = false; setLoading(false); }
+    }
+  }, [limit, search, gender, nav, filter]);
 
-    fetchProducts();
-    return subscribeToMarketplaceProducts(() => {
-      fetchProducts();
-    });
-  }, []);
+  const refresh = useCallback(() => {
+    nextPage.current = initialPage;
+    hasMore.current = true;
+    void fetchPage(initialPage, true);
+  }, [fetchPage, initialPage]);
 
   useEffect(() => {
-    setPage(initialPage);
-  }, [initialPage, filters.search, filters.gender, filters.nav, filters.filter]);
-
-  const filteredItems = useMemo(
-    () => applyProductFilters(allItems, filters),
-    [allItems, filters.search, filters.gender, filters.nav, filters.filter]
-  );
-
-  const items = useMemo(
-    () => filteredItems.slice(0, page * limit),
-    [filteredItems, page, limit]
-  );
-
-  const total = filteredItems.length;
+    refresh();
+    const unsubscribe = subscribeToMarketplaceProducts(refresh);
+    return () => { controller.current?.abort(); unsubscribe(); };
+  }, [refresh]);
 
   const loadMore = () => {
-    if (items.length >= total) return;
-    setPage((p) => p + 1);
+    if (!busy.current && hasMore.current) void fetchPage(nextPage.current, false);
   };
-
-  const refresh = () => {
-    setPage(initialPage);
-  };
-
-  return { items, allItems, loading, error, page, limit, total, loadMore, refresh } as const;
+  return { items, allItems: items, loading, error, page, limit, total, loadMore, refresh } as const;
 }

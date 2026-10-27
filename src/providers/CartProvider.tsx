@@ -4,6 +4,8 @@ const CART_STORAGE_KEY = 'kukuza-cart';
 
 export type CartItem = {
   id: string;
+  /** Identifiant persistant attendu par l'API OrderItem. */
+  productId?: number | string;
   name: string;
   price: number;
   image?: string;

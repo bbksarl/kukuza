@@ -8,6 +8,7 @@ import PortalProductDetail from '@/features/portal/pages/ProductDetail';
 import CartPage from '@/features/portal/pages/CartPage';
 import FavoritesPage from '@/features/portal/pages/FavoritesPage';
 import AdminRoute from '@/features/admin/components/AdminRoute';
+import ShopRoute from '@/features/shop/components/ShopRoute';
 import { useLanguage } from '@/core/i18n';
 
 const LoginPage = lazy(() =>
@@ -119,10 +120,10 @@ export default function App() {
           <Route path="/admin/sales" element={<AdminRoute><AdminSalesPage /></AdminRoute>} />
 
           <Route path="/shop" element={<Navigate to="/shop/dashboard" replace />} />
-          <Route path="/shop/dashboard" element={<DashboardPage />} />
-          <Route path="/shop/ventes" element={<SalesPage />} />
-          <Route path="/shop/produits" element={<ProductsPage />} />
-          <Route path="/shop/produits/ajouter" element={<AddProductPage />} />
+          <Route path="/shop/dashboard" element={<ShopRoute><DashboardPage /></ShopRoute>} />
+          <Route path="/shop/ventes" element={<ShopRoute><SalesPage /></ShopRoute>} />
+          <Route path="/shop/produits" element={<ShopRoute><ProductsPage /></ShopRoute>} />
+          <Route path="/shop/produits/ajouter" element={<ShopRoute><AddProductPage /></ShopRoute>} />
           <Route path="/dashboard" element={<Navigate to="/shop/dashboard" replace />} />
           <Route path="/ventes" element={<Navigate to="/shop/ventes" replace />} />
 

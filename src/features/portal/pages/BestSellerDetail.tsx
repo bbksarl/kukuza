@@ -8,6 +8,7 @@ import { useLanguage } from '@/core/i18n';
 import { useCart } from '@/providers/CartProvider';
 import { useFavorites } from '@/providers/FavoritesProvider';
 import Seo from '@/components/seo/Seo';
+import { runtimeConfig } from '@/config/runtime';
 
 function parsePrice(value: string) {
   const parsed = Number(value.replace(/[^0-9,.-]/g, '').replace(',', '.'));
@@ -36,7 +37,7 @@ export default function BestSellerDetail() {
   const priceFormatter = useMemo(
     () => new Intl.NumberFormat(language === 'en' ? 'en-US' : 'fr-FR', {
       style: 'currency',
-      currency: 'EUR',
+      currency: runtimeConfig.currency,
       maximumFractionDigits: 2,
     }),
     [language],
@@ -55,6 +56,7 @@ export default function BestSellerDetail() {
   const addBestSellerToCart = () => {
     addItem({
       id: `best-seller:${product.id}:${selectedColor}:${selectedSize}`,
+      productId: product.id,
       name: t(product.titleKey),
       price: price ?? 0,
       image: selectedImage,

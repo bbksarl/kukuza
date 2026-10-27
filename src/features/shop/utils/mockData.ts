@@ -7,6 +7,7 @@ import type {
   SaleItem,
   CreateProductInput,
 } from '../types';
+import { runtimeConfig } from '@/config/runtime';
 
 export const getMockDashboardStats = (): DashboardStats => ({
   totalRevenue: 0,
@@ -57,10 +58,12 @@ export const buildMockCreatedProduct = (input: CreateProductInput): Product => {
 };
 
 export const formatCurrency = (value: number): string => {
-  return `${new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: runtimeConfig.currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(value)} F CFA`;
+  }).format(value);
 };
 
 export const formatPercentage = (value: number, decimals: number = 1): string => {

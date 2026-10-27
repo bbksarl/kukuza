@@ -6,6 +6,7 @@ export interface FacadeMiddlewareContext {
   init: RequestInit;
   correlationId: string;
   skipRedirect?: boolean;
+  retrySafeRequest?: boolean;
 }
 
 export type FacadeNext = (context: FacadeMiddlewareContext) => Promise<Response>;
@@ -14,7 +15,24 @@ export type FacadeMiddleware = (context: FacadeMiddlewareContext, next: FacadeNe
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
 
-const wait = (durationMs: number): Promise<void> => new Promise((resolve) => window.setTimeout(resolve, durationMs));
+const wait = (durationMs: number, signal?: AbortSignal): Promise<void> => new Promise((resolve, reject) => {
+  const abortSignal = signal;
+  if (abortSignal?.aborted) {
+    reject(abortSignal.reason instanceof Error ? abortSignal.reason : new DOMException('La requête a été annulée.', 'AbortError'));
+    return;
+  }
+
+  const timeoutId = setTimeout(() => {
+    abortSignal?.removeEventListener('abort', onAbort);
+    resolve();
+  }, durationMs);
+  const onAbort = () => {
+    clearTimeout(timeoutId);
+    abortSignal?.removeEventListener('abort', onAbort);
+    reject(abortSignal?.reason instanceof Error ? abortSignal.reason : new DOMException('La requête a été annulée.', 'AbortError'));
+  };
+  abortSignal?.addEventListener('abort', onAbort, { once: true });
+});
 
 export const correlationMiddleware: FacadeMiddleware = async (context, next) => {
   const headers = new Headers(context.init.headers);
@@ -34,21 +52,24 @@ export const sessionMiddleware: FacadeMiddleware = async (context, next) => {
 
 export const retryMiddleware: FacadeMiddleware = async (context, next) => {
   const method = (context.init.method ?? 'GET').toUpperCase();
-  const shouldRetry = SAFE_METHODS.has(method);
+  const shouldRetry = context.retrySafeRequest ?? SAFE_METHODS.has(method);
   const maxAttempts = shouldRetry ? 2 : 1;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
       const response = await next(context);
       if (attempt < maxAttempts && RETRYABLE_STATUS.has(response.status)) {
-        const retryAfter = Number(response.headers.get('Retry-After'));
-        await wait(Number.isFinite(retryAfter) ? retryAfter * 1000 : 150 * attempt);
+        const header = response.headers.get('Retry-After');
+        const seconds = header == null ? NaN : Number(header);
+        const retryAfter = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(header ?? '') - Date.now();
+        await wait(Number.isFinite(retryAfter) ? Math.max(0, retryAfter) : 150 * attempt, context.init.signal ?? undefined);
         continue;
       }
       return response;
     } catch (error) {
+      if (context.init.signal?.aborted) throw error;
       if (attempt >= maxAttempts) throw error;
-      await wait(150 * attempt);
+      await wait(150 * attempt, context.init.signal ?? undefined);
     }
   }
 
@@ -56,7 +77,7 @@ export const retryMiddleware: FacadeMiddleware = async (context, next) => {
 };
 
 const safeSameOriginPath = (value: string | null, fallback: string): string => {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) return fallback;
+  if (!value || !value.startsWith('/') || value.startsWith('//') || (value.includes('\\') || [...value].some((char) => char.charCodeAt(0) <= 32))) return fallback;
   return value;
 };
 
@@ -105,7 +126,7 @@ export const redirectMiddleware = (config: FacadeRuntimeConfig): FacadeMiddlewar
 };
 
 export const buildMiddlewareChain = (config: FacadeRuntimeConfig, transport: FacadeNext): FacadeNext => {
-  const middleware: FacadeMiddleware[] = [correlationMiddleware, sessionMiddleware, retryMiddleware, redirectMiddleware(config)];
+  const middleware: FacadeMiddleware[] = [correlationMiddleware, sessionMiddleware, redirectMiddleware(config), retryMiddleware];
   return middleware.reduceRight<FacadeNext>((next, current) => (context) => current(context, next), transport);
 };
 
@@ -121,6 +142,10 @@ export const throwForResponse = async (response: Response, correlationId: string
 
   const message = typeof payload === 'object' && payload !== null && 'message' in payload && typeof payload.message === 'string'
     ? payload.message
+    : typeof payload === 'object' && payload !== null && 'detail' in payload && typeof payload.detail === 'string'
+      ? payload.detail
+      : typeof payload === 'object' && payload !== null && 'title' in payload && typeof payload.title === 'string'
+        ? payload.title
     : `Erreur façade HTTP ${response.status}`;
   throw new FacadeHttpError(response.status, message, payload, correlationId);
 };

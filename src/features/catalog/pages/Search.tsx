@@ -15,7 +15,7 @@ export const Search: FC = () => {
     if (query.trim()) {
       searchProducts(query);
     }
-  }, [query]);
+  }, [query, searchProducts]);
 
   return (
     <div className="min-h-screen bg-gray-50">

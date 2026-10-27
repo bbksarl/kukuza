@@ -15,7 +15,10 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
 COPY .ci-builds/ /usr/share/nginx/html/
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+ENV KUKUZA_API_UPSTREAM=http://host.docker.internal:7200
+ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
+ENV NGINX_ENVSUBST_FILTER=^KUKUZA_API_UPSTREAM$
+COPY nginx.conf /etc/nginx/templates/nginx.conf.template
 
 # Expose port
 EXPOSE 80

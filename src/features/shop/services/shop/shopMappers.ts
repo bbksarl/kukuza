@@ -42,6 +42,56 @@ const parseNumber = (value: unknown, fallback = 0): number => {
   return fallback;
 };
 
+export const metricValue = (value: unknown, keys: string[]): number => {
+  if (typeof value === 'number') return value;
+  if (typeof value !== 'object' || value === null) return 0;
+  const source = value as Record<string, unknown>;
+  return parseNumber(keys.map((key) => source[key]).find((candidate) => candidate != null));
+};
+
+const asObject = (value: unknown): Record<string, unknown> => (
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+);
+
+const analyticsSource = (input: unknown): Record<string, unknown> => {
+  const source = asObject(input);
+  return asObject(source.metrics ?? source.cache ?? source.data ?? source);
+};
+
+const listFrom = (source: Record<string, unknown>, keys: string[]): unknown[] => {
+  for (const key of keys) {
+    if (Array.isArray(source[key])) return source[key] as unknown[];
+  }
+  return [];
+};
+
+/** Mappe la réponse du MetricsController vers le modèle consommé par le dashboard. */
+export const mapAnalyticsResponse = (input: unknown): DashboardOverview => {
+  const source = analyticsSource(input);
+  const root = asObject(input);
+
+  return {
+    stats: {
+      totalRevenue: metricValue(source, ['tr', 'revenue', 'totalRevenue', 'total_revenue']),
+      revenueChange: metricValue(source, ['variation', 'revenueChange', 'revenue_change', 'change']),
+      dailyRevenue: metricValue(source, ['dailyRevenue', 'daily_revenue', 'dailyTr', 'daily_tr']),
+      dailyRevenueChange: metricValue(source, ['dailyRevenueChange', 'daily_revenue_change']),
+      totalSales: metricValue(source, ['sold', 'quantity', 'totalSales', 'total_sales']),
+      salesChange: metricValue(source, ['salesChange', 'sales_change']),
+      activeUsers: metricValue(source, ['active_users', 'activeUsers', 'users']),
+      usersChange: metricValue(source, ['usersChange', 'users_change']),
+    },
+    salesData: listFrom(source, ['salesData', 'sales_data', 'trend'])
+      .concat(source === root ? [] : listFrom(root, ['salesData', 'sales_data']))
+      .map(mapChartPoint),
+    visitsData: listFrom(source, ['visitsData', 'visits_data', 'visits'])
+      .concat(source === root ? [] : listFrom(root, ['visitsData', 'visits_data']))
+      .map(mapVisitsPoint),
+  };
+};
+
 const normalizeProductStatus = (value: unknown, stock: number): ProductStatus => {
   if (value === 'in_stock' || value === 'out_of_stock' || value === 'low_stock') {
     return value;
@@ -97,21 +147,37 @@ const normalizeSaleStatus = (value: unknown): SaleStatus => {
 export const mapProduct = (input: unknown): Product => {
   const source = (input ?? {}) as Record<string, unknown>;
   const stock = parseNumber(source.stock ?? source.quantity);
+  const images = source.images ?? source.productImages;
+  const firstImage = Array.isArray(images) ? images[0] : undefined;
+  const imageFromCollection = typeof firstImage === 'string'
+    ? firstImage
+    : typeof firstImage === 'object' && firstImage !== null
+      ? (firstImage as Record<string, unknown>).imageUrl
+      : undefined;
+  const category = typeof source.category === 'object' && source.category !== null
+    ? String((source.category as Record<string, unknown>).name ?? 'Non classe')
+    : String(source.category ?? source.categoryName ?? 'Non classe');
 
   return {
     id: String(source.id ?? createFallbackId('product')),
     reference: String(source.reference ?? source.referenceCode ?? source.ref ?? 'N/A'),
     name: String(source.name ?? source.title ?? 'Produit sans nom'),
-    category: String(source.category ?? source.categoryName ?? 'Non classe'),
+    category,
     price: parseNumber(source.price),
     stock,
-    image: typeof source.image === 'string' ? source.image : typeof source.imageUrl === 'string' ? source.imageUrl : undefined,
+    image: typeof source.image === 'string'
+      ? source.image
+      : typeof source.imageUrl === 'string'
+        ? source.imageUrl
+        : typeof imageFromCollection === 'string'
+          ? imageFromCollection
+          : undefined,
     status: normalizeProductStatus(source.status, stock),
     createdAt: parseDate(source.createdAt ?? source.created_at),
     updatedAt: parseDate(source.updatedAt ?? source.updated_at),
-    boutiqueId: source.boutiqueId == null && source.shopId == null && source.creatorId == null
+    boutiqueId: source.boutiqueId == null && source.shopId == null && source.brandId == null && source.creatorId == null
       ? undefined
-      : String(source.boutiqueId ?? source.shopId ?? source.creatorId),
+      : String(source.boutiqueId ?? source.shopId ?? source.brandId ?? source.creatorId),
     boutiqueName: typeof source.boutiqueName === 'string'
       ? source.boutiqueName
       : typeof source.shopName === 'string'
@@ -169,7 +235,7 @@ const mapChartPoint = (input: unknown): ChartDataPoint => {
 
   return {
     label: String(source.label ?? source.name ?? source.day ?? source.month ?? ''),
-    value: parseNumber(source.value ?? source.amount ?? source.total),
+    value: parseNumber(source.value ?? source.amount ?? source.total ?? source.tr ?? source.revenue),
     date: source.date ? parseDate(source.date) : undefined,
   };
 };
@@ -179,7 +245,7 @@ const mapVisitsPoint = (input: unknown): VisitsData => {
 
   return {
     day: String(source.day ?? source.label ?? ''),
-    visits: parseNumber(source.visits ?? source.value),
+    visits: parseNumber(source.visits ?? source.active_users ?? source.activeUsers ?? source.value),
   };
 };
 

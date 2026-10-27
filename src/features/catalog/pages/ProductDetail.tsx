@@ -13,10 +13,12 @@ export const ProductDetail: FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
 
   useEffect(() => {
+    let active = true;
     if (productId) {
-      fetchProductById(productId).then(setProduct);
+      void fetchProductById(productId).then((product) => { if (active) setProduct(product); });
     }
-  }, [productId]);
+    return () => { active = false; };
+  }, [productId, fetchProductById]);
 
   if (loading) {
     return (

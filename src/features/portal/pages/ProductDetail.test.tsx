@@ -4,6 +4,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LanguageProvider } from '@/core/i18n';
 import { CartProvider } from '@/providers/CartProvider';
 import ProductDetail from './ProductDetail';
+import { getProduct } from '@/repositories/portal/catalogRepository';
+vi.mock('@/repositories/portal/catalogRepository', () => ({ getProduct: vi.fn() }));
 
 describe('portal product detail', () => {
   beforeEach(() => {
@@ -22,7 +24,8 @@ describe('portal product detail', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders the selected product details from its route id', () => {
+  it('renders the selected product details from its route id', async () => {
+    vi.mocked(getProduct).mockResolvedValue({ id: 1, name: 'Robe Soleil Dakar', price: 125, brand: { id: 2, name: 'Maison Nene' }, imageUrl: '/assets/products/p1.png' });
     render(
       <LanguageProvider>
         <CartProvider>
@@ -35,8 +38,8 @@ describe('portal product detail', () => {
       </LanguageProvider>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Robe Soleil Dakar' })).toBeVisible();
-    expect(screen.getByText('Maison Nene')).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Robe Soleil Dakar' })).toBeVisible();
+    expect(screen.getAllByText('Maison Nene')[0]).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Détails du produit' })).toBeVisible();
 
     fireEvent.click(screen.getByRole('button', { name: 'Acheter' }));

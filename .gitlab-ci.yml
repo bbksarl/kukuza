@@ -16,7 +16,7 @@ variables:
   NPM_FLAGS: "--no-audit --no-fund --prefer-offline --progress=false"
 
 default:
-  image: node:20-alpine
+  image: node:24-alpine
   interruptible: true
   cache:
     key: "npm-cache-$CI_COMMIT_REF_SLUG"
@@ -41,6 +41,7 @@ test:
   script:
     - echo "[test] Typecheck and UI smoke tests for the unified application"
     - cd "$CI_PROJECT_DIR"
+    - npm run lint
     - npm run typecheck
     - npm run test
 

@@ -1,5 +1,5 @@
 
-import { logger, LogEntry } from './logger';
+import { logger } from './logger';
 
 export interface ErrorMetrics {
   totalErrors: number;

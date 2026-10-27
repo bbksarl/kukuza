@@ -4,6 +4,7 @@ import { useProducts } from '../hooks/useProducts';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { useLanguage } from '@/core/i18n';
 import Seo from '@/components/seo/Seo';
+import { catalogService, type Category } from '@/services/catalog/CatalogService';
 
 const PRODUCTS_PER_PAGE = 20;
 
@@ -43,12 +44,19 @@ const getPageItems = (currentPage: number, totalPages: number): PageItem[] => {
 
 export const ProductBrowser: FC = () => {
   const navigate = useNavigate();
-  const { products, loading, error, total, fetchProducts } = useProducts();
+  const { products, loading, error, total, limit, fetchProducts } = useProducts();
   const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [categories, setCategories] = useState<Category[]>([]);
   const [page, setPage] = useState(1);
 
-  const totalPages = Math.ceil(total / PRODUCTS_PER_PAGE);
+  useEffect(() => {
+    let active = true;
+    void catalogService.getCategories().then((data) => { if (active) setCategories(data); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const totalPages = Math.ceil(total / limit);
   const pageItems = getPageItems(page, totalPages);
 
   useEffect(() => {
@@ -99,9 +107,7 @@ export const ProductBrowser: FC = () => {
             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">{t('catalog.allCategories')}</option>
-            <option value="fashion">{t('catalog.fashion')}</option>
-            <option value="electronics">{t('catalog.electronics')}</option>
-            <option value="home">{t('catalog.home')}</option>
+            {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
           </select>
         </div>
 
@@ -142,8 +148,8 @@ export const ProductBrowser: FC = () => {
           >
             <p className="text-sm text-gray-600">
               {t('catalog.showingProducts', {
-                start: (page - 1) * PRODUCTS_PER_PAGE + 1,
-                end: Math.min(page * PRODUCTS_PER_PAGE, total),
+                start: (page - 1) * limit + 1,
+                end: Math.min(page * limit, total),
                 total,
               })}
             </p>

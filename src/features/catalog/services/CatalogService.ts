@@ -4,7 +4,9 @@
  */
 
 import { facadeClient } from '@/api/client';
-import { getMarketplaceProducts, type MarketplaceProductRecord } from '@/services/products/marketplaceProductStore';
+import { getProducts, getProduct, getCategories } from '@/repositories/portal/catalogRepository';
+import type { ProductDto, ProductQuery } from '@/api/contracts/catalog';
+import { getStoredUserId } from '@/core/auth/sessionStorage';
 
 export interface Product {
   id: string;
@@ -38,81 +40,67 @@ export interface Review {
 }
 
 class CatalogService {
-  private mapMarketplaceProduct(product: MarketplaceProductRecord): Product {
-    const boutiqueId = product.boutiqueId ?? product.creatorId;
-
+  private mapCoreProduct(product: ProductDto): Product {
+    const id = product.id == null ? '' : String(product.id);
+    const boutiqueId = product.brandId ?? product.creatorId;
+    const boutiqueName = product.brand?.name;
     return {
-      id: String(product.id),
-      name: product.name,
+      id,
+      name: product.name ?? 'Produit Kukuza',
       description: product.description ?? '',
-      price: product.price,
-      image: product.image_url ?? product.image ?? '',
-      categoryId: product.category ?? '',
-      creatorId: boutiqueId == null ? '' : String(boutiqueId),
-      rating: product.rating ?? 0,
+      price: product.price ?? 0,
+      image: product.imageUrl ?? '',
+      categoryId: product.categoryId == null ? '' : String(product.categoryId),
+      creatorId: product.creatorId == null ? '' : String(product.creatorId),
+      rating: product.averageRating ?? 0,
       reviewCount: product.reviewCount ?? 0,
       boutiqueId: boutiqueId == null ? undefined : String(boutiqueId),
-      boutiqueName: product.boutiqueName ?? product.creatorName ?? product.creator_name ?? product.brand,
+      boutiqueName,
     };
   }
 
   /**
    * Récupérer tous les produits
    */
-  async getProducts(filters?: {
-    categoryId?: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-  }) {
-    const params = new URLSearchParams();
-    if (filters?.categoryId) params.append('categoryId', filters.categoryId);
-    if (filters?.search) params.append('search', filters.search);
-    if (filters?.page) params.append('page', String(filters.page));
-    if (filters?.limit) params.append('limit', String(filters.limit));
-
-    const response = await facadeClient.get<{ products: Product[]; total: number }>(
-      `/catalog/products?${params.toString()}`
-    );
-
-    const localProducts = getMarketplaceProducts().map((product) => this.mapMarketplaceProduct(product));
-    const remoteIds = new Set(response.products.map((product) => String(product.id)));
-    const localOnlyProducts = localProducts.filter((product) => !remoteIds.has(product.id));
-
-    return {
-      products: [...localOnlyProducts, ...response.products],
-      total: response.total + localOnlyProducts.length,
-    };
+  async getProducts(filters: ProductQuery & { page?: number; limit?: number } = {}, signal?: AbortSignal) {
+    const { page = 1, limit = 20, ...query } = filters;
+    const response = await getProducts(page, limit, signal, query);
+    return { products: response.items.map((product) => this.mapCoreProduct(product)), total: response.total, limit: response.limit };
   }
 
   /**
    * Récupérer un produit par ID
    */
-  async getProductById(productId: string) {
-    const response = await facadeClient.get<{ product: Product }>(
-      `/catalog/products/${productId}`
-    );
-    return response.product;
+  async getProductById(productId: string, signal?: AbortSignal) {
+    const response = await getProduct(productId, signal);
+    return this.mapCoreProduct(response);
   }
 
   /**
    * Récupérer les catégories
    */
   async getCategories() {
-    const response = await facadeClient.get<{ categories: Category[] }>(
-      '/catalog/categories'
-    );
-    return response.categories;
+    return (await getCategories()).map((category) => ({ ...category, id: String(category.id) }));
   }
 
   /**
    * Récupérer les avis d'un produit
    */
   async getProductReviews(productId: string) {
-    const response = await facadeClient.get<{ reviews: Review[] }>(
-      `/catalog/products/${productId}/reviews`
+    const response = await facadeClient.get<Array<Record<string, unknown>>>(
+      `/ProductReview/product/${productId}`
     );
-    return response.reviews;
+    return response.map((review) => ({
+      id: String(review.id ?? ''),
+      productId: String(review.productId ?? productId),
+      userId: String(review.userId ?? ''),
+      userName: typeof (review.user as Record<string, unknown> | undefined)?.username === 'string'
+        ? String((review.user as Record<string, unknown>).username)
+        : 'Utilisateur',
+      rating: Number(review.rating ?? 0),
+      content: typeof review.comment === 'string' ? review.comment : '',
+      createdAt: String(review.createdAt ?? ''),
+    }));
   }
 
   /**
@@ -122,20 +110,30 @@ class CatalogService {
     rating: number;
     content: string;
   }) {
-    const response = await facadeClient.post<{ review: Review }>(
-      `/catalog/products/${productId}/reviews`,
-      data
-    );
-    return response.review;
+    const userId = getStoredUserId();
+    if (userId == null) throw new Error('Vous devez être connecté pour laisser un avis.');
+    const response = await facadeClient.post<Record<string, unknown>>('/Review', {
+      productId: Number(productId),
+      userId,
+      rating: data.rating,
+      comment: data.content,
+    });
+    return {
+      id: String(response.id ?? ''),
+      productId: String(response.productId ?? productId),
+      userId: String(response.userId ?? userId),
+      userName: 'Utilisateur',
+      rating: Number(response.rating ?? data.rating),
+      content: typeof response.comment === 'string' ? response.comment : data.content,
+      createdAt: String(response.createdAt ?? new Date().toISOString()),
+    };
   }
 
   /**
    * Rechercher des produits
    */
   async searchProducts(query: string) {
-    const response = await facadeClient.get<{ products: Product[] }>(
-      `/catalog/products/search?q=${encodeURIComponent(query)}`
-    );
+    const response = await this.getProducts({ search: query });
     return response.products;
   }
 }

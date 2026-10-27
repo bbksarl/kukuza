@@ -1,13 +1,15 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LanguageProvider } from '@/core/i18n';
 import { CartProvider } from '@/providers/CartProvider';
 import CartPage from './CartPage';
+import { facadeClient, FacadeHttpError } from '@/api/client';
 
 describe('cart page', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    vi.spyOn(facadeClient, 'get').mockRejectedValue(new FacadeHttpError(401, 'Unauthorized', null, 'test'));
     vi.stubGlobal(
       'IntersectionObserver',
       class {
@@ -27,9 +29,9 @@ describe('cart page', () => {
     ]));
   });
 
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
-  it('displays the cart and resets it after payment', async () => {
+  it('keeps the cart and asks the guest to authenticate before checkout', async () => {
     render(
       <LanguageProvider>
         <CartProvider>
@@ -46,7 +48,7 @@ describe('cart page', () => {
     expect(screen.getByText('Robe Soleil Dakar')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Payer' }));
 
-    expect(await screen.findByRole('heading', { name: 'Paiement effectué' })).toBeVisible();
-    await waitFor(() => expect(window.localStorage.getItem('kukuza-cart')).toBe('[]'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Connectez-vous pour finaliser votre commande.');
+    expect(window.localStorage.getItem('kukuza-cart')).not.toBe('[]');
   });
 });

@@ -1,5 +1,4 @@
 import { FacadeHttpError, facadeClient } from '@/api/client';
-import { shopEnv } from '../../config/env';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -20,7 +19,7 @@ interface RequestJsonOptions extends RequestInit {
 }
 
 export const requestJson = async <T>(path: string, options: RequestJsonOptions = {}): Promise<T> => {
-  const { timeoutMs = shopEnv.requestTimeoutMs, ...requestInit } = options;
+  const { timeoutMs, ...requestInit } = options;
 
   try {
     return await facadeClient.request<T>(path, {

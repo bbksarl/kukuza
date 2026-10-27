@@ -21,7 +21,7 @@ export default function Banner({ showCategories = true, logoSrc = '/assets/logo.
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         aria-hidden="true"
       />
 
@@ -47,12 +47,13 @@ export default function Banner({ showCategories = true, logoSrc = '/assets/logo.
             {t('hero.about')}
           </a>
 
-          <a
-            href="#shop"
+          <button
+            type="button"
+            onClick={() => navigate('/register')}
             className="rounded-xl border-2 border-white bg-white px-6 py-3 text-sm font-semibold uppercase tracking-wide text-slate-900 shadow-lg transition hover:-translate-y-0.5 hover:bg-transparent hover:text-white"
           >
             {t('hero.registerShop')}
-          </a>
+          </button>
         </div>
       </div>
 

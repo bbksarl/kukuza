@@ -59,7 +59,10 @@ export default function Offre() {
       });
 
     return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      tlLeft.scrollTrigger?.kill();
+      tlRight.scrollTrigger?.kill();
+      tlLeft.kill();
+      tlRight.kill();
     };
   }, []);
 

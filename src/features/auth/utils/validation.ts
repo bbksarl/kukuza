@@ -1,21 +1,9 @@
 
 import { z } from 'zod';
-import { ERROR_MESSAGES } from './messages';
 
-const emailSchema = z.string()
-  .email(ERROR_MESSAGES.EMAIL_INVALID)
-  .transform(val => val.trim().toLowerCase());
+import { emailSchema, passwordSchema, loginInputSchema } from '../domain/auth/schemas';
 
-const passwordSchema = z.string()
-  .min(8, ERROR_MESSAGES.PASSWORD_TOO_SHORT)
-  .regex(/[A-Z]/, 'Le mot de passe doit contenir au moins une majuscule')
-  .regex(/[a-z]/, 'Le mot de passe doit contenir au moins une minuscule')
-  .regex(/\d/, 'Le mot de passe doit contenir au moins un chiffre');
-
-export const loginValidationSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(1, ERROR_MESSAGES.PASSWORD_REQUIRED),
-});
+export const loginValidationSchema = loginInputSchema;
 
 export type LoginInput = z.infer<typeof loginValidationSchema>;
 
@@ -23,6 +11,10 @@ export const registerValidationSchema = z.object({
   name: z.string()
     .min(2, 'Le nom doit contenir au moins 2 caractères')
     .max(100, 'Le nom doit contenir au maximum 100 caractères'),
+  username: z.string()
+    .trim()
+    .min(3, 'Le nom utilisateur doit contenir au moins 3 caractères')
+    .max(100, 'Le nom utilisateur doit contenir au maximum 100 caractères'),
   email: emailSchema,
   password: passwordSchema,
   confirmPassword: z.string(),
@@ -44,7 +36,7 @@ export const boutiqueValidationSchema = z.object({
     .regex(/^[0-9]{5}$/, 'Le code doit contenir 5 chiffres'),
   country: z.string().min(1, 'Le pays est requis'),
   phoneNumber: z.string()
-    .regex(/^[0-9\s\-\+]{6,20}$/, 'Le numéro de téléphone invalide'),
+    .regex(/^[0-9\s\-+]{6,20}$/, 'Le numéro de téléphone invalide'),
   description: z.string()
     .min(10, 'La description doit contenir au moins 10 caractères')
     .max(1000, 'La description doit contenir au maximum 1000 caractères'),

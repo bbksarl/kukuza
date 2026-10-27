@@ -20,7 +20,7 @@ interface NavItem {
 const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpen = false, onClose = () => {} }) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { logout } = useAuth();
+  const { logout, error: authError } = useAuth();
 
   const navItems: NavItem[] = [
     {
@@ -51,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
   };
 
   const handleLogout = async () => {
-    await logout();
+    try { await logout(); } catch { return; }
     onClose();
     navigate('/auth/login', { replace: true });
   };
@@ -121,6 +121,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
           </ul>
         </nav>
 
+        {authError && <p role="alert" className="px-2 text-xs text-red-600">{authError}</p>}
         <button
           onClick={() => void handleLogout()}
           className="shop-sidebar-logout w-full flex flex-col items-center gap-2 py-3 px-2 text-(--color-text-secondary) hover:text-(--color-error) hover:bg-red-50 transition-colors"

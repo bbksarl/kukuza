@@ -5,25 +5,40 @@ import Header from '../components/portal/Header';
 import Footer from '../components/portal/Footer';
 import { useLanguage } from '@/core/i18n';
 import { useCart } from '@/providers/CartProvider';
+import { createOrder } from '@/services/orders/orderService';
+import { runtimeConfig } from '@/config/runtime';
 
 export default function CartPage() {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
   const { items, totalQuantity, totalPrice, changeQuantity, removeItem, clearCart } = useCart();
-  const [isPaid, setIsPaid] = useState(false);
+  const [isOrderCreated, setIsOrderCreated] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const priceFormatter = useMemo(
     () => new Intl.NumberFormat(language === 'en' ? 'en-US' : 'fr-FR', {
       style: 'currency',
-      currency: 'EUR',
+      currency: runtimeConfig.currency,
       maximumFractionDigits: 2,
     }),
     [language],
   );
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
+    if (isSubmitting) return;
+    setPaymentError(null);
+    setIsSubmitting(true);
+    try {
+      await createOrder(items);
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : 'Impossible de créer la commande.');
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
     clearCart();
-    setIsPaid(true);
+    setIsOrderCreated(true);
   };
 
   return (
@@ -45,14 +60,14 @@ export default function CartPage() {
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">KUKUZA</p>
               <h1 className="font-display mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">{t('cart.title')}</h1>
             </div>
-            {!isPaid && <p className="text-sm text-slate-500">{t('cart.itemCount', { value: totalQuantity })}</p>}
+            {!isOrderCreated && <p className="text-sm text-slate-500">{t('cart.itemCount', { value: totalQuantity })}</p>}
           </div>
 
-          {isPaid ? (
+          {isOrderCreated ? (
             <section className="rounded-3xl border border-teal-700/15 bg-white px-6 py-16 text-center shadow-sm sm:px-10">
               <CheckCircle2 className="mx-auto text-teal-700" size={52} aria-hidden="true" />
-              <h2 className="font-display mt-5 text-2xl font-bold text-slate-900">{t('cart.paymentSuccess')}</h2>
-              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">{t('cart.paymentSuccessHint')}</p>
+              <h2 className="font-display mt-5 text-2xl font-bold text-slate-900">{t('cart.orderCreated')}</h2>
+              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">{t('cart.orderCreatedHint')}</p>
               <button
                 type="button"
                 className="mt-7 inline-flex min-h-11 items-center justify-center rounded-full bg-slate-900 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-teal-700"
@@ -137,6 +152,11 @@ export default function CartPage() {
               </section>
 
               <aside className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                {paymentError && (
+                  <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    {paymentError}
+                  </div>
+                )}
                 <h2 className="font-display text-xl font-bold text-slate-900">{t('cart.summary')}</h2>
                 <dl className="mt-5 space-y-3 text-sm">
                   <div className="flex items-center justify-between gap-4">
@@ -156,6 +176,8 @@ export default function CartPage() {
                   type="button"
                   className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-teal-700"
                   onClick={handlePayment}
+                  disabled={isSubmitting}
+                  aria-busy={isSubmitting}
                 >
                   {t('cart.pay')}
                 </button>
@@ -168,4 +190,3 @@ export default function CartPage() {
     </div>
   );
 }
-

@@ -3,18 +3,18 @@ import { ArrowLeft, Check, Heart, ShoppingBag } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/portal/Header';
 import Footer from '../components/portal/Footer';
-import { getProducts } from '@/repositories/portal/catalogRepository';
+import { getProduct } from '@/repositories/portal/catalogRepository';
 import { useLanguage } from '@/core/i18n';
 import { useCart } from '@/providers/CartProvider';
 import { useFavorites } from '@/providers/FavoritesProvider';
 import {
   formatFilterLabel,
   getPortalProductById,
-  mergeMarketplaceProducts,
   normalizeProduct,
   type PortalProduct,
 } from '../data/catalog';
 import Seo from '@/components/seo/Seo';
+import { runtimeConfig } from '@/config/runtime';
 
 type ProductRouteState = {
   product?: PortalProduct;
@@ -31,14 +31,14 @@ export default function ProductDetail() {
   const stateProduct = routeState?.product && String(routeState.product.id) === productId
     ? routeState.product
     : undefined;
-  const localProduct = getPortalProductById(productId);
+  const localProduct = runtimeConfig.enableApiMocks ? getPortalProductById(productId) : undefined;
   const [remoteProduct, setRemoteProduct] = useState<PortalProduct | undefined>();
   const [isResolving, setIsResolving] = useState(!stateProduct && !localProduct);
   const [selectedSize, setSelectedSize] = useState('');
   const [isAdded, setIsAdded] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
 
     if (stateProduct || localProduct || !productId) {
       setRemoteProduct(undefined);
@@ -47,32 +47,31 @@ export default function ProductDetail() {
     }
 
     setIsResolving(true);
-    getProducts(1, 1000)
+    getProduct(productId, controller.signal)
       .then((response) => {
-        if (cancelled) return;
-        const products = mergeMarketplaceProducts(response?.items?.map((item) => normalizeProduct(item)) ?? []);
-        setRemoteProduct(products.find((item) => String(item.id) === productId));
+        if (!controller.signal.aborted) setRemoteProduct(normalizeProduct(response));
       })
+      .catch(() => { if (!controller.signal.aborted) setRemoteProduct(undefined); })
       .finally(() => {
-        if (!cancelled) setIsResolving(false);
+        if (!controller.signal.aborted) setIsResolving(false);
       });
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [localProduct, productId, stateProduct]);
 
   const product = stateProduct ?? localProduct ?? remoteProduct;
   const currencyFormatter = new Intl.NumberFormat(language === 'en' ? 'en-US' : 'fr-FR', {
     style: 'currency',
-    currency: 'EUR',
+      currency: runtimeConfig.currency,
     maximumFractionDigits: 0,
   });
 
   useEffect(() => {
     setSelectedSize(product?.sizes[0] ?? '');
     setIsAdded(false);
-  }, [product?.id]);
+  }, [product?.id, product?.sizes]);
 
   if (isResolving) {
     return (
@@ -117,6 +116,7 @@ export default function ProductDetail() {
   const addProductToCart = () => {
     addItem({
       id: `product:${product.id}:${selectedSize || 'default'}`,
+      productId: product.id,
       name: product.name,
       price: product.price,
       image: product.image_url,

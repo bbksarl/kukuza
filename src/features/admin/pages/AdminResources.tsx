@@ -3,11 +3,14 @@ import { Check, Search, ShieldBan } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import { useAdminOverview } from '../hooks/useAdminOverview';
 import { useLanguage } from '@/core/i18n';
+import { runtimeConfig } from '@/config/runtime';
 
 function currency(value: number, language: 'fr' | 'en') {
-  return `${new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat(language === 'en' ? 'en-US' : 'fr-FR', {
+    style: 'currency',
+    currency: runtimeConfig.currency,
     maximumFractionDigits: 0,
-  }).format(value)} F CFA`;
+  }).format(value);
 }
 
 function statusClass(status: string) {
@@ -115,11 +118,11 @@ export function AdminProductsPage() {
 export function AdminSalesPage() {
   const { t, language } = useLanguage();
   const { data, isLoading, error } = useAdminOverview();
-  const max = Math.max(...(data?.sales.map((sale) => sale.value) ?? [1]));
+  const max = Math.max(1, ...(data?.sales.map((sale) => sale.value) ?? []));
   const total = data?.sales.reduce((sum, sale) => sum + sale.value, 0) ?? 0;
   return <Page title={t('admin.navigation.sales')} subtitle={t('admin.pages.salesSubtitle')}>
     {!data ? <LoadingOrError loading={isLoading} error={error} /> : <>
-      <div className="grid gap-4 sm:grid-cols-2"><div className="rounded-2xl bg-slate-950 p-6 text-white"><p className="text-sm text-slate-400">{t('admin.periodRevenue')}</p><p className="mt-2 text-3xl font-bold">{currency(total, language)}</p></div><div className="rounded-2xl border border-slate-200 bg-white p-6"><p className="text-sm text-slate-500">{t('admin.dailyAverage')}</p><p className="mt-2 text-3xl font-bold text-teal-700">{currency(total / data.sales.length, language)}</p></div></div>
+      <div className="grid gap-4 sm:grid-cols-2"><div className="rounded-2xl bg-slate-950 p-6 text-white"><p className="text-sm text-slate-400">{t('admin.periodRevenue')}</p><p className="mt-2 text-3xl font-bold">{currency(total, language)}</p></div><div className="rounded-2xl border border-slate-200 bg-white p-6"><p className="text-sm text-slate-500">{t('admin.dailyAverage')}</p><p className="mt-2 text-3xl font-bold text-teal-700">{currency(data.sales.length ? total / data.sales.length : 0, language)}</p></div></div>
       <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">{t('admin.revenueEvolution')}</h2><div className="mt-8 flex h-72 items-end gap-3">{data.sales.map((sale) => <div key={sale.label} className="flex h-full flex-1 flex-col justify-end gap-2 text-center"><span className="text-xs font-bold text-slate-500">{currency(sale.value, language)}</span><div className="rounded-t-xl bg-teal-600" style={{ height: `${Math.max(8, sale.value / max * 100)}%` }} /><span className="text-xs font-semibold text-slate-500">{sale.label}</span></div>)}</div></article>
     </>}
   </Page>;

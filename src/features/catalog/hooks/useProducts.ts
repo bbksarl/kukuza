@@ -1,119 +1,52 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { catalogService, Product } from '@/services/catalog/CatalogService';
-import { getMarketplaceProducts, subscribeToMarketplaceProducts } from '@/services/products/marketplaceProductStore';
+import { catalogService, type Product } from '@/services/catalog/CatalogService';
+import type { ProductQuery } from '@/api/contracts/catalog';
 
+type Filters = ProductQuery & { page?: number; limit?: number };
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
-  const lastFilters = useRef<{
-    categoryId?: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-  }>({});
-
-  const getLocalProducts = useCallback((): Product[] => getMarketplaceProducts().map((product) => ({
-    id: String(product.id),
-    name: product.name,
-    description: product.description ?? '',
-    price: product.price,
-    image: product.image_url ?? product.image ?? '',
-    categoryId: product.category ?? '',
-    creatorId: product.boutiqueId == null ? String(product.creatorId ?? '') : String(product.boutiqueId),
-    rating: product.rating ?? 0,
-    reviewCount: product.reviewCount ?? 0,
-    boutiqueId: product.boutiqueId == null ? undefined : String(product.boutiqueId),
-    boutiqueName: product.boutiqueName ?? product.creatorName ?? product.creator_name ?? product.brand,
-  })), []);
-
-  const fetchProducts = useCallback(async (filters?: {
-    categoryId?: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-  }) => {
-    lastFilters.current = filters ?? {};
+  const [limit, setLimit] = useState(20);
+  const controller = useRef<AbortController | null>(null);
+  useEffect(() => () => controller.current?.abort(), []);
+  const start = useCallback(() => {
+    controller.current?.abort();
+    const request = new AbortController();
+    controller.current = request;
     setLoading(true);
     setError(null);
+    return request.signal;
+  }, []);
+
+  const fetchProducts = useCallback(async (filters: Filters = {}) => {
+    const signal = start();
     try {
-      const data = await catalogService.getProducts(filters);
+      const data = await catalogService.getProducts(filters, signal);
+      if (signal.aborted) return;
       setProducts(data.products);
       setTotal(data.total);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      const localProducts = getLocalProducts();
-      setError(localProducts.length > 0 ? null : errorMessage);
-      setProducts(localProducts);
-      setTotal(localProducts.length);
-    } finally {
-      setLoading(false);
-    }
-  }, [getLocalProducts]);
+      setLimit(data.limit);
+    } catch (error) {
+      if (signal.aborted) return;
+      setError(error instanceof Error ? error.message : 'Catalogue indisponible.');
+      setProducts([]);
+      setTotal(0);
+    } finally { if (!signal.aborted) setLoading(false); }
+  }, [start]);
 
-  useEffect(() => subscribeToMarketplaceProducts(() => {
-    void fetchProducts(lastFilters.current);
-  }), [fetchProducts]);
-
-  const fetchProductById = useCallback(async (productId: string) => {
-    setLoading(true);
-    setError(null);
+  const fetchProductById = useCallback(async (id: string) => {
+    const signal = start();
     try {
-      const product = await catalogService.getProductById(productId);
-      return product;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      const localProduct = getLocalProducts().find((item) => item.id === productId);
-
-      if (localProduct) {
-        setError(null);
-        return localProduct;
-      }
-
-      setError(errorMessage);
+      const product = await catalogService.getProductById(id, signal);
+      return signal.aborted ? null : product;
+    } catch (error) {
+      if (!signal.aborted) setError(error instanceof Error ? error.message : 'Produit indisponible.');
       return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [getLocalProducts]);
+    } finally { if (!signal.aborted) setLoading(false); }
+  }, [start]);
 
-  const searchProducts = useCallback(async (query: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await catalogService.searchProducts(query);
-      const localProducts = getLocalProducts().filter((product) =>
-        `${product.name} ${product.description} ${product.boutiqueName ?? ''}`.toLowerCase().includes(query.trim().toLowerCase()),
-      );
-      const remoteIds = new Set(data.map((product) => product.id));
-      const productsWithLocal = [
-        ...localProducts.filter((product) => !remoteIds.has(product.id)),
-        ...data,
-      ];
-      setProducts(productsWithLocal);
-      setTotal(productsWithLocal.length);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      const normalizedQuery = query.trim().toLowerCase();
-      const localProducts = getLocalProducts().filter((product) =>
-        `${product.name} ${product.description} ${product.boutiqueName ?? ''}`.toLowerCase().includes(normalizedQuery),
-      );
-      setError(localProducts.length > 0 ? null : errorMessage);
-      setProducts(localProducts);
-      setTotal(localProducts.length);
-    } finally {
-      setLoading(false);
-    }
-  }, [getLocalProducts]);
-
-  return {
-    products,
-    loading,
-    error,
-    total,
-    fetchProducts,
-    fetchProductById,
-    searchProducts,
-  };
+  const searchProducts = useCallback((search: string) => fetchProducts({ search }), [fetchProducts]);
+  return { products, loading, error, total, limit, fetchProducts, fetchProductById, searchProducts };
 };

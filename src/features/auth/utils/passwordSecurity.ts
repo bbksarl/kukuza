@@ -56,7 +56,7 @@ export const validatePasswordStrength = (password: string): PasswordStrength => 
   if (/\d/.test(password)) score += 1;
   else feedback.push('Ajouter des chiffres');
 
-  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 1;
+  if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) score += 1;
   else feedback.push('Ajouter des caractères spéciaux pour plus de sécurité');
 
   if (isWeakPassword(password)) {

@@ -1,5 +1,5 @@
 import React, { useState, FC } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
 import { useForm } from '../hooks/useForm';
@@ -12,6 +12,7 @@ import { useLanguage } from '@/core/i18n';
 
 interface RegisterFormValues {
   name: string;
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -19,6 +20,7 @@ interface RegisterFormValues {
 
 const initialValues: RegisterFormValues = {
   name: '',
+  username: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -92,6 +94,18 @@ export const RegisterPage: FC = () => {
               error={errors.name}
               touched={touched.name}
               placeholder={t('auth.namePlaceholder')}
+            />
+
+            <Input
+              label={t('auth.username')}
+              type="text"
+              name="username"
+              value={values.username}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={errors.username}
+              touched={touched.username}
+              placeholder={t('auth.usernamePlaceholder')}
             />
 
             <Input

@@ -1,13 +1,16 @@
 import { render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
+import { facadeClient, FacadeHttpError } from '@/api/client';
 
 afterEach(() => {
+  vi.restoreAllMocks();
   window.history.replaceState({}, '', '/');
 });
 
 describe('unified application routing', () => {
   it('serves authentication from the single application router', async () => {
+    vi.spyOn(facadeClient, 'get').mockRejectedValue(new FacadeHttpError(401, 'Unauthorized', null, 'test'));
     window.history.pushState({}, '', '/auth/login');
 
     render(<App />);

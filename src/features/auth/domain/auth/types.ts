@@ -12,6 +12,7 @@ export interface BoutiqueProfileData {
 
 export interface RegisterData {
   name: string;
+  username?: string;
   email: string;
   password: string;
   isBoutique?: boolean;
@@ -21,5 +22,6 @@ export interface RegisterData {
 export interface AuthResult {
   user: User;
   role: User['role'];
+  token?: string;
   redirectUrl?: string;
 }

@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/core/i18n';
 import NotificationsButton from '@/components/notifications/NotificationsButton';
 
-const developmentAdminEmail = import.meta.env.VITE_DEFAULT_ADMIN_EMAIL ?? 'Compte administrateur local';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 type AdminLayoutProps = {
@@ -23,14 +22,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, language, setLanguage } = useLanguage();
-  const { logout: signOut } = useAuth();
+  const { logout: signOut, error: authError, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
   const logout = async () => {
-    await signOut();
+    try { await signOut(); } catch { return; }
     navigate('/auth/login');
   };
 
@@ -65,6 +64,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </nav>
 
       <div className="border-t border-white/10 pt-4">
+        {authError && <p role="alert" className="text-sm text-red-300">{authError}</p>}
         <button
           type="button"
           className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
@@ -112,8 +112,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex items-center gap-3 border-l border-slate-200 pl-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-50 text-sm font-bold text-teal-700">A</div>
                 <div className="hidden sm:block">
-                  <p className="text-sm font-bold text-slate-900">Admin KUKUZA</p>
-                  <p className="text-xs text-slate-500">{developmentAdminEmail}</p>
+                  <p className="text-sm font-bold text-slate-900">{user?.username ?? 'Admin KUKUZA'}</p>
+                  <p className="text-xs text-slate-500">{user?.email.toString()}</p>
                 </div>
               </div>
             </div>

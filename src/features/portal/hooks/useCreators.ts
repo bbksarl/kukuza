@@ -1,3 +1,4 @@
+import { runtimeConfig } from '@/config/runtime';
 import { useState, useEffect } from 'react';
 import { getCreators, type CatalogCreator } from '@/repositories/portal/catalogRepository';
 
@@ -18,20 +19,22 @@ export function useCreators() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchCreators = async () => {
       try {
-        const data = await getCreators();
-        if (data) setCreators(data);
-        else setCreators(mockCreators);
+        const data = await getCreators(controller.signal);
+        if (!controller.signal.aborted) setCreators(data);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : String(err));
-        setCreators(mockCreators);
+        if (controller.signal.aborted) return;
+        setError(runtimeConfig.enableApiMocks ? null : (err instanceof Error ? err.message : String(err)));
+        setCreators(runtimeConfig.enableApiMocks ? mockCreators : []);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
-    fetchCreators();
+    void fetchCreators();
+    return () => controller.abort();
   }, []);
 
   return { creators, loading, error } as const;

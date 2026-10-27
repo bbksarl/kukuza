@@ -1,6 +1,6 @@
 import React, { SVGProps } from 'react';
 
-interface HomeIconProps extends SVGProps<SVGSVGElement> {}
+type HomeIconProps = SVGProps<SVGSVGElement>;
 
 const HomeIcon = (props: HomeIconProps) => {
   return (
