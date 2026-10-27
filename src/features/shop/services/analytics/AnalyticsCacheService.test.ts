@@ -30,12 +30,12 @@ describe('analytics cache contract', () => {
     }).stats).toEqual({
       totalRevenue: 125000,
       revenueChange: 12.5,
-      dailyRevenue: 0,
-      dailyRevenueChange: 0,
+      dailyRevenue: null,
+      dailyRevenueChange: null,
       totalSales: 18,
-      salesChange: 0,
+      salesChange: null,
       activeUsers: 31,
-      usersChange: 0,
+      usersChange: null,
     });
   });
 });

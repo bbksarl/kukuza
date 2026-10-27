@@ -28,7 +28,7 @@ const AnalyticsCards: React.FC<AnalyticsCardsProps> = ({ stats }) => {
           icon={<Banknote size={24} style={{ color: '#297560' }} />}
           iconBgColor="bg-green-100"
           label={t('shop.dailyRevenue')}
-          value={formatCurrency(stats.dailyRevenue)}
+          value={stats.dailyRevenue == null ? '—' : formatCurrency(stats.dailyRevenue)}
           change={stats.dailyRevenueChange}
         />
         <StatCard

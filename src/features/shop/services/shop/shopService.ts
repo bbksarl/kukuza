@@ -16,6 +16,7 @@ import {
   type MarketplaceProductRecord,
 } from '@/services/products/marketplaceProductStore';
 import { getStoredBrandId, getStoredUserId } from '@/core/auth/sessionStorage';
+import { parseShopResponse, ShopResponseError, shopBrandSchema, shopCategorySchema, shopListSchema } from '@/api/contracts/shop';
 
 export interface ShopCategory {
   id: number;
@@ -38,6 +39,7 @@ const withFallback = async <T>(
   try {
     return await request();
   } catch (error) {
+    if (error instanceof ShopResponseError) throw error;
     if (shopEnv.enableApiMocks) {
       console.warn(`[shopService] Falling back to mock data for ${operation}.`, error);
       return fallback();
@@ -48,15 +50,9 @@ const withFallback = async <T>(
 };
 
 const createProductPayload = async (input: CreateProductInput, brandId: number): Promise<FormData> => {
-  let categoryId: number | undefined;
-  try {
-    const categories = await requestJson<unknown>(endpoint(shopEnv.endpoints.brandCategories, { brandId }));
-    const categoryList = extractList(categories) as Array<Record<string, unknown>>;
-    const category = categoryList.find((item) => String(item.name ?? '').toLowerCase() === input.category.toLowerCase());
-    if (category?.id != null) categoryId = Number(category.id);
-  } catch {
-    throw new Error('Impossible de charger les catégories de cette marque.');
-  }
+  const categories = await requestJson<unknown>(endpoint(shopEnv.endpoints.brandCategories, { brandId }));
+  const categoryList = parseShopResponse(shopCategorySchema.array(), extractList(categories));
+  const categoryId = categoryList.find((item) => item.name.toLowerCase() === input.category.toLowerCase())?.id;
 
   if (categoryId == null) throw new Error('La catégorie sélectionnée est invalide pour cette marque.');
 
@@ -71,15 +67,7 @@ const createProductPayload = async (input: CreateProductInput, brandId: number):
   return payload;
 };
 
-const extractList = (response: unknown): unknown[] => {
-  if (Array.isArray(response)) return response;
-
-  const source = (response ?? {}) as Record<string, unknown>;
-  if (Array.isArray(source.data)) return source.data;
-  if (Array.isArray(source.products)) return source.products;
-  if (Array.isArray(source.items)) return source.items;
-  return [];
-};
+const extractList = (response: unknown): unknown[] => parseShopResponse(shopListSchema, response);
 
 const extractProduct = (response: unknown): unknown => {
   const source = (response ?? {}) as Record<string, unknown>;
@@ -89,8 +77,8 @@ const extractProduct = (response: unknown): unknown => {
 const getCurrentBrandId = async (): Promise<number> => {
   const userId = getStoredUserId();
   const brands = await requestJson<unknown>('/Brand');
-  const brandList = extractList(brands) as Array<Record<string, unknown>>;
-  const ownedBrands = brandList.filter((item) => userId != null && Number(item.userId) === userId);
+  const brandList = parseShopResponse(shopBrandSchema.array(), extractList(brands));
+  const ownedBrands = brandList.filter((item) => userId != null && item.userId === userId);
   const storedBrandId = getStoredBrandId();
   const brand = storedBrandId != null
     ? ownedBrands.find((item) => Number(item.id) === storedBrandId)
@@ -104,6 +92,7 @@ const getCurrentBrandId = async (): Promise<number> => {
 };
 
 const saveProductForMarketplace = (product: Product): Product => {
+  if (!shopEnv.enableApiMocks) return product;
   const boutique = getCurrentBoutique();
   const productWithBoutique: Product = {
     ...product,
@@ -127,7 +116,7 @@ const saveProductForMarketplace = (product: Product): Product => {
     updatedAt: productWithBoutique.updatedAt.toISOString(),
   };
 
-  if (shopEnv.enableApiMocks) saveMarketplaceProduct(record);
+  saveMarketplaceProduct(record);
   return productWithBoutique;
 };
 
@@ -135,14 +124,7 @@ export const shopService = {
   async getCategories(): Promise<ShopCategory[]> {
     const brandId = await getCurrentBrandId();
     const response = await requestJson<unknown>(endpoint(shopEnv.endpoints.brandCategories, { brandId }));
-    return extractList(response)
-      .map((item) => item as Record<string, unknown>)
-      .map((item) => ({
-        id: Number(item.id),
-        name: String(item.name ?? ''),
-        parentId: item.parentId == null ? null : Number(item.parentId),
-      }))
-      .filter((category) => Number.isInteger(category.id) && category.name.length > 0);
+    return parseShopResponse(shopCategorySchema.array(), extractList(response));
   },
 
   async getDashboardOverview(): Promise<DashboardOverview> {
@@ -188,13 +170,7 @@ export const shopService = {
       'getSales',
       async () => {
         const response = await requestJson<unknown>('/OrderItem');
-        const list = Array.isArray(response)
-          ? response
-          : Array.isArray((response as { data?: unknown[] })?.data)
-            ? (response as { data: unknown[] }).data
-            : [];
-
-        return list.map(mapSaleItem);
+        return extractList(response).map(mapSaleItem);
       },
       () => getMockSales()
     );

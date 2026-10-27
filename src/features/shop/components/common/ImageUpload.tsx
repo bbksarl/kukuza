@@ -98,6 +98,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             <button
               type="button"
               onClick={handleAddClick}
+              aria-label={t('shop.addImage')}
               className="w-32 h-32 rounded-lg border-2 border-dashed border-(--color-border) bg-(--color-secondary) hover:bg-(--color-border) transition-colors flex items-center justify-center"
             >
               <Plus size={32} className="text-(--color-text-tertiary)" />
@@ -107,6 +108,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           <input
             ref={fileInputRef}
             type="file"
+            aria-label={t('shop.addImage')}
             accept="image/jpeg,image/jpg,image/png,image/webp"
             multiple
             onChange={handleFileSelect}

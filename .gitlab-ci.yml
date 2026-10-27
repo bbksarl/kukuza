@@ -1,5 +1,6 @@
 workflow:
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
     - when: never
 
@@ -27,7 +28,13 @@ default:
   before_script:
     - set -eu
 
+.checks:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
 install:
+  extends: .checks
   stage: install
   script:
     - echo "[install] Installing the unified KUKUZA application"
@@ -35,6 +42,7 @@ install:
     - if [ -f package-lock.json ]; then npm ci $NPM_FLAGS; else npm install $NPM_FLAGS; fi
 
 test:
+  extends: .checks
   stage: test
   needs:
     - job: install
@@ -46,6 +54,7 @@ test:
     - npm run test
 
 build:
+  extends: .checks
   stage: build
   needs:
     - job: install
@@ -85,9 +94,8 @@ docker:develop:
   needs:
     - job: build
       artifacts: true
-  only:
-    - develop
-    - main
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_COMMIT_BRANCH == "main"'
 
 deploy:develop:
   stage: deploy
@@ -150,6 +158,5 @@ deploy:develop:
     url: https://www.kukuzaa.com
   needs:
     - job: docker:develop
-  only:
-    - develop
-    - main
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_COMMIT_BRANCH == "main"'

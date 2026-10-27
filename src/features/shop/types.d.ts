@@ -35,13 +35,13 @@ export interface Product {
 
 export interface DashboardStats {
   totalRevenue: number;
-  revenueChange: number;
-  dailyRevenue: number;
-  dailyRevenueChange: number;
+  revenueChange: number | null;
+  dailyRevenue: number | null;
+  dailyRevenueChange: number | null;
   totalSales: number;
-  salesChange: number;
+  salesChange: number | null;
   activeUsers: number;
-  usersChange: number;
+  usersChange: number | null;
 }
 
 export interface ChartDataPoint {

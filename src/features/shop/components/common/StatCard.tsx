@@ -6,7 +6,7 @@ interface StatCardProps {
   iconBgColor?: string;
   label: string;
   value: string | number;
-  change?: number;
+  change?: number | null;
   changeLabel?: string;
 }
 
@@ -29,7 +29,7 @@ const StatCard: React.FC<StatCardProps> = ({
             {label}
           </div>
           <div className="text-2xl font-bold text-(--color-text-primary)">{value}</div>
-          {change !== undefined && (
+          {change != null && (
             <div className={`stat-card-change mt-2 ${isPositive ? 'positive' : isNegative ? 'negative' : ''}`}>
               {isPositive ? '+' : ''}{change}% {changeLabel}
             </div>

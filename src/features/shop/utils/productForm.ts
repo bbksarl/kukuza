@@ -1,5 +1,8 @@
 import type { CreateProductInput, ProductFormValues } from '../types';
 
+export type ProductTextField = Exclude<keyof ProductFormValues, 'images'>;
+export type ProductFormErrors = Partial<Record<keyof ProductFormValues, string>>;
+
 export const PRODUCT_CATEGORIES = [
   'Vetements',
   'Chaussures',
@@ -34,8 +37,8 @@ export const getGenderOptions = (ageRange: string): string[] => {
   return [];
 };
 
-export const validateProductForm = (formData: ProductFormValues): Partial<Record<keyof ProductFormValues, string>> => {
-  const errors: Partial<Record<keyof ProductFormValues, string>> = {};
+export const validateProductForm = (formData: ProductFormValues): ProductFormErrors => {
+  const errors: ProductFormErrors = {};
 
   if (!formData.name.trim()) {
     errors.name = "Le nom de l'article est requis";
@@ -47,21 +50,21 @@ export const validateProductForm = (formData: ProductFormValues): Partial<Record
 
   if (!formData.price.trim()) {
     errors.price = 'Le prix est requis';
-  } else if (Number.isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
+  } else if (!Number.isFinite(Number(formData.price)) || Number(formData.price) <= 0) {
     errors.price = 'Le prix doit etre un nombre valide';
   }
 
   if (!formData.quantity.trim()) {
     errors.quantity = 'La quantite est requise';
-  } else if (Number.isNaN(Number(formData.quantity)) || Number(formData.quantity) < 0) {
+  } else if (!Number.isSafeInteger(Number(formData.quantity)) || Number(formData.quantity) < 0) {
     errors.quantity = 'La quantite doit etre un nombre valide';
   }
 
-  if (!formData.ageRange) {
+  if (!PRODUCT_AGE_RANGES.some((age) => age === formData.ageRange)) {
     errors.ageRange = "La tranche d'age est requise";
   }
 
-  if (!formData.gender) {
+  if (!getGenderOptions(formData.ageRange).includes(formData.gender)) {
     errors.gender = 'La categorie de genre est requise';
   }
 

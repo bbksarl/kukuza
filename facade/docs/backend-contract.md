@@ -86,7 +86,7 @@ Réponse unique pour le portail et le catalogue :
 
 `page` commence à 1 ; `limit` est compris entre 1 et 100 et représente la taille réellement appliquée. `total` est le nombre total **après filtrage**, avant pagination. Appliquer un ordre stable avec départage par identifiant.
 
-Filtres facultatifs : `search`, `categoryId`, `gender`, `nav`, `filter`. Appliquer tous les filtres côté serveur avant pagination. Les valeurs de navigation et de filtres actuellement proposées par l'interface sont décrites dans `src/features/portal/data/catalog.ts` (`NAV_ITEMS`, `FILTERS_BY_TYPE`, `applyProductFilters`). Ce dernier constitue la sémantique de référence pour les démonstrations locales.
+Filtres facultatifs : `search`, `categoryId`, `gender`, `nav`, `filter`. Appliquer tous les filtres côté serveur avant pagination. Les valeurs proposées par l'interface sont dans `src/features/portal/data/catalog/navigation.ts` (`NAV_ITEMS`, `FILTERS_BY_TYPE`). `filters.ts` définit la sémantique de référence des filtres pour les démonstrations locales ; `data/catalog.ts` réexporte ces fonctions.
 
 ### GET `/Product/{id}`
 
@@ -99,6 +99,12 @@ Tableaux d'objets `{ "id": 3, "name": "…" }`. Les marques peuvent inclure `pro
 ### POST `/brands/{brandId}/products`
 
 Multipart : `name`, `price`, `stock`, `categoryId`, `gender`, `ageRange`, et plusieurs fichiers `images`. Répondre avec le produit créé. Vérifier l'appartenance de la boutique, la catégorie, les quantités et les images côté serveur. `GET /brands/{brandId}/categories` retourne les catégories disponibles, `GET /brands/{brandId}/products` les produits de la boutique. Les chemins sont configurables via `VITE_BRAND_*`.
+
+Les réponses de création et de liste des produits de la boutique doivent fournir `id`, `name`, `price`, `stock`, `createdAt` et `updatedAt`. `price` est un nombre fini positif ou nul ; `stock` un entier positif ou nul ; les dates sont des chaînes ISO 8601 avec fuseau. Les chaînes numériques ne sont pas converties silencieusement. Le statut facultatif accepte `in_stock`, `low_stock` ou `out_of_stock` ; en son absence, l'affichage le déduit du stock (zéro, 1 à 10, plus de 10). Un statut fourni mais inconnu est refusé. La référence et la catégorie absentes s'affichent comme non renseignées, sans valeur métier inventée.
+
+### GET `/OrderItem` — ventes accessibles au vendeur
+
+Retourner une liste contenant `id`, `productName`, `quantity` (entier strictement positif), `unitPrice`, `totalPrice`, `customer`, `date` et `status` (`completed`, `pending` ou `cancelled`). Les montants doivent être numériques, finis et non négatifs. `totalPrice` doit venir du serveur : il n'est pas reconstitué côté navigateur. `reference` est facultatif. Une date, un montant ou un statut manquant/invalide produit une erreur ; une réponse mal formée ne devient pas une liste vide. Seul un tableau vide explicite représente une liste vide.
 
 Les avis utilisent actuellement `GET /ProductReview/product/{id}` et `POST /Review`. Ce dernier reçoit `productId`, `rating`, `comment` et un `userId` historique ; le backend doit déduire l'auteur de la session et ignorer/refuser toute usurpation de cet identifiant.
 
@@ -141,6 +147,8 @@ Le frontend conserve la tentative en `sessionStorage` jusqu'à une réponse vali
 Les totaux sont calculés sur l'ensemble du périmètre autorisé, indépendamment des listes limitées affichées. Le chiffre d'affaires doit suivre la règle métier choisie pour les commandes payées/terminées. Les listes `topProducts` et `recentUsers` sont des sélections ; elles ne constituent pas des endpoints paginés de gestion exhaustive.
 
 `GET /brands/{brandId}/metrics?period=month&year=2026&month=10` reste utilisé pour le dashboard vendeur. Voir `AnalyticsCacheService.ts` pour les périodes jour/mois/année et `shopMappers.ts` pour la réponse consommée.
+
+Les métriques vendeur exigent `totalRevenue`, `totalSales` et `activeUsers` (les alias historiques `tr`, `sold`, `active_users` restent acceptés). Le revenu est non négatif et les compteurs sont des entiers non négatifs. Les variations et `dailyRevenue` sont facultatifs ou nuls : leur absence reste distincte d'une valeur zéro. Toute valeur fournie doit être numérique et finie. Les séries `salesData` et `visitsData` sont facultatives ; lorsqu'elles sont fournies, elles doivent être des tableaux de points valides, sans points ni montants synthétiques. Les règles sont vérifiées par `src/api/contracts/shop.ts`, même en mode démonstration.
 
 ## Validation avec le backend réel
 

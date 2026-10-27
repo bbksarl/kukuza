@@ -46,7 +46,15 @@ Les comptes de démonstration n'autorisent aucune opération sur le backend. Le 
 
 `Header.tsx` compose les éléments de `components/header/`. Le hook `useHeaderNavigation` centralise la navigation et le panneau ouvert (menu, filtres, recherche ou langue), ainsi que sa fermeture au clavier ou lors d'un changement de route.
 
+`data/catalog.ts` conserve les exports publics ; les implémentations sont réparties dans `data/catalog/` : types, navigation, libellés, filtres, conversion des produits et données locales/de démonstration. Les conversions exigent un identifiant, un nom et un prix valides.
+
 Les appels réseau restent dans les services et la façade HTTP. `usePaginatedProducts` gère l'annulation des anciennes recherches, conserve les produits pendant le chargement suivant et permet de réessayer la page en échec.
+
+## Organisation de la boutique
+
+`AddProduct.tsx` compose le formulaire et l'aperçu. `useProductForm` gère les champs, la validation, le chargement des catégories et la soumission ; les composants de `components/products/` gèrent l'affichage. Une soumission en cours verrouille les champs et empêche une seconde création simultanée. Une erreur conserve les saisies ; une réponse valide réinitialise le formulaire. Les aperçus libèrent leurs URL temporaires.
+
+Les schémas de `src/api/contracts/shop.ts` valident les produits, ventes et métriques après conversion des alias connus. Les identifiants, dates, montants et statuts essentiels ne sont plus inventés. Une réponse invalide provoque une erreur, y compris en mode démo. Les statistiques facultatives absentes restent `null` : elles s'affichent avec un tiret ou sans pourcentage de variation. Le [contrat proposé](facade/docs/backend-contract.md) détaille les champs attendus.
 
 ## Contrôles
 
@@ -60,6 +68,10 @@ npm run check
 ```
 
 ESLint vérifie notamment les règles des hooks et leurs dépendances. Les tests couvrent la session, les formulaires, les commandes, la pagination, les erreurs réseau et l'interface. La CI exécute le lint, TypeScript, les tests et le build.
+
+La CI GitLab crée des pipelines de vérification sur les merge requests et sur `main`. Les jobs d'installation, de test et de build participent aux deux. La publication Docker reste réservée à `main`, avec un déploiement manuel ; les merge requests n'exécutent aucun de ces deux jobs. Les [règles GitLab](https://docs.gitlab.com/ci/jobs/job_rules/) sont déclarées explicitement sur chaque groupe de jobs.
+
+Les tests de la boutique couvrent aussi les réponses incomplètes, les statistiques absentes, les reprises du formulaire après erreur et les soumissions simultanées.
 
 Les parcours de `ProductsList.test.tsx` simulent les réponses de `fetch` en conservant la vraie façade HTTP, les services et les validations Zod. Ils couvrent la recherche et le retour navigateur, les suggestions au clavier, la pagination avec reprise après erreur, les réponses invalides et les résultats vides. Les exemples de réponses sont dans `tests/fixtures/catalog.ts`. Aucun serveur C# ni mode de démonstration n'est nécessaire pour les exécuter :
 
