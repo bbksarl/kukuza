@@ -102,6 +102,14 @@ Multipart : `name`, `price`, `stock`, `categoryId`, `gender`, `ageRange`, et plu
 
 Les réponses de création et de liste des produits de la boutique doivent fournir `id`, `name`, `price`, `stock`, `createdAt` et `updatedAt`. `price` est un nombre fini positif ou nul ; `stock` un entier positif ou nul ; les dates sont des chaînes ISO 8601 avec fuseau. Les chaînes numériques ne sont pas converties silencieusement. Le statut facultatif accepte `in_stock`, `low_stock` ou `out_of_stock` ; en son absence, l'affichage le déduit du stock (zéro, 1 à 10, plus de 10). Un statut fourni mais inconnu est refusé. La référence et la catégorie absentes s'affichent comme non renseignées, sans valeur métier inventée.
 
+### PATCH `/Product/{id}` — édition dans l'espace boutique
+
+Endpoint à fournir par le backend : accepter un `multipart/form-data` avec `name`, `price`, `stock`, `categoryId`, `gender`, `ageRange` et zéro ou un fichier `images`. Si aucun fichier n'est envoyé, conserver l'image actuelle. Vérifier côté serveur que le produit et la catégorie appartiennent à une boutique administrée par la session, puis répondre avec le produit complet au format utilisé par `GET /Product/{id}`. `price` doit être positif ou nul, `stock` un entier positif ou nul, et le fichier image doit respecter les mêmes formats et limites que la création.
+
+### DELETE `/Product/{id}` — suppression dans l'espace boutique
+
+Endpoint à fournir par le backend : supprimer uniquement un produit appartenant à une boutique administrée par la session et répondre `204 No Content` (ou retourner le produit supprimé). Refuser les identifiants hors périmètre avec `403` ou `404`.
+
 ### GET `/OrderItem` — ventes accessibles au vendeur
 
 Retourner une liste contenant `id`, `productName`, `quantity` (entier strictement positif), `unitPrice`, `totalPrice`, `customer`, `date` et `status` (`completed`, `pending` ou `cancelled`). Les montants doivent être numériques, finis et non négatifs. `totalPrice` doit venir du serveur : il n'est pas reconstitué côté navigateur. `reference` est facultatif. Une date, un montant ou un statut manquant/invalide produit une erreur ; une réponse mal formée ne devient pas une liste vide. Seul un tableau vide explicite représente une liste vide.

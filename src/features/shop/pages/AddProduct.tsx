@@ -18,9 +18,10 @@ export default function AddProductPage() {
         </h1>
         {form.submitError && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{form.submitError}</div>}
         {form.submitSuccess && <div role="status" className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{form.submitSuccess}</div>}
-        <form onSubmit={(event) => { event.preventDefault(); void form.submit('publish'); }} noValidate>
-          <fieldset disabled={form.isSubmitting} aria-busy={form.isSubmitting} className="grid min-w-0 grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3">
+        <form className="shop-add-product-form" onSubmit={(event) => { event.preventDefault(); void form.submit('publish'); }} noValidate>
+          <fieldset disabled={form.isSubmitting} aria-busy={form.isSubmitting} className="min-w-0">
             <legend className="sr-only">{t('shop.addProductsTitle')}</legend>
+            <div className="shop-add-product-layout grid min-w-0 grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <Card>
                 <ProductFields values={form.values} errors={form.errors} categories={form.categories} categoriesError={form.categoriesError} onChange={form.change} />
@@ -46,6 +47,7 @@ export default function AddProductPage() {
                   <ArrowRight size={18} />
                 </button>
               </Card>
+            </div>
             </div>
           </fieldset>
         </form>

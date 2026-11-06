@@ -99,9 +99,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               type="button"
               onClick={handleAddClick}
               aria-label={t('shop.addImage')}
-              className="w-32 h-32 rounded-lg border-2 border-dashed border-(--color-border) bg-(--color-secondary) hover:bg-(--color-border) transition-colors flex items-center justify-center"
+              className="shop-image-add-button rounded-lg transition-colors flex items-center justify-center"
             >
-              <Plus size={32} className="text-(--color-text-tertiary)" />
+              <Plus size={16} />
+              <span>{t('shop.addImage')}</span>
             </button>
           </div>
 

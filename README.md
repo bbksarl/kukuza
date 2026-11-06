@@ -29,6 +29,7 @@ Le contrat cible est décrit dans [facade/docs/backend-contract.md](facade/docs/
 - `GET /api/Auth/me`, `POST /api/Auth/login`, `POST /api/Auth/logout` ;
 - `POST /api/Auth/register` en multipart, incluant le profil et le logo de boutique ;
 - `GET /api/Product` avec pagination et filtres serveur, `GET /api/Product/{id}` ;
+- `PATCH /api/Product/{id}` et `DELETE /api/Product/{id}` pour modifier/supprimer un produit dans l'espace boutique (contrat proposé dans `facade/docs/backend-contract.md`) ;
 - `POST /api/Order/checkout`, transactionnel et idempotent ;
 - `GET /api/admin/overview`, avec les agrégats calculés côté serveur.
 

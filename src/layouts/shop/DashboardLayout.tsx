@@ -13,7 +13,7 @@ const DashboardLayout = ({ children, activePath }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen bg-white">
       <Sidebar activePath={activePath} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <div className={`md:ml-[80px] transition-all duration-300 ${isSidebarOpen ? 'md:opacity-100 opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`md:ml-[104px] transition-all duration-300 ${isSidebarOpen ? 'md:opacity-100 opacity-0 pointer-events-none' : 'opacity-100'}`}>
         <Header 
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
         />

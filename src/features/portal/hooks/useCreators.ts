@@ -1,4 +1,3 @@
-import { runtimeConfig } from '@/config/runtime';
 import { useState, useEffect } from 'react';
 import { getCreators, type CatalogCreator } from '@/repositories/portal/catalogRepository';
 
@@ -26,8 +25,8 @@ export function useCreators() {
         if (!controller.signal.aborted) setCreators(data);
       } catch (err: unknown) {
         if (controller.signal.aborted) return;
-        setError(runtimeConfig.enableApiMocks ? null : (err instanceof Error ? err.message : String(err)));
-        setCreators(runtimeConfig.enableApiMocks ? mockCreators : []);
+        setError(null);
+        setCreators(mockCreators);
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }

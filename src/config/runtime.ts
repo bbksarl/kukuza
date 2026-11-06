@@ -15,5 +15,5 @@ const parseBoolean = (value: string | undefined, fallback: boolean): boolean => 
 export const runtimeConfig = {
   enableApiMocks: parseBoolean(env.VITE_ENABLE_API_MOCKS, false),
   isDevelopment: Boolean(env.DEV),
-  currency: /^[A-Z]{3}$/.test(env.VITE_DEFAULT_CURRENCY ?? '') ? env.VITE_DEFAULT_CURRENCY! : 'EUR',
+  currency: /^[A-Z]{3}$/.test(env.VITE_DEFAULT_CURRENCY ?? '') ? env.VITE_DEFAULT_CURRENCY! : 'XOF',
 } as const;

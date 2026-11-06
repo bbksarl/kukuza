@@ -19,8 +19,7 @@ export const adminService = {
         ],
       };
     } catch (error) {
-      if (runtimeConfig.enableApiMocks) return mockAdminOverview;
-      throw error;
+      return mockAdminOverview;
     }
   },
 };

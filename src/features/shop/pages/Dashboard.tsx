@@ -19,6 +19,8 @@ const DashboardPage: React.FC = () => {
   } = useDashboardData();
   const {
     products,
+    deleteProduct,
+    updateProduct,
     isLoading: isProductsLoading,
     error: productsError,
   } = useProducts();
@@ -65,7 +67,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         <div className="overflow-hidden">
-          <ProductsTable products={products} />
+          <ProductsTable products={products} onDeleteProduct={deleteProduct} onUpdateProduct={updateProduct} />
         </div>
       </div>
     </DashboardLayout>

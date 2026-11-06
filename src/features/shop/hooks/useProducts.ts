@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Product, ProductFilter } from '../types';
+import type { Product, ProductEditInput, ProductFilter } from '../types';
 import { shopService } from '@/services/shop';
 
 interface UseProductsReturn {
@@ -10,6 +10,8 @@ interface UseProductsReturn {
   filter: ProductFilter;
   setFilter: (filter: ProductFilter) => void;
   refetch: () => Promise<void>;
+  deleteProduct: (productId: string) => Promise<void>;
+  updateProduct: (productId: string, changes: ProductEditInput) => Promise<void>;
 }
 
 export const useProducts = (): UseProductsReturn => {
@@ -32,6 +34,18 @@ export const useProducts = (): UseProductsReturn => {
     }
   };
 
+  const deleteProduct = async (productId: string): Promise<void> => {
+    await shopService.deleteProduct(productId);
+    setProducts((current) => current.filter((product) => product.id !== productId));
+  };
+
+  const updateProduct = async (productId: string, changes: ProductEditInput): Promise<void> => {
+    const current = products.find((product) => product.id === productId);
+    if (!current) throw new Error('Produit introuvable.');
+    const updated = await shopService.updateProduct(current, changes);
+    setProducts((items) => items.map((product) => product.id === productId ? updated : product));
+  };
+
   useEffect(() => {
     void fetchProducts();
   }, []);
@@ -48,6 +62,8 @@ export const useProducts = (): UseProductsReturn => {
     error,
     filter,
     setFilter,
-    refetch: fetchProducts
+    refetch: fetchProducts,
+    deleteProduct,
+    updateProduct,
   };
 };

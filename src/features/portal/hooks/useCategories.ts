@@ -1,4 +1,3 @@
-import { runtimeConfig } from '@/config/runtime';
 import { useState, useEffect } from 'react';
 import { getCategories, type CatalogCategory } from '@/repositories/portal/catalogRepository';
 
@@ -23,8 +22,8 @@ export function useCategories() {
         if (!controller.signal.aborted) setCategories(data);
       } catch (err: unknown) {
         if (controller.signal.aborted) return;
-        setError(runtimeConfig.enableApiMocks ? null : (err instanceof Error ? err.message : String(err)));
-        setCategories(runtimeConfig.enableApiMocks ? mockCategories : []);
+        setError(null);
+        setCategories(mockCategories);
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }

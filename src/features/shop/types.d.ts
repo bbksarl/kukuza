@@ -105,3 +105,13 @@ export interface ProductFormValues {
   gender: string;
   images: File[];
 }
+
+export interface ProductEditInput {
+  name: string;
+  category: string;
+  price: number;
+  quantity: number;
+  gender?: string;
+  ageRange?: string;
+  image?: File;
+}

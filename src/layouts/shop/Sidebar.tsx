@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
       )}
 
       {/* Sidebar - Desktop Fixed */}
-      <aside className={`shop-dashboard-sidebar fixed left-0 top-0 h-screen w-[80px] bg-white border-r border-(--color-border) flex flex-col items-center z-50 transition-transform duration-300 md:translate-x-0 ${
+      <aside className={`shop-dashboard-sidebar fixed left-0 top-0 h-screen w-[min(18rem,85vw)] md:w-[104px] bg-white border-r border-(--color-border) flex flex-col items-center z-50 transition-transform duration-300 md:translate-x-0 ${
         isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
         {/* Boutique identity */}
@@ -111,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath = '/shop/dashboard', isOpe
                     <span className={isActive ? 'text-(--color-primary)' : ''}>
                       {item.icon}
                     </span>
-                    <span className="text-2xs text-center font-medium break-words max-w-[74px] leading-tight">
+                    <span className="text-2xs text-center font-medium whitespace-normal max-w-[96px] leading-tight">
                       {item.label}
                     </span>
                   </button>

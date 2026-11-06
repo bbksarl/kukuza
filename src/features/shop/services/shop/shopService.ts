@@ -1,11 +1,14 @@
-import type { CreateProductInput, DashboardOverview, Product, SaleItem } from '../../types';
+import type { CreateProductInput, DashboardOverview, Product, ProductEditInput, SaleItem } from '../../types';
 import { shopEnv } from '../../config/env';
 import { requestJson } from '../api/httpClient';
 import {
   buildMockCreatedProduct,
+  deleteMockProduct,
+  getMockCategories,
   getMockDashboardOverview,
   getMockProducts,
   getMockSales,
+  saveMockProductOverride,
 } from '../../utils/mockData';
 import { mapAnalyticsResponse, mapProduct, mapSaleItem } from './shopMappers';
 import { analyticsCacheService } from '../analytics/AnalyticsCacheService';
@@ -34,13 +37,14 @@ const endpoint = (template: string, values: Record<string, number | string>): st
 const withFallback = async <T>(
   operation: string,
   request: () => Promise<T>,
-  fallback: () => T
+  fallback: () => T,
+  allowOfflineDemo = shopEnv.enableApiMocks,
 ): Promise<T> => {
   try {
     return await request();
   } catch (error) {
     if (error instanceof ShopResponseError) throw error;
-    if (shopEnv.enableApiMocks) {
+    if (allowOfflineDemo) {
       console.warn(`[shopService] Falling back to mock data for ${operation}.`, error);
       return fallback();
     }
@@ -122,9 +126,16 @@ const saveProductForMarketplace = (product: Product): Product => {
 
 export const shopService = {
   async getCategories(): Promise<ShopCategory[]> {
-    const brandId = await getCurrentBrandId();
-    const response = await requestJson<unknown>(endpoint(shopEnv.endpoints.brandCategories, { brandId }));
-    return parseShopResponse(shopCategorySchema.array(), extractList(response));
+    return withFallback(
+      'getCategories',
+      async () => {
+        const brandId = await getCurrentBrandId();
+        const response = await requestJson<unknown>(endpoint(shopEnv.endpoints.brandCategories, { brandId }));
+        return parseShopResponse(shopCategorySchema.array(), extractList(response));
+      },
+      () => getMockCategories(),
+      true,
+    );
   },
 
   async getDashboardOverview(): Promise<DashboardOverview> {
@@ -140,7 +151,8 @@ export const shopService = {
         });
         return mapAnalyticsResponse(response);
       },
-      () => getMockDashboardOverview()
+      () => getMockDashboardOverview(),
+      true
     );
   },
 
@@ -161,7 +173,8 @@ export const shopService = {
       () => [
         ...getMarketplaceProducts().map(mapProduct),
         ...getMockProducts(),
-      ]
+      ],
+      true
     );
   },
 
@@ -172,7 +185,8 @@ export const shopService = {
         const response = await requestJson<unknown>('/OrderItem');
         return extractList(response).map(mapSaleItem);
       },
-      () => getMockSales()
+      () => getMockSales(),
+      true
     );
   },
 
@@ -190,5 +204,64 @@ export const shopService = {
       },
       () => saveProductForMarketplace(buildMockCreatedProduct(input))
     );
+  },
+
+  async deleteProduct(productId: string): Promise<void> {
+    if (productId.startsWith('demo-product-')) {
+      deleteMockProduct(productId);
+      return;
+    }
+    if (shopEnv.enableApiMocks && productId.startsWith('product-')) {
+      return;
+    }
+
+    await requestJson<unknown>(endpoint(shopEnv.endpoints.product, { productId }), {
+      method: 'DELETE',
+    });
+  },
+
+  async updateProduct(product: Product, changes: ProductEditInput): Promise<Product> {
+    const toDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Impossible de lire l’image.'));
+      reader.onerror = () => reject(new Error('Impossible de lire l’image.'));
+      reader.readAsDataURL(file);
+    });
+    const { image, ...fields } = changes;
+    const updatedProduct: Product = {
+      ...product,
+      ...fields,
+      image: image ? await toDataUrl(image) : product.image,
+      stock: changes.quantity,
+      status: changes.quantity === 0 ? 'out_of_stock' : changes.quantity <= 10 ? 'low_stock' : 'in_stock',
+      updatedAt: new Date(),
+    };
+
+    if (product.id.startsWith('demo-product-') || (shopEnv.enableApiMocks && product.id.startsWith('product-'))) {
+      if (product.id.startsWith('demo-product-')) saveMockProductOverride(updatedProduct);
+      return updatedProduct;
+    }
+
+    const brandId = await getCurrentBrandId();
+    const categoryResponse = await requestJson<unknown>(endpoint(shopEnv.endpoints.brandCategories, { brandId }));
+    const category = parseShopResponse(shopCategorySchema.array(), extractList(categoryResponse))
+      .find((item) => item.name.toLowerCase() === changes.category.toLowerCase());
+    if (!category) throw new Error('La catégorie sélectionnée est invalide pour cette marque.');
+
+    const response = await requestJson<unknown>(endpoint(shopEnv.endpoints.product, { productId: product.id }), {
+      method: 'PATCH',
+      body: (() => {
+        const payload = new FormData();
+        payload.append('name', changes.name);
+        payload.append('price', String(changes.price));
+        payload.append('stock', String(changes.quantity));
+        payload.append('categoryId', String(category.id));
+        if (changes.gender) payload.append('gender', changes.gender);
+        if (changes.ageRange) payload.append('ageRange', changes.ageRange);
+        if (image) payload.append('images', image);
+        return payload;
+      })(),
+    });
+    return response == null ? updatedProduct : mapProduct(extractProduct(response));
   },
 };

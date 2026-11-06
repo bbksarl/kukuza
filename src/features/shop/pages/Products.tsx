@@ -8,6 +8,8 @@ const ProductsPage: React.FC = () => {
   const { t } = useLanguage();
   const {
     products,
+    deleteProduct,
+    updateProduct,
     isLoading,
     error: productsError,
   } = useProducts();
@@ -38,7 +40,7 @@ const ProductsPage: React.FC = () => {
   return (
     <DashboardLayout activePath="/shop/produits">
       <div className="shop-dashboard shop-products-page overflow-hidden">
-        <ProductsTable products={products} />
+        <ProductsTable products={products} onDeleteProduct={deleteProduct} onUpdateProduct={updateProduct} />
       </div>
     </DashboardLayout>
   );
