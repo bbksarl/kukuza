@@ -1,10 +1,11 @@
 type ViteRuntimeEnv = {
   DEV?: boolean;
+  MODE?: string;
   VITE_ENABLE_API_MOCKS?: string;
   VITE_DEFAULT_CURRENCY?: string;
 };
 
-const env = (import.meta as ImportMeta & { env?: ViteRuntimeEnv }).env ?? {};
+const env: ViteRuntimeEnv = import.meta.env;
 
 const parseBoolean = (value: string | undefined, fallback: boolean): boolean => {
   if (value == null) return fallback;
@@ -13,7 +14,7 @@ const parseBoolean = (value: string | undefined, fallback: boolean): boolean => 
 
 /** Les données mock sont toujours opt-in, y compris en développement. */
 export const runtimeConfig = {
-  enableApiMocks: parseBoolean(env.VITE_ENABLE_API_MOCKS, false),
+  enableApiMocks: env.MODE === 'demo' || parseBoolean(env.VITE_ENABLE_API_MOCKS, false),
   isDevelopment: Boolean(env.DEV),
   currency: /^[A-Z]{3}$/.test(env.VITE_DEFAULT_CURRENCY ?? '') ? env.VITE_DEFAULT_CURRENCY! : 'XOF',
 } as const;

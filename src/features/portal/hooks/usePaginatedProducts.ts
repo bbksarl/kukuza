@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { getProducts } from '@/repositories/portal/catalogRepository';
 import { applyProductFilters, mergeMarketplaceProducts, mockProducts, normalizeProduct, type PortalProduct, type ProductFilters } from '../data/catalog';
 import { subscribeToMarketplaceProducts } from '@/services/products/marketplaceProductStore';
+import { runtimeConfig } from '@/config/runtime';
 
 export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters: ProductFilters = {}) {
   const [items, setItems] = useState<PortalProduct[]>([]);
@@ -36,7 +37,7 @@ export function usePaginatedProducts(initialPage = 1, initialLimit = 12, filters
       try {
         data = await getProducts(requestedPage, limit, request.signal, { search, gender, nav, filter });
       } catch (error) {
-        if (request.signal.aborted) throw error;
+        if (request.signal.aborted || !runtimeConfig.enableApiMocks || error instanceof ZodError) throw error;
         const matching = applyProductFilters(mergeMarketplaceProducts(mockProducts), { search, gender, nav, filter });
         data = { items: matching.slice((requestedPage - 1) * limit, requestedPage * limit), total: matching.length, page: requestedPage, limit };
       }

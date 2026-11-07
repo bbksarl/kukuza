@@ -1,7 +1,11 @@
 import { FacadeClient } from '@kukuza/facade';
 import { getStoredAuthToken } from '@/core/auth/sessionStorage';
+import { runtimeConfig } from '@/config/runtime';
+import { DemoFacadeClient } from './demoClient';
 
-export const facadeClient = new FacadeClient({ getAccessToken: getStoredAuthToken });
+export const facadeClient = runtimeConfig.enableApiMocks
+  ? new DemoFacadeClient()
+  : new FacadeClient({ getAccessToken: getStoredAuthToken });
 
 export {
   FacadeClient,

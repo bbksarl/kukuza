@@ -35,9 +35,13 @@ Le contrat cible est décrit dans [facade/docs/backend-contract.md](facade/docs/
 
 Le dépôt ne contient pas l'implémentation de ces endpoints C#. Les tests simulent leur contrat ; un test d'intégration avec le vrai backend reste nécessaire.
 
-## Démonstration locale
+## Démonstration sans backend
 
-Les données fictives nécessitent `VITE_ENABLE_API_MOCKS=true`. Les comptes administrateur et boutique configurés par les variables `VITE_DEFAULT_*` fonctionnent uniquement avec le serveur de développement. Utiliser des identifiants de démonstration, jamais ceux d'un compte réel : toute variable `VITE_*` est destinée au navigateur.
+Pour tester localement, activer `VITE_ENABLE_API_MOCKS=true` dans `.env.local`, puis lancer `npm run dev`. Pour produire une démo publiable, lancer `npm run build:demo`, puis `npm run preview`. Le mode Vite `demo` active explicitement les mocks, même si `.env.local` ou l'environnement contient `VITE_ENABLE_API_MOCKS=false`.
+
+La façade démo répond directement dans le navigateur, sans requête réseau vers `/api`. Elle couvre le catalogue et ses filtres, les comptes admin/boutique, la session, l'inscription locale, les données boutique, les avis et le checkout simulé. Les nouveaux comptes démo sont conservés dans le stockage du navigateur ; leurs identifiants servent uniquement aux tests. Les comptes prédéfinis sont dans `.env.demo` et peuvent être remplacés par les variables `VITE_DEFAULT_*`.
+
+Les comptes administrateur et boutique configurés par les variables `VITE_DEFAULT_*` sont disponibles en développement et dans les builds avec mocks. Utiliser des identifiants de démonstration, jamais ceux d'un compte réel : toute variable `VITE_*` est destinée au navigateur.
 
 Les comptes de démonstration n'autorisent aucune opération sur le backend. Le backend reste responsable des rôles, des boutiques accessibles et des permissions.
 
@@ -79,6 +83,12 @@ Les parcours de `ProductsList.test.tsx` simulent les réponses de `fetch` en con
 ```bash
 npm test -- src/features/portal/pages/ProductsList.test.tsx src/features/portal/components/portal/Header.test.tsx
 ```
+
+## Vercel
+
+Le projet est actuellement publié comme une démo frontend : `vercel.json` utilise `npm run build:demo`, le dossier `dist` et le fallback React vers `index.html`. Aucun backend ni variable `KUKUZA_API_UPSTREAM` n'est nécessaire. Redéployer après avoir envoyé les changements. Si le projet Vercel possède une surcharge de la commande de build, utiliser également `npm run build:demo`.
+
+`.env.local` n'est pas envoyé par Git. Les identifiants publics de `.env.demo` sont inclus dans ce build. Pour passer ultérieurement au vrai backend, remplacer la commande de build par `npm run build`, désactiver `VITE_ENABLE_API_MOCKS` et configurer `VITE_API_BASE_URL` avec l'URL de l'API et son CORS. Le proxy Vite et Nginx ne sont pas exécutés sur Vercel.
 
 ## Docker / Nginx
 

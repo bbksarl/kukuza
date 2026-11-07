@@ -7,14 +7,15 @@ import { authApiConfig } from '../../../config/authApiConfig';
 import { getDevelopmentAdmin } from '../../../config/defaultAdmin';
 import { getDevelopmentBoutique } from '../../../config/defaultBoutique';
 import { clearStoredSession, readStoredAuthUser } from '@/core/auth/sessionStorage';
+import { runtimeConfig } from '@/config/runtime';
 
 const toUser = (user: SessionUserDto): User => new User(
   user.id, user.username, user.email, user.role, user.createdAt, user.brandId ?? undefined,
 );
 
-/** Les comptes locaux restent limités au serveur de développement. */
+/** Restaure les comptes locaux en développement ou en mode démo. */
 const getDevelopmentSession = (): User | null => {
-  if (!import.meta.env.DEV) return null;
+  if (!import.meta.env.DEV && !runtimeConfig.enableApiMocks) return null;
   const stored = readStoredAuthUser();
   if (!stored) return null;
   const candidates = [

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getCreators, type CatalogCreator } from '@/repositories/portal/catalogRepository';
+import { runtimeConfig } from '@/config/runtime';
 
 type Creator = CatalogCreator;
 
@@ -25,8 +26,8 @@ export function useCreators() {
         if (!controller.signal.aborted) setCreators(data);
       } catch (err: unknown) {
         if (controller.signal.aborted) return;
-        setError(null);
-        setCreators(mockCreators);
+        setError(runtimeConfig.enableApiMocks ? null : err instanceof Error ? err.message : 'Boutiques indisponibles.');
+        setCreators(runtimeConfig.enableApiMocks ? mockCreators : []);
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }

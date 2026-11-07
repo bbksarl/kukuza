@@ -30,6 +30,8 @@ export default defineConfig({
   test: {
     name: 'unified-app',
     environment: 'jsdom',
+    // Les tests API restent indépendants du mode démo choisi dans .env.local.
+    env: { VITE_ENABLE_API_MOCKS: 'false' },
     setupFiles: [path.resolve(appRoot, 'tests/setup.ts')],
     include: [
       path.resolve(appRoot, 'src/**/*.test.{ts,tsx}'),
