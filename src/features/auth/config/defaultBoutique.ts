@@ -1,19 +1,20 @@
+import { environment } from '@/config/environment.generated';
 import { User } from '../domain/auth/entities/User';
 import type { AuthResult } from '../domain/auth/types';
 import { runtimeConfig } from '@/config/runtime';
 
-const DEFAULT_BOUTIQUE_EMAIL = import.meta.env.VITE_DEFAULT_BOUTIQUE_EMAIL ?? '';
-const DEFAULT_BOUTIQUE_PASSWORD = import.meta.env.VITE_DEFAULT_BOUTIQUE_PASSWORD ?? '';
+const DEFAULT_BOUTIQUE_EMAIL = environment.VITE_DEFAULT_BOUTIQUE_EMAIL ?? '';
+const DEFAULT_BOUTIQUE_PASSWORD = environment.VITE_DEFAULT_BOUTIQUE_PASSWORD ?? '';
 
 /**
  * Compte local disponible en développement ou en mode démo explicite.
  */
 export const getDevelopmentBoutique = (email: string, password: string): AuthResult | null => {
-  if ((!import.meta.env.DEV && !runtimeConfig.enableApiMocks) || !DEFAULT_BOUTIQUE_EMAIL || !DEFAULT_BOUTIQUE_PASSWORD) return null;
+  if (!runtimeConfig.enableApiMocks || !DEFAULT_BOUTIQUE_EMAIL || !DEFAULT_BOUTIQUE_PASSWORD) return null;
 
   if (
-    email.trim().toLowerCase() !== DEFAULT_BOUTIQUE_EMAIL.toLowerCase()
-    || password !== DEFAULT_BOUTIQUE_PASSWORD
+    email.trim().toLowerCase() !== DEFAULT_BOUTIQUE_EMAIL.toLowerCase() ||
+    password !== DEFAULT_BOUTIQUE_PASSWORD
   ) {
     return null;
   }

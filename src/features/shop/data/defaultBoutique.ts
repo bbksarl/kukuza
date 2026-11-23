@@ -1,3 +1,5 @@
+import { environment } from '@/config/environment.generated';
+
 /**
  * Profil utilisé lorsque l'API boutique n'a pas encore renvoyé le profil réel.
  *
@@ -18,8 +20,8 @@ export const DEFAULT_BOUTIQUE: Readonly<BoutiqueProfile> = Object.freeze({
   id: 'boutique-default',
   name: 'Abdoulaye Diallo',
   ownerName: 'Abdoulaye Diallo',
-  ownerEmail: import.meta.env.VITE_DEFAULT_BOUTIQUE_EMAIL ?? 'Abdoulaye Diallo',
+  ownerEmail: environment.VITE_DEFAULT_BOUTIQUE_EMAIL ?? 'Abdoulaye Diallo',
   initials: 'AD',
-  logo: '/assets/logo.png',
+  logo: '/assets/logo.webp',
   status: 'active',
 });

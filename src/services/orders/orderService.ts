@@ -1,7 +1,9 @@
 import { z } from 'zod';
-import { facadeClient, FacadeHttpError } from '@/api/client';
+import { Injectable, inject } from '@angular/core';
+import { ApiClient } from '@/app/core/api-client.service';
+import { ApiError } from '@/app/core/api-error';
 import { sessionUserSchema } from '@/api/contracts/auth';
-import type { CartItem } from '@/providers/CartProvider';
+import type { CartItem } from '@/app/storefront/cart.service';
 
 const checkoutItemSchema = z.object({
   productId: z.number().int().positive(),
@@ -17,6 +19,7 @@ const checkoutResponseSchema = z.object({
 const pendingKeys = new Map<string, { fingerprint: string; key: string }>();
 
 const getProductId = (item: CartItem): number => {
+  if (item.id.startsWith('best-seller:')) return Number.NaN;
   const id = Number(item.productId);
   if (Number.isInteger(id) && id > 0) return id;
   return Number(/^(?:product|best-seller):(\d+)(?::|$)/.exec(item.id)?.[1]);
@@ -28,40 +31,76 @@ const getAttemptKey = (scope: string, fingerprint: string): string => {
   try {
     const stored = window.sessionStorage.getItem(scope);
     if (stored) {
-      const parsed = z.object({ fingerprint: z.string(), key: z.string().uuid() }).safeParse(JSON.parse(stored));
+      const parsed = z
+        .object({ fingerprint: z.string(), key: z.string().uuid() })
+        .safeParse(JSON.parse(stored));
       if (parsed.success) previous = parsed.data;
     }
-  } catch { /* L'état mémoire couvre les navigateurs sans stockage. */ }
-  const attempt = previous?.fingerprint === fingerprint
-    ? previous : { fingerprint, key: crypto.randomUUID() };
+  } catch {
+    /* L'état mémoire couvre les navigateurs sans stockage. */
+  }
+  const attempt =
+    previous?.fingerprint === fingerprint ? previous : { fingerprint, key: crypto.randomUUID() };
   pendingKeys.set(scope, attempt);
-  try { window.sessionStorage.setItem(scope, JSON.stringify(attempt)); } catch { /* Mémoire uniquement. */ }
+  try {
+    window.sessionStorage.setItem(scope, JSON.stringify(attempt));
+  } catch {
+    /* Mémoire uniquement. */
+  }
   return attempt.key;
 };
 
-export async function createOrder(items: CartItem[]): Promise<z.infer<typeof checkoutResponseSchema>> {
+export async function submitOrder(
+  items: CartItem[],
+  api: Pick<ApiClient, 'get' | 'post'>,
+): Promise<z.infer<typeof checkoutResponseSchema>> {
   if (items.length === 0) throw new Error('Votre panier est vide.');
-  const result = z.array(checkoutItemSchema).safeParse(items.map((item) => ({
-    productId: getProductId(item), quantity: item.quantity, size: item.size, color: item.color,
-  })));
+  const result = z.array(checkoutItemSchema).safeParse(
+    items.map((item) => ({
+      productId: getProductId(item),
+      quantity: item.quantity,
+      size: item.size,
+      color: item.color,
+    })),
+  );
   if (!result.success) throw new Error('Un produit ou une quantité du panier est invalide.');
-  const orderItems = result.data.sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
+  const orderItems = result.data.sort((left, right) =>
+    JSON.stringify(left).localeCompare(JSON.stringify(right)),
+  );
   let userId: number;
   try {
-    const user = sessionUserSchema.parse(await facadeClient.get<unknown>('/Auth/me', { skipRedirect: true }));
+    const user = sessionUserSchema.parse(await api.get('/Auth/me', { skipRedirect: true }));
     userId = user.id;
   } catch (error) {
-    if (error instanceof FacadeHttpError && error.status === 401) {
+    if (error instanceof ApiError && error.status === 401) {
       throw new Error('Connectez-vous pour finaliser votre commande.', { cause: error });
     }
     throw error;
   }
   const scope = `kukuza-checkout:${userId}`;
   const key = getAttemptKey(scope, JSON.stringify(orderItems));
-  const response = checkoutResponseSchema.parse(await facadeClient.post<unknown>('/Order/checkout', {
-    items: orderItems,
-  }, { headers: { 'Idempotency-Key': key }, skipRedirect: true }));
+  const response = checkoutResponseSchema.parse(
+    await api.post(
+      '/Order/checkout',
+      {
+        items: orderItems,
+      },
+      { headers: { 'Idempotency-Key': key }, skipRedirect: true },
+    ),
+  );
   pendingKeys.delete(scope);
-  try { window.sessionStorage.removeItem(scope); } catch { /* Mémoire uniquement. */ }
+  try {
+    window.sessionStorage.removeItem(scope);
+  } catch {
+    /* Mémoire uniquement. */
+  }
   return response;
+}
+
+@Injectable({ providedIn: 'root' })
+export class OrderService {
+  private readonly api = inject(ApiClient);
+  create(items: CartItem[]) {
+    return submitOrder(items, this.api);
+  }
 }

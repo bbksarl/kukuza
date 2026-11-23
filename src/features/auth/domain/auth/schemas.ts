@@ -1,18 +1,22 @@
 import { z } from 'zod';
 
-export const emailSchema = z.string().trim()
-  .email('Format d\'email invalide')
-  .transform(val => val.trim().toLowerCase());
+export const emailSchema = z
+  .string()
+  .trim()
+  .email("Format d'email invalide")
+  .transform((val) => val.trim().toLowerCase());
 
-export const passwordSchema = z.string()
+export const passwordSchema = z
+  .string()
   .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
   .regex(/[A-Z]/, 'Le mot de passe doit contenir au moins une majuscule')
   .regex(/[a-z]/, 'Le mot de passe doit contenir au moins une minuscule')
   .regex(/\d/, 'Le mot de passe doit contenir au moins un chiffre');
 
-export const phoneNumberSchema = z.string()
+export const phoneNumberSchema = z
+  .string()
   .regex(/^\+?[1-9]\d{1,14}$/, 'Format de numéro de téléphone invalide')
-  .transform(val => val.replace(/\s+/g, '').replace(/^00/, '+'));
+  .transform((val) => val.replace(/\s+/g, '').replace(/^00/, '+'));
 
 export const userSchema = z.object({
   id: z.number().int().positive(),
@@ -44,7 +48,7 @@ export const loginInputSchema = z.object({
 
 export const registerInputSchema = z.object({
   username: z.string().min(3, 'Nom utilisateur requis').max(100),
-  email: z.string().email('Format d\'email invalide'),
+  email: z.string().email("Format d'email invalide"),
   password: passwordSchema,
   name: z.string().min(1, 'Nom requis'),
 });

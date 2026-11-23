@@ -7,7 +7,9 @@ html {
 
 /* Section transitions */
 section {
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
 }
 
 /* Banner animations */
@@ -87,7 +89,7 @@ section {
 }
 
 .portal-header__link::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 50%;
   bottom: -6px;
@@ -107,13 +109,13 @@ section {
 }
 
 .portal-header__link.active::after,
-.portal-header__link[aria-current="page"]::after {
+.portal-header__link[aria-current='page']::after {
   transform: translateX(-50%) scaleX(1);
   opacity: 1;
 }
 
 .portal-header__link.active:hover::after,
-.portal-header__link[aria-current="page"]:hover::after {
+.portal-header__link[aria-current='page']:hover::after {
   transform: translateX(-50%) scaleX(1.06);
 }
 
@@ -192,7 +194,9 @@ section {
 }
 
 .boutiques-item {
-  transition: transform 0.3s ease, filter 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
 }
 
 .boutiques-item:hover {
@@ -274,7 +278,8 @@ section {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -314,7 +319,9 @@ section {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
   transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
+  transition:
+    width 0.6s ease,
+    height 0.6s ease;
 }
 
 .skincare-cta:hover::before {
@@ -360,7 +367,6 @@ section {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-
 .offre-button {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -377,7 +383,9 @@ section {
   background: rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  transition: width 0.5s ease, height 0.5s ease;
+  transition:
+    width 0.5s ease,
+    height 0.5s ease;
 }
 
 .offre-button:hover::after {
@@ -460,13 +468,7 @@ section {
 
 .loading-shimmer {
   animation: shimmer 2s infinite linear;
-  background: linear-gradient(
-    to right,
-    #f0f0f0 0%,
-    #e0e0e0 20%,
-    #f0f0f0 40%,
-    #f0f0f0 100%
-  );
+  background: linear-gradient(to right, #f0f0f0 0%, #e0e0e0 20%, #f0f0f0 40%, #f0f0f0 100%);
   background-size: 1000px 100%;
 }
 
@@ -479,7 +481,7 @@ section {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   html {
     scroll-behavior: auto;
   }

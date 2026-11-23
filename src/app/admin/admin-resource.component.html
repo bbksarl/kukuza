@@ -1,0 +1,26 @@
+@if (loading()) {
+  <p role="status" class="p-8">{{ t('admin.loading') }}</p>
+} @else if (error() || !data()) {
+  <p role="alert" class="rounded bg-red-50 p-6">{{ t('admin.error') }}</p>
+} @else {
+  <section>
+    <p class="text-xs font-bold uppercase text-teal-700">{{ t(subtitle) }}</p>
+    <h1 class="mt-2 text-3xl font-bold">{{ t(title) }}</h1>
+    <input
+      [formControl]="query"
+      [placeholder]="t(searchLabel)"
+      class="my-5 w-full max-w-sm rounded border p-3"
+    />
+    <div class="grid gap-4 lg:grid-cols-2">
+      @for (item of items(); track item.id) {
+        <article class="flex gap-4 rounded-xl border bg-white p-5 shadow-sm">
+          <img [src]="image(item)" alt="" class="h-16 w-16 rounded object-cover" />
+          <div>
+            <h2 class="font-bold">{{ item.name }}</h2>
+            <p class="text-sm text-slate-500">{{ detail(item) }}</p>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+}

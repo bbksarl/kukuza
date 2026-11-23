@@ -26,3 +26,12 @@ pnpm-debug.log*
 .vscode/
 *.swp
 .codex
+
+# Angular generated configuration and local reports
+.angular/
+out-tsc/
+src/config/environment.generated.ts
+proxy.generated.json
+playwright-report/
+test-results/
+.ci-builds/

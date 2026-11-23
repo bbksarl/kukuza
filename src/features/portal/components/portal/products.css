@@ -6,7 +6,9 @@
   width: 100%;
   min-height: 380px; /* Make cards larger and ensure overlay sits correctly */
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -83,7 +85,10 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -135,7 +140,7 @@
     gap: 24px;
     padding: 0 24px;
   }
-  
+
   .product-card {
     min-height: 340px;
   }
@@ -148,16 +153,16 @@
     gap: 16px;
     padding: 0 16px;
   }
-  
+
   .product-card {
     aspect-ratio: 3 / 4;
     min-height: 280px;
   }
-  
+
   .product-name {
     font-size: 15px;
   }
-  
+
   .product-brand {
     font-size: 12px;
   }
@@ -178,19 +183,19 @@
     gap: 12px;
     padding: 0 12px;
   }
-  
+
   .product-card {
     min-height: 240px;
   }
-  
+
   .product-overlay {
     padding: 16px 12px;
   }
-  
+
   .product-name {
     font-size: 14px;
   }
-  
+
   .product-brand {
     font-size: 11px;
   }
@@ -222,15 +227,19 @@
   min-width: 280px; /* increased width */
   width: auto;
   cursor: pointer;
-  box-shadow: 0 10px 28px rgba(5,112,85,0.06);
-  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
+  box-shadow: 0 10px 28px rgba(5, 112, 85, 0.06);
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease,
+    color 0.12s ease;
 }
 
 .load-more-btn:hover {
   transform: translateY(-3px);
   background: #057055; /* fill with green on hover */
   color: #ffffff; /* white text on hover */
-  box-shadow: 0 14px 36px rgba(5,112,85,0.12);
+  box-shadow: 0 14px 36px rgba(5, 112, 85, 0.12);
 }
 
 .load-more-btn:active {

@@ -10,7 +10,14 @@ class User {
   readonly createdAt: string;
   readonly brandId?: number;
 
-  constructor(id: number, username: string, email: string, role: UserRole, createdAt: string, brandId?: number) {
+  constructor(
+    id: number,
+    username: string,
+    email: string,
+    role: UserRole,
+    createdAt: string,
+    brandId?: number,
+  ) {
     this.id = id;
     this.username = username;
     this.email = new Email(email);

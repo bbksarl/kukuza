@@ -12,7 +12,10 @@ describe('sessionStorage', () => {
   beforeEach(() => window.localStorage.clear());
 
   it('reads valid user and boutique identifiers', () => {
-    window.localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify({ id: 12, brandId: 34, role: 'creator' }));
+    window.localStorage.setItem(
+      AUTH_USER_STORAGE_KEY,
+      JSON.stringify({ id: 12, brandId: 34, role: 'creator' }),
+    );
 
     expect(getStoredUserId()).toBe(12);
     expect(getStoredBrandId()).toBe(34);

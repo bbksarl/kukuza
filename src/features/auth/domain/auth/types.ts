@@ -22,6 +22,5 @@ export interface RegisterData {
 export interface AuthResult {
   user: User;
   role: User['role'];
-  token?: string;
   redirectUrl?: string;
 }

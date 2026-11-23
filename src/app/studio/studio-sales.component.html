@@ -1,0 +1,50 @@
+<section class="shop-dashboard">
+  <h1 class="mb-6 text-2xl font-bold">{{ t('shop.sales') }}</h1>
+  @if (loading()) {
+    <p role="status">{{ t('shop.loading') }}</p>
+  } @else if (error()) {
+    <p role="alert" class="rounded bg-red-50 p-4 text-red-700">{{ t('shop.salesUnavailable') }}</p>
+  } @else {
+    <input [formControl]="search" [placeholder]="t('shop.search')" class="mb-5 rounded border p-3" />
+    <div class="overflow-x-auto rounded-xl bg-white">
+      <table class="w-full min-w-[700px] text-left text-sm">
+        <thead>
+          <tr>
+            @for (
+              key of [
+                'reference',
+                'product',
+                'customer',
+                'quantityShort',
+                'unitPrice',
+                'total',
+                'date',
+                'status',
+              ];
+              track key
+            ) {
+              <th class="p-4">{{ t('shop.' + key) }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (sale of filtered(); track sale.id) {
+            <tr class="border-t">
+              <td class="p-4">{{ sale.reference }}</td>
+              <td class="p-4">{{ sale.productName }}</td>
+              <td class="p-4">{{ sale.customer }}</td>
+              <td class="p-4">{{ sale.quantity }}</td>
+              <td class="p-4">{{ lang.money(sale.unitPrice) }}</td>
+              <td class="p-4">{{ lang.money(sale.totalPrice) }}</td>
+              <td class="p-4">{{ sale.date | date: 'mediumDate' }}</td>
+              <td class="p-4">{{ t('shop.' + sale.status) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (!filtered().length) {
+        <p class="p-8 text-center">{{ t('shop.noSales') }}</p>
+      }
+    </div>
+  }
+</section>

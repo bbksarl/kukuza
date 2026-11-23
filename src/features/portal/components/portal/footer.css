@@ -1,5 +1,5 @@
 .footer {
-  background-color: #5A8A7F;
+  background-color: #5a8a7f;
   color: #ffffff;
   padding: 60px 0 0;
 }
@@ -161,7 +161,7 @@
 .newsletter-button {
   padding: 14px 24px;
   background: #ffffff;
-  color: #5A8A7F;
+  color: #5a8a7f;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
@@ -272,7 +272,7 @@
     gap: 14px;
     align-items: center;
   }
-  
+
   .footer-logo img {
     height: 100px;
   }
@@ -302,11 +302,11 @@
   .footer-center {
     order: -1;
   }
-  
+
   .footer-logo img {
     height: 90px;
   }
-  
+
   .footer-nav {
     align-items: center;
   }
@@ -322,7 +322,7 @@
   .footer-social {
     gap: 22px;
   }
-  
+
   .social-icon svg {
     width: 26px;
     height: 26px;
@@ -339,43 +339,43 @@
   .footer {
     padding: 32px 0 0;
   }
-  
+
   .footer-container {
     gap: 32px;
     padding: 0 16px 24px;
   }
-  
+
   .footer-logo img {
     height: 80px;
   }
-  
+
   .footer-heading {
     font-size: 1rem;
   }
-  
+
   .footer-text,
   .footer-list li,
   .footer-nav li,
   .newsletter-text {
     font-size: 0.875rem;
   }
-  
+
   .footer-bottom {
     padding: 24px 0;
   }
-  
+
   .footer-bottom-container {
     padding: 0 16px;
   }
-  
+
   .contact-item {
     font-size: 0.875rem;
   }
-  
+
   .footer-social {
     gap: 20px;
   }
-  
+
   .social-icon svg {
     width: 24px;
     height: 24px;
@@ -386,15 +386,15 @@
   .footer-container {
     gap: 28px;
   }
-  
+
   .footer-logo img {
     height: 70px;
   }
-  
+
   .footer-heading {
     font-size: 0.9375rem;
   }
-  
+
   .footer-text,
   .footer-list li,
   .footer-nav li {

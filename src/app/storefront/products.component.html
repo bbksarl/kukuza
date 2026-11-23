@@ -1,0 +1,186 @@
+<main class="min-h-[70vh] bg-slate-50" [class.pt-16]="!catalog">
+  <section class="px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+    <div class="mx-auto max-w-7xl">
+      <div class="mb-8 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-7">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p class="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-teal-700">
+              {{ t('catalog.title') }}
+            </p>
+            <h1 class="text-2xl font-bold capitalize text-slate-900 sm:text-3xl">
+              {{ searchPage ? t('catalog.searchProducts') : heading() }}
+            </h1>
+            <p class="mt-2 text-sm text-slate-500">
+              {{ total() }} {{ total() > 1 ? t('catalog.productsFound') : t('catalog.productFound') }}
+            </p>
+          </div>
+          <form class="flex w-full max-w-xl flex-col gap-2 sm:flex-row" (ngSubmit)="search()" role="search">
+            <label class="sr-only" for="catalog-search">{{ t('catalog.searchLabel') }}</label>
+            <div class="relative flex-1">
+              <div
+                class="flex min-h-12 items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 focus-within:border-teal-700"
+              >
+                <k-icon name="search" /><input
+                  id="catalog-search"
+                  type="search"
+                  name="query"
+                  [ngModel]="query()"
+                  (ngModelChange)="query.set($event); activeSuggestion.set(0); suggestionsOpen.set(true)"
+                  (focus)="suggestionsOpen.set(true)"
+                  (keydown)="keydown($event)"
+                  [placeholder]="t('search.placeholder')"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  [attr.aria-expanded]="suggestionsOpen() && suggestions().length > 0"
+                  [attr.aria-controls]="
+                    suggestionsOpen() && suggestions().length ? 'catalog-suggestions' : null
+                  "
+                  [attr.aria-activedescendant]="
+                    suggestionsOpen() && suggestions().length ? 'suggestion-' + activeSuggestion() : null
+                  "
+                  class="w-full bg-transparent text-sm text-slate-900 outline-none"
+                />
+              </div>
+              @if (suggestionsOpen() && suggestions().length) {
+                <div
+                  id="catalog-suggestions"
+                  role="listbox"
+                  class="absolute inset-x-0 top-full z-30 mt-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+                >
+                  @for (product of suggestions(); track product.id) {
+                    <button
+                      type="button"
+                      role="option"
+                      [id]="'suggestion-' + $index"
+                      [attr.aria-selected]="activeSuggestion() === $index"
+                      class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-teal-50"
+                      [class.bg-teal-50]="activeSuggestion() === $index"
+                      (mousedown)="$event.preventDefault()"
+                      (mouseenter)="activeSuggestion.set($index)"
+                      (click)="search(product.name)"
+                    >
+                      <img [src]="product.image_url" alt="" class="h-10 w-10 rounded-lg object-cover" /><span
+                        class="text-sm font-semibold"
+                        >{{ product.name }}</span
+                      >
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+            <button
+              type="submit"
+              class="min-h-12 rounded-full bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-teal-700"
+            >
+              {{ t('search.submit') }}
+            </button>
+          </form>
+          @if (params().keys.length) {
+            <a
+              [routerLink]="catalog ? '/catalog' : '/products'"
+              class="text-sm font-semibold text-teal-700"
+              >{{ t('navigation.reset') }}</a
+            >
+          }
+        </div>
+      </div>
+      @if (catalog) {
+        <label class="mb-6 block text-sm font-semibold"
+          >{{ t('product.category')
+          }}<select
+            class="ml-3 rounded-lg border border-slate-300 bg-white p-2"
+            [ngModel]="params().get('categoryId') || ''"
+            (ngModelChange)="update({ categoryId: $event || null, page: null })"
+          >
+            <option value="">{{ t('catalog.allProducts') }}</option>
+            @for (category of categories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select></label
+        >
+      }
+      @if (loading() && !items().length) {
+        <div role="status" class="py-8 text-center">{{ t('catalog.loading') }}</div>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          @for (n of [1, 2, 3, 4]; track n) {
+            <div class="h-96 animate-pulse rounded-2xl bg-slate-200"></div>
+          }
+        </div>
+      }
+      @if (error()) {
+        <div
+          role="alert"
+          class="mx-auto mb-6 max-w-2xl rounded-3xl border border-red-200 bg-red-50 px-6 py-10 text-center"
+        >
+          <h2 class="text-lg font-semibold text-red-900">{{ error() }}</h2>
+          <button
+            (click)="retry()"
+            class="mt-4 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white"
+          >
+            {{ t('catalog.retry') }}
+          </button>
+        </div>
+      }
+      @if (!loading() && !error() && !items().length) {
+        <div class="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center">
+          <h2 class="text-xl font-semibold">{{ t('catalog.noProducts') }}</h2>
+          <p class="mt-3 text-sm text-slate-500">{{ t('catalog.noProductsHint') }}</p>
+          <a
+            [routerLink]="catalog ? '/catalog' : '/products'"
+            class="mt-6 inline-block rounded-full bg-slate-900 px-5 py-3 text-sm text-white"
+            >{{ t('catalog.showAll') }}</a
+          >
+        </div>
+      }
+      <div
+        [attr.aria-busy]="loading()"
+        class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        @for (product of items(); track product.id) {
+          <k-product-card [product]="product" [catalog]="catalog" />
+        }
+      </div>
+      @if (items().length) {
+        <nav class="mt-10 flex flex-wrap justify-center gap-3" aria-label="Pagination">
+          @if (catalog) {
+            <button
+              class="rounded-full border px-4 py-2"
+              [disabled]="page() === 1 || loading()"
+              (click)="update({ page: page() - 1 })"
+            >
+              ←
+            </button>
+            @for (value of pages(); track value) {
+              <button
+                class="rounded-full border px-4 py-2"
+                [class.bg-teal-700]="page() === value"
+                [class.text-white]="page() === value"
+                [attr.aria-current]="page() === value ? 'page' : null"
+                (click)="update({ page: value })"
+              >
+                {{ value }}
+              </button>
+            }
+            <button
+              class="rounded-full border px-4 py-2"
+              [disabled]="page() >= totalPages() || loading()"
+              (click)="update({ page: page() + 1 })"
+            >
+              →
+            </button>
+          } @else if (items().length < total()) {
+            <button
+              class="rounded-full bg-teal-700 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
+              (click)="more()"
+              [disabled]="loading() || !!error()"
+            >
+              {{ loading() ? t('catalog.loading') : t('catalog.loadMore') }}
+            </button>
+          } @else {
+            <p class="text-sm text-slate-500">{{ t('catalog.allDisplayed') }}</p>
+          }
+        </nav>
+      }
+    </div>
+  </section>
+</main>

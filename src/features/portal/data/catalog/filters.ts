@@ -48,7 +48,10 @@ function matchesDropdownFilter(product: PortalProduct, nav: NavType, filter: str
   }
 
   if (nav === 'createurs') {
-    return normalizeText(product.creator_name) === normalizedFilter || normalizeText(product.brand) === normalizedFilter;
+    return (
+      normalizeText(product.creator_name) === normalizedFilter ||
+      normalizeText(product.brand) === normalizedFilter
+    );
   }
 
   if (nav === 'nouveautes') {
@@ -61,14 +64,25 @@ function matchesDropdownFilter(product: PortalProduct, nav: NavType, filter: str
     }
 
     if (normalizedFilter === 'nouveautes') {
-      return product.recency === 'Cette semaine' || product.tags.some((tag) => normalizeText(tag) === normalizedFilter);
+      return (
+        product.recency === 'Cette semaine' ||
+        product.tags.some((tag) => normalizeText(tag) === normalizedFilter)
+      );
     }
 
-    return product.collections.some((item) => normalizeText(item) === normalizedFilter)
-      || product.tags.some((item) => normalizeText(item) === normalizedFilter);
+    return (
+      product.collections.some((item) => normalizeText(item) === normalizedFilter) ||
+      product.tags.some((item) => normalizeText(item) === normalizedFilter)
+    );
   }
 
-  if (nav === 'vetements' || nav === 'chaussures' || nav === 'decor' || nav === 'sacs' || nav === 'accessoires') {
+  if (
+    nav === 'vetements' ||
+    nav === 'chaussures' ||
+    nav === 'decor' ||
+    nav === 'sacs' ||
+    nav === 'accessoires'
+  ) {
     if (nav === 'accessoires' && normalizedFilter === 'sacs') {
       return product.category === 'sacs';
     }
@@ -79,7 +93,11 @@ function matchesDropdownFilter(product: PortalProduct, nav: NavType, filter: str
       return matchesPriceFilter(product.price, filter);
     }
 
-    if (FILTERS_BY_TYPE[nav].some((item) => normalizeText(item.label) === normalizedFilter && normalizeText(item.category) === 'taille')) {
+    if (
+      FILTERS_BY_TYPE[nav].some(
+        (item) => normalizeText(item.label) === normalizedFilter && normalizeText(item.category) === 'taille',
+      )
+    ) {
       return product.sizes.some((size) => normalizeText(size) === normalizedFilter);
     }
 
@@ -109,29 +127,35 @@ function matchesGender(product: PortalProduct, gender: string) {
   const normalizedFilter = normalizeText(gender);
 
   if (normalizedFilter === 'enfant' || normalizedFilter === 'children') {
-    return normalizedAgeRange === 'enfant'
-      || normalizedAgeRange === 'children'
-      || normalizedGender.includes('fille')
-      || normalizedGender.includes('garcon')
-      || normalizedGender.includes('child');
+    return (
+      normalizedAgeRange === 'enfant' ||
+      normalizedAgeRange === 'children' ||
+      normalizedGender.includes('fille') ||
+      normalizedGender.includes('garcon') ||
+      normalizedGender.includes('child')
+    );
   }
 
   if (normalizedFilter === 'femme' || normalizedFilter === 'women') {
-    return normalizedGender.includes('femme')
-      || normalizedGender.includes('female')
-      || normalizedGender.includes('woman')
-      || normalizedGender.includes('fille')
-      || normalizedGender.includes('unisexe')
-      || normalizedGender.includes('unisex');
+    return (
+      normalizedGender.includes('femme') ||
+      normalizedGender.includes('female') ||
+      normalizedGender.includes('woman') ||
+      normalizedGender.includes('fille') ||
+      normalizedGender.includes('unisexe') ||
+      normalizedGender.includes('unisex')
+    );
   }
 
   if (normalizedFilter === 'homme' || normalizedFilter === 'men') {
-    return normalizedGender.includes('homme')
-      || normalizedGender.includes('male')
-      || normalizedGender.includes('man')
-      || normalizedGender.includes('garcon')
-      || normalizedGender.includes('unisexe')
-      || normalizedGender.includes('unisex');
+    return (
+      normalizedGender.includes('homme') ||
+      normalizedGender.includes('male') ||
+      normalizedGender.includes('man') ||
+      normalizedGender.includes('garcon') ||
+      normalizedGender.includes('unisexe') ||
+      normalizedGender.includes('unisex')
+    );
   }
 
   return normalizedGender === normalizedFilter || normalizedAgeRange === normalizedFilter;

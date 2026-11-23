@@ -1,10 +1,14 @@
-
 export interface User {
   id: string;
   name: string;
   email: string;
   role: 'admin' | 'owner' | 'staff';
   avatar?: string;
+}
+
+export interface ShopCategory {
+  id: number;
+  name: string;
 }
 
 export interface Boutique {

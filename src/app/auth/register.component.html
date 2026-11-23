@@ -1,0 +1,102 @@
+<k-auth-layout
+  ><div class="w-full space-y-2">
+    <h1 class="text-center text-base font-bold text-primary sm:text-lg md:text-xl">
+      {{ shopStep() ? t('auth.shopInfoTitle') : t('auth.register') }}
+    </h1>
+    @if (session.error()) {
+      <div role="alert" class="auth-error-alert rounded border px-3 py-2 text-sm">
+        {{ lang.text(session.error()) }}
+      </div>
+    }
+    @if (!shopStep()) {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-2" novalidate>
+        <fieldset [disabled]="session.busy()" class="space-y-2">
+          @for (field of fields; track field.name) {
+            <k-auth-field
+              [control]="form.controls[field.name]"
+              [name]="field.name"
+              [type]="field.type"
+              [label]="t('auth.' + field.key)"
+              [error]="errors()[field.name] || ''"
+              [autocomplete]="
+                field.type === 'password' ? 'new-password' : field.name === 'email' ? 'email' : 'off'
+              "
+            />
+          }
+          <label class="flex items-center gap-2 py-2 text-sm text-white"
+            ><input type="checkbox" formControlName="isBoutique" />{{ t('auth.shopAccount') }}</label
+          ><button
+            type="submit"
+            class="w-full rounded-md bg-primary px-4 py-3 text-sm font-bold text-white"
+            [disabled]="session.busy()"
+          >
+            {{
+              session.busy()
+                ? t('app.loading')
+                : form.controls.isBoutique.value
+                  ? t('auth.continue')
+                  : t('auth.signUp')
+            }}
+          </button>
+          <p class="text-right text-xs text-gray-400">
+            {{ t('auth.haveAccount') }}
+            <a routerLink="/auth/login" class="text-primary">{{ t('auth.login') }}</a>
+          </p>
+        </fieldset>
+      </form>
+    } @else {
+      <form [formGroup]="boutique" (ngSubmit)="submit()" class="space-y-2" novalidate>
+        <fieldset [disabled]="session.busy()" class="space-y-2">
+          @for (field of shopFields; track field.name) {
+            <k-auth-field
+              [control]="boutique.controls[field.name]"
+              [name]="field.name"
+              [label]="t('auth.' + field.key)"
+              [error]="errors()[field.name] || ''"
+            />
+          }
+          <label class="block text-xs text-white"
+            >{{ t('auth.country')
+            }}<select formControlName="country" class="auth-input mt-1">
+              @for (country of countries; track country) {
+                <option class="text-slate-900">{{ country }}</option>
+              }
+            </select></label
+          ><label class="block text-xs text-white"
+            >Indicatif<select formControlName="countryCode" class="auth-input mt-1">
+              @for (code of ['+221', '+223', '+225', '+226', '+227', '+229', '+33']; track code) {
+                <option class="text-slate-900">{{ code }}</option>
+              }
+            </select></label
+          ><label
+            class="block rounded-lg border border-dashed border-white/30 p-3 text-center text-xs text-white"
+            (dragover)="$event.preventDefault()"
+            (drop)="drop($event)"
+            >{{ t('auth.shopLogo')
+            }}<input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="mt-2 block w-full"
+              (change)="chooseLogo($any($event.target).files[0])"
+            />
+            @if (logoPreview()) {
+              <img [src]="logoPreview()" alt="Logo" class="mx-auto mt-2 h-16 w-16 object-contain" />
+            }
+          </label>
+          @if (imageError()) {
+            <p role="alert" class="text-xs text-red-300">{{ imageError() }}</p>
+          }
+          <button
+            type="submit"
+            class="w-full rounded-md bg-primary px-4 py-3 text-sm font-bold text-white"
+            [disabled]="session.busy()"
+          >
+            {{ session.busy() ? t('app.loading') : t('auth.signUp') }}</button
+          ><button type="button" class="w-full py-2 text-xs text-white" (click)="shopStep.set(false)">
+            {{ t('auth.backAccount') }}
+          </button>
+        </fieldset>
+      </form>
+    }
+  </div></k-auth-layout
+>

@@ -2,12 +2,42 @@ import type { DropdownType, FilterOption, NavItem } from './types';
 import { formatFilterLabel } from './labels';
 
 export const NAV_ITEMS: NavItem[] = [
-  { hash: '#nouveautes', title: 'NOUVEAUTES', hasDropdown: true, dropdownType: 'nouveautes', navType: 'nouveautes' },
-  { hash: '#createurs', title: 'CREATEURS', hasDropdown: true, dropdownType: 'createurs', navType: 'createurs' },
-  { hash: '#vetements', title: 'VETEMENTS', hasDropdown: true, dropdownType: 'vetements', navType: 'vetements' },
-  { hash: '#chaussures', title: 'CHAUSSURES', hasDropdown: true, dropdownType: 'chaussures', navType: 'chaussures' },
+  {
+    hash: '#nouveautes',
+    title: 'NOUVEAUTES',
+    hasDropdown: true,
+    dropdownType: 'nouveautes',
+    navType: 'nouveautes',
+  },
+  {
+    hash: '#createurs',
+    title: 'CREATEURS',
+    hasDropdown: true,
+    dropdownType: 'createurs',
+    navType: 'createurs',
+  },
+  {
+    hash: '#vetements',
+    title: 'VETEMENTS',
+    hasDropdown: true,
+    dropdownType: 'vetements',
+    navType: 'vetements',
+  },
+  {
+    hash: '#chaussures',
+    title: 'CHAUSSURES',
+    hasDropdown: true,
+    dropdownType: 'chaussures',
+    navType: 'chaussures',
+  },
   { hash: '#decor', title: 'DECOR ET LIFESTYLE', hasDropdown: true, dropdownType: 'decor', navType: 'decor' },
-  { hash: '#accessoires', title: 'ACCESSOIRES', hasDropdown: true, dropdownType: 'accessoires', navType: 'accessoires' },
+  {
+    hash: '#accessoires',
+    title: 'ACCESSOIRES',
+    hasDropdown: true,
+    dropdownType: 'accessoires',
+    navType: 'accessoires',
+  },
   { hash: '#skincare', title: 'SKINCARE', hasDropdown: false, navType: 'skincare' },
   { hash: '#promotion', title: 'PROMOTION', hasDropdown: false, navType: 'promotion' },
 ];

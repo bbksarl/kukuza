@@ -1,6 +1,11 @@
 import {
-  chartPointSchema, dashboardStatsSchema, parseShopResponse, shopProductSchema,
-  shopRecordSchema, shopSaleSchema, visitsPointSchema,
+  chartPointSchema,
+  dashboardStatsSchema,
+  parseShopResponse,
+  shopProductSchema,
+  shopRecordSchema,
+  shopSaleSchema,
+  visitsPointSchema,
 } from '@/api/contracts/shop';
 import { z } from 'zod';
 import type { DashboardOverview, Product, SaleItem } from '../../types';
@@ -15,21 +20,29 @@ const productStatus = (value: unknown, stock: unknown): unknown => {
     return stock === 0 ? 'out_of_stock' : stock <= 10 ? 'low_stock' : 'in_stock';
   }
   const aliases: Record<string, string> = {
-    'in-stock': 'in_stock', available: 'in_stock', available_stock: 'in_stock',
-    'out-of-stock': 'out_of_stock', unavailable: 'out_of_stock', sold_out: 'out_of_stock',
-    'low-stock': 'low_stock', low: 'low_stock',
+    'in-stock': 'in_stock',
+    available: 'in_stock',
+    available_stock: 'in_stock',
+    'out-of-stock': 'out_of_stock',
+    unavailable: 'out_of_stock',
+    sold_out: 'out_of_stock',
+    'low-stock': 'low_stock',
+    low: 'low_stock',
   };
   const normalized = typeof value === 'string' ? value.toLowerCase() : value;
-  return typeof normalized === 'string' ? aliases[normalized] ?? normalized : normalized;
+  return typeof normalized === 'string' ? (aliases[normalized] ?? normalized) : normalized;
 };
 
 const saleStatus = (value: unknown): unknown => {
   const aliases: Record<string, string> = {
-    complete: 'completed', paid: 'completed', success: 'completed',
-    waiting: 'pending', processing: 'pending',
+    complete: 'completed',
+    paid: 'completed',
+    success: 'completed',
+    waiting: 'pending',
+    processing: 'pending',
   };
   const normalized = typeof value === 'string' ? value.toLowerCase() : value;
-  return typeof normalized === 'string' ? aliases[normalized] ?? normalized : normalized;
+  return typeof normalized === 'string' ? (aliases[normalized] ?? normalized) : normalized;
 };
 
 export const mapProduct = (input: unknown): Product => {
@@ -37,10 +50,12 @@ export const mapProduct = (input: unknown): Product => {
   const stock = source.stock ?? source.quantity;
   const images = source.images ?? source.productImages;
   const firstImage = images == null ? undefined : list(images)[0];
-  const imageFromCollection = firstImage == null || typeof firstImage === 'string' ? firstImage : record(firstImage).imageUrl;
-  const category = source.category == null || typeof source.category === 'string'
-    ? source.category ?? source.categoryName
-    : record(source.category).name;
+  const imageFromCollection =
+    firstImage == null || typeof firstImage === 'string' ? firstImage : record(firstImage).imageUrl;
+  const category =
+    source.category == null || typeof source.category === 'string'
+      ? (source.category ?? source.categoryName)
+      : record(source.category).name;
   const brand = source.brand != null && typeof source.brand !== 'string' ? record(source.brand) : undefined;
 
   return parseShopResponse(shopProductSchema, {
@@ -55,7 +70,12 @@ export const mapProduct = (input: unknown): Product => {
     createdAt: source.createdAt ?? source.created_at,
     updatedAt: source.updatedAt ?? source.updated_at,
     boutiqueId: source.boutiqueId ?? source.shopId ?? source.brandId ?? source.creatorId ?? brand?.id,
-    boutiqueName: source.boutiqueName ?? source.shopName ?? source.creatorName ?? brand?.name ?? (typeof source.brand === 'string' ? source.brand : undefined),
+    boutiqueName:
+      source.boutiqueName ??
+      source.shopName ??
+      source.creatorName ??
+      brand?.name ??
+      (typeof source.brand === 'string' ? source.brand : undefined),
     gender: source.gender,
     ageRange: source.ageRange ?? source.age_range,
   });
@@ -80,16 +100,17 @@ const metric = (source: Record<string, unknown>, keys: string[]): unknown => {
   return keys.map((key) => source[key]).find((value) => value != null);
 };
 
-const mapStats = (source: Record<string, unknown>) => parseShopResponse(dashboardStatsSchema, {
-  totalRevenue: metric(source, ['tr', 'revenue', 'totalRevenue', 'total_revenue']),
-  revenueChange: metric(source, ['variation', 'revenueChange', 'revenue_change', 'change']),
-  dailyRevenue: metric(source, ['dailyRevenue', 'daily_revenue', 'dailyTr', 'daily_tr']),
-  dailyRevenueChange: metric(source, ['dailyRevenueChange', 'daily_revenue_change']),
-  totalSales: metric(source, ['sold', 'quantity', 'totalSales', 'total_sales']),
-  salesChange: metric(source, ['salesChange', 'sales_change']),
-  activeUsers: metric(source, ['active_users', 'activeUsers', 'users']),
-  usersChange: metric(source, ['usersChange', 'users_change']),
-});
+const mapStats = (source: Record<string, unknown>) =>
+  parseShopResponse(dashboardStatsSchema, {
+    totalRevenue: metric(source, ['tr', 'revenue', 'totalRevenue', 'total_revenue']),
+    revenueChange: metric(source, ['variation', 'revenueChange', 'revenue_change', 'change']),
+    dailyRevenue: metric(source, ['dailyRevenue', 'daily_revenue', 'dailyTr', 'daily_tr']),
+    dailyRevenueChange: metric(source, ['dailyRevenueChange', 'daily_revenue_change']),
+    totalSales: metric(source, ['sold', 'quantity', 'totalSales', 'total_sales']),
+    salesChange: metric(source, ['salesChange', 'sales_change']),
+    activeUsers: metric(source, ['active_users', 'activeUsers', 'users']),
+    usersChange: metric(source, ['usersChange', 'users_change']),
+  });
 
 const listFrom = (source: Record<string, unknown>, keys: string[]): unknown[] => {
   const key = keys.find((key) => source[key] !== undefined);
@@ -121,9 +142,11 @@ export const mapAnalyticsResponse = (input: unknown): DashboardOverview => {
   return {
     stats: mapStats(source),
     salesData: listFrom(source, ['salesData', 'sales_data', 'trend'])
-      .concat(source === root ? [] : listFrom(root, ['salesData', 'sales_data'])).map(mapChartPoint),
+      .concat(source === root ? [] : listFrom(root, ['salesData', 'sales_data']))
+      .map(mapChartPoint),
     visitsData: listFrom(source, ['visitsData', 'visits_data', 'visits'])
-      .concat(source === root ? [] : listFrom(root, ['visitsData', 'visits_data'])).map(mapVisitsPoint),
+      .concat(source === root ? [] : listFrom(root, ['visitsData', 'visits_data']))
+      .map(mapVisitsPoint),
   };
 };
 

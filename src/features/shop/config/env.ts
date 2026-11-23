@@ -1,6 +1,7 @@
+import { environment } from '@/config/environment.generated';
 import { runtimeConfig } from '@/config/runtime';
 
-const env = import.meta.env;
+const env = environment;
 export const shopEnv = {
   enableApiMocks: runtimeConfig.enableApiMocks,
   endpoints: {

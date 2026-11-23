@@ -4,7 +4,10 @@ const text = z.string().trim().min(1);
 const amount = z.number().nonnegative();
 const count = z.number().int().nonnegative();
 const date = z.union([z.iso.datetime({ offset: true }).transform((value) => new Date(value)), z.date()]);
-const optionalMetric = z.number().nullish().transform((value) => value ?? null);
+const optionalMetric = z
+  .number()
+  .nullish()
+  .transform((value) => value ?? null);
 
 export class ShopResponseError extends Error {
   constructor(cause: unknown) {
@@ -27,9 +30,14 @@ export const shopListSchema = z.union([
   z.object({ products: z.array(z.unknown()) }).transform(({ products }) => products),
 ]);
 export const shopCategorySchema = z.object({
-  id: z.number().int().positive(), name: text, parentId: z.number().int().positive().nullish(),
+  id: z.number().int().positive(),
+  name: text,
+  parentId: z.number().int().positive().nullish(),
 });
-export const shopBrandSchema = z.object({ id: z.number().int().positive(), userId: z.number().int().positive().optional() });
+export const shopBrandSchema = z.object({
+  id: z.number().int().positive(),
+  userId: z.number().int().positive().optional(),
+});
 
 export const shopProductSchema = z.object({
   id: entityIdSchema.transform(String),
@@ -38,11 +46,14 @@ export const shopProductSchema = z.object({
   stock: count,
   category: text.nullish().transform((value) => value ?? 'Non renseignée'),
   reference: text.nullish().transform((value) => value ?? '—'),
-  image: z.string().nullish().transform((value) => value ?? undefined),
+  image: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? undefined),
   status: z.enum(['in_stock', 'out_of_stock', 'low_stock']),
   createdAt: date,
   updatedAt: date,
-  boutiqueId: entityIdSchema.nullish().transform((value) => value == null ? undefined : String(value)),
+  boutiqueId: entityIdSchema.nullish().transform((value) => (value == null ? undefined : String(value))),
   boutiqueName: text.optional(),
   gender: text.optional(),
   ageRange: text.optional(),

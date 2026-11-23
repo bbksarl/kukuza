@@ -1,0 +1,17 @@
+.git
+.npm
+node_modules
+dist
+coverage
+test-results
+playwright-report
+src
+facade
+tests
+e2e
+scripts
+*.md
+.*
+!.dockerignore
+!.ci-builds
+!.ci-builds/**

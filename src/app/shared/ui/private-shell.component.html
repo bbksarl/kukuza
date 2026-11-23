@@ -1,0 +1,110 @@
+<div class="min-h-screen" [class]="admin ? 'bg-slate-100 text-slate-900' : 'bg-white'">
+  <a
+    href="#private-content"
+    class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-white focus:p-3"
+    >{{ t('accessibility.skipToContent') }}</a
+  >
+  @if (menu()) {
+    <div class="fixed inset-0 z-40 bg-slate-950/60 md:hidden" (click)="menu.set(false)"></div>
+  }
+  <aside
+    class="fixed inset-y-0 left-0 z-50 flex flex-col transition-transform md:translate-x-0"
+    [class]="
+      (admin
+        ? 'w-72 bg-slate-950 px-4 py-5 text-white '
+        : 'shop-dashboard-sidebar w-[min(18rem,85vw)] border-r border-slate-200 bg-white md:w-[104px] ') +
+      (menu() ? 'translate-x-0' : '-translate-x-full')
+    "
+  >
+    <div
+      class="flex flex-col items-center justify-center border-b py-5"
+      [class]="admin ? 'border-white/10' : 'shop-sidebar-profile border-slate-100'"
+    >
+      <a routerLink="/" class="text-lg font-bold tracking-[0.15em]" [class.text-teal-700]="!admin">{{
+        admin ? 'KUKUZA' : (session.user()?.username || 'K').slice(0, 2).toUpperCase()
+      }}</a>
+      <p class="mt-2 text-center text-[11px] font-semibold">
+        {{ admin ? t('admin.console') : session.user()?.username }}
+      </p>
+      <button
+        class="absolute right-3 top-3 md:hidden"
+        [attr.aria-label]="t('navigation.close')"
+        (click)="menu.set(false)"
+      >
+        <k-icon name="close" />
+      </button>
+    </div>
+    <nav class="flex-1" [class]="admin ? 'mt-7 space-y-1' : ''">
+      @for (link of links; track link.path) {
+        <a
+          [routerLink]="link.path"
+          routerLinkActive="!bg-teal-700 !text-white"
+          [routerLinkActiveOptions]="{ exact: true }"
+          ariaCurrentWhenActive="page"
+          (click)="menu.set(false)"
+          class="flex items-center gap-3 py-3 text-sm font-semibold transition hover:bg-teal-700/10"
+          [class]="
+            admin ? 'rounded-xl px-3 text-slate-400' : 'shop-sidebar-nav-item flex-col px-1 text-slate-500'
+          "
+          ><k-icon [name]="link.icon" />{{ t(link.key) }}</a
+        >
+      }
+    </nav>
+    <div class="border-t py-4" [class]="admin ? 'border-white/10' : 'border-slate-100'">
+      @if (session.error()) {
+        <p role="alert" class="p-2 text-xs text-red-500">{{ session.error() }}</p>
+      }
+      <button
+        class="flex w-full items-center justify-center gap-2 py-3 text-xs text-slate-500"
+        (click)="logout()"
+        [disabled]="session.busy()"
+      >
+        <k-icon name="logout" />{{ t(admin ? 'admin.logout' : 'shop.logout') }}
+      </button>
+    </div>
+  </aside>
+  <div class="min-h-screen" [class]="admin ? 'md:pl-72' : 'md:ml-[104px]'">
+    <header
+      class="sticky top-0 z-30 flex h-[74px] items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 md:px-7"
+    >
+      <button
+        class="p-2 md:hidden"
+        [attr.aria-label]="t('navigation.menu')"
+        [attr.aria-expanded]="menu()"
+        (click)="menu.update((value) => !value)"
+      >
+        <k-icon name="menu" />
+      </button>
+      @if (admin) {
+        <div class="hidden md:block">
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">
+            {{ t('admin.secureArea') }}
+          </p>
+          <p class="mt-1 text-sm text-slate-500">{{ t('admin.globalMonitoring') }}</p>
+        </div>
+      } @else {
+        <a routerLink="/"><img src="/assets/shop/logo.webp" alt="KUKUZA" class="h-7 w-auto md:h-8" /></a>
+      }
+      <div class="ml-auto flex items-center gap-3">
+        <k-notifications [role]="admin ? 'admin' : 'boutique'" /><button
+          class="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600"
+          [attr.aria-label]="t('language.choose')"
+          (click)="lang.set(lang.language() === 'fr' ? 'en' : 'fr')"
+        >
+          {{ lang.language().toUpperCase() }}
+        </button>
+        <div class="hidden border-l border-slate-200 pl-3 sm:block">
+          <p class="text-sm font-semibold">{{ session.user()?.username }}</p>
+          <p class="text-xs text-slate-500">{{ session.user()?.email?.toString() }}</p>
+        </div>
+      </div>
+    </header>
+    <main
+      id="private-content"
+      tabindex="-1"
+      [class]="admin ? 'p-4 sm:p-6 lg:p-8' : 'shop-dashboard-main min-h-screen'"
+    >
+      <router-outlet />
+    </main>
+  </div>
+</div>

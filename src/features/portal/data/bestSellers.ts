@@ -11,8 +11,8 @@ export type BestSellerItem = {
   alt: string;
   title: string;
   titleKey: string;
-  price: string;
-  oldPrice: string;
+  price: number;
+  currency: 'EUR';
   category: string;
   categoryKey: string;
   description: string;
@@ -28,16 +28,16 @@ export const bestSellers: BestSellerItem[] = [
   {
     id: 1,
     slug: 'elegance-streetwear',
-    src: '/assets/mVentes/im2.png',
+    src: '/assets/mVentes/im2.webp',
     alt: 'Tenue streetwear noir et blanc',
     title: 'Elegance Streetwear',
     titleKey: 'bestSellers.eleganceStreetwear.title',
-    price: '69,99 EUR',
-    oldPrice: '79,00 EUR',
+    price: 69.99,
+    currency: 'EUR',
     category: 'Nouveaute',
     categoryKey: 'bestSellers.eleganceStreetwear.category',
     description:
-      "Silhouette urbaine structuree avec une allure effortless. Cette tenue streetwear mixe coupe nette, details modernes et confort premium pour accompagner les journees actives comme les sorties du soir.",
+      'Silhouette urbaine structuree avec une allure effortless. Cette tenue streetwear mixe coupe nette, details modernes et confort premium pour accompagner les journees actives comme les sorties du soir.',
     descriptionKey: 'bestSellers.eleganceStreetwear.description',
     shippingNote: "Frais d'expedition calcules a l'etape de paiement.",
     shippingKey: 'bestSellers.shipping',
@@ -50,22 +50,22 @@ export const bestSellers: BestSellerItem[] = [
   {
     id: 2,
     slug: 'robe-porte-feuille',
-    src: '/assets/mVentes/im1.png',
+    src: '/assets/mVentes/im1.webp',
     alt: 'Robe rouge elegante',
     title: 'Robe Porte-Feuille',
     titleKey: 'bestSellers.wrapDress.title',
-    price: '129,00 EUR',
-    oldPrice: '89,00 EUR',
+    price: 129,
+    currency: 'EUR',
     category: 'Best seller',
     categoryKey: 'bestSellers.wrapDress.category',
     description:
-      "Robe longue elegante au drape sophistique, sublimee par un decollete drape, un col choker moderne et une fente frontale qui allonge la silhouette. Sa coupe ajustee epouse les formes avec raffinement, ideale pour les soirees, evenements ou occasions speciales.",
+      'Robe longue elegante au drape sophistique, sublimee par un decollete drape, un col choker moderne et une fente frontale qui allonge la silhouette. Sa coupe ajustee epouse les formes avec raffinement, ideale pour les soirees, evenements ou occasions speciales.',
     descriptionKey: 'bestSellers.wrapDress.description',
     shippingNote: "Frais d'expedition calcules a l'etape de paiement.",
     shippingKey: 'bestSellers.shipping',
     colors: [
-      { name: 'Rouge bordeaux', hex: '#7d1117', image: '/assets/mVentes/im1.png' },
-      { name: 'Noir intense', hex: '#171717', image: '/assets/mVentes/im1-noir.png' },
+      { name: 'Rouge bordeaux', hex: '#7d1117', image: '/assets/mVentes/im1.webp' },
+      { name: 'Noir intense', hex: '#171717', image: '/assets/mVentes/im1-noir.webp' },
     ],
     sizes: ['XL', 'S', 'M', 'L'],
     featured: true,
@@ -73,16 +73,16 @@ export const bestSellers: BestSellerItem[] = [
   {
     id: 3,
     slug: 'caftan-luxe',
-    src: '/assets/mVentes/im3.png',
+    src: '/assets/mVentes/im3.webp',
     alt: 'Caftan raye multicolore',
     title: 'Caftan Luxe',
     titleKey: 'bestSellers.luxuryKaftan.title',
-    price: '89,90 EUR',
-    oldPrice: '99,90 EUR',
+    price: 89.9,
+    currency: 'EUR',
     category: 'Edition limitee',
     categoryKey: 'bestSellers.luxuryKaftan.category',
     description:
-      "Piece signature au tombe fluide et aux rayures lumineuses. Ce caftan apporte une presence elegante et artisanale, parfait pour des moments festifs ou une allure resort tres chic.",
+      'Piece signature au tombe fluide et aux rayures lumineuses. Ce caftan apporte une presence elegante et artisanale, parfait pour des moments festifs ou une allure resort tres chic.',
     descriptionKey: 'bestSellers.luxuryKaftan.description',
     shippingNote: "Frais d'expedition calcules a l'etape de paiement.",
     shippingKey: 'bestSellers.shipping',
@@ -94,7 +94,6 @@ export const bestSellers: BestSellerItem[] = [
   },
 ];
 
-export const getBestSellerBySlug = (slug: string) =>
-  bestSellers.find((item) => item.slug === slug);
+export const getBestSellerBySlug = (slug: string) => bestSellers.find((item) => item.slug === slug);
 
 export const defaultBestSeller = bestSellers.find((item) => item.featured) ?? bestSellers[0];

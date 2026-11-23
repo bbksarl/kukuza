@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 import { emailSchema, passwordSchema, loginInputSchema } from '../domain/auth/schemas';
@@ -7,51 +6,59 @@ export const loginValidationSchema = loginInputSchema;
 
 export type LoginInput = z.infer<typeof loginValidationSchema>;
 
-export const registerValidationSchema = z.object({
-  name: z.string()
-    .min(2, 'Le nom doit contenir au moins 2 caractères')
-    .max(100, 'Le nom doit contenir au maximum 100 caractères'),
-  username: z.string()
-    .trim()
-    .min(3, 'Le nom utilisateur doit contenir au moins 3 caractères')
-    .max(100, 'Le nom utilisateur doit contenir au maximum 100 caractères'),
-  email: emailSchema,
-  password: passwordSchema,
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword'],
-});
+export const registerValidationSchema = z
+  .object({
+    name: z
+      .string()
+      .min(2, 'Le nom doit contenir au moins 2 caractères')
+      .max(100, 'Le nom doit contenir au maximum 100 caractères'),
+    username: z
+      .string()
+      .trim()
+      .min(3, 'Le nom utilisateur doit contenir au moins 3 caractères')
+      .max(100, 'Le nom utilisateur doit contenir au maximum 100 caractères'),
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Les mots de passe ne correspondent pas',
+    path: ['confirmPassword'],
+  });
 
 export type RegisterInput = z.infer<typeof registerValidationSchema>;
 
 export const boutiqueValidationSchema = z.object({
-  shopName: z.string()
+  shopName: z
+    .string()
     .min(2, 'Le nom de la boutique doit contenir au moins 2 caractères')
     .max(100, 'Le nom doit contenir au maximum 100 caractères'),
-  address: z.string()
-    .min(5, 'L\'adresse doit contenir au moins 5 caractères')
-    .max(200, 'L\'adresse doit contenir au maximum 200 caractères'),
-  postalCode: z.string()
-    .regex(/^[0-9]{5}$/, 'Le code doit contenir 5 chiffres'),
+  address: z
+    .string()
+    .min(5, "L'adresse doit contenir au moins 5 caractères")
+    .max(200, "L'adresse doit contenir au maximum 200 caractères"),
+  postalCode: z.string().regex(/^[0-9]{5}$/, 'Le code doit contenir 5 chiffres'),
   country: z.string().min(1, 'Le pays est requis'),
-  phoneNumber: z.string()
-    .regex(/^[0-9\s\-+]{6,20}$/, 'Le numéro de téléphone invalide'),
-  description: z.string()
+  phoneNumber: z.string().regex(/^[0-9\s\-+]{6,20}$/, 'Le numéro de téléphone invalide'),
+  description: z
+    .string()
     .min(10, 'La description doit contenir au moins 10 caractères')
     .max(1000, 'La description doit contenir au maximum 1000 caractères'),
 });
 
 export type BoutiqueInput = z.infer<typeof boutiqueValidationSchema>;
 
-export const validateWithSchema = <T>(schema: z.ZodSchema, data: unknown): { valid: boolean; data?: T; errors?: Record<string, string> } => {
+export const validateWithSchema = <T>(
+  schema: z.ZodSchema,
+  data: unknown,
+): { valid: boolean; data?: T; errors?: Record<string, string> } => {
   try {
     const result = schema.parse(data);
     return { valid: true, data: result as T };
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors: Record<string, string> = {};
-      error.issues.forEach(err => {
+      error.issues.forEach((err) => {
         const path = err.path.join('.');
         errors[path] = err.message;
       });

@@ -6,6 +6,10 @@ export class Email {
     this.value = emailSchema.parse(value);
     Object.freeze(this);
   }
-  equals(other: unknown): boolean { return other instanceof Email && this.value === other.value; }
-  toString(): string { return this.value; }
+  equals(other: unknown): boolean {
+    return other instanceof Email && this.value === other.value;
+  }
+  toString(): string {
+    return this.value;
+  }
 }

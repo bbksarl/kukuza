@@ -14,7 +14,9 @@ export function getProductSuggestions(products: readonly PortalProduct[], query:
         product.creator_name,
         product.category,
         product.subcategory,
-      ].filter(Boolean).map((value) => normalizeText(value));
+      ]
+        .filter(Boolean)
+        .map((value) => normalizeText(value));
       const name = normalizeText(product.name);
       const boutique = normalizeText(product.boutique_name || product.brand || product.creator_name);
       const searchableText = searchableFields.join(' ');

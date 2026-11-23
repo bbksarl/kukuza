@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
-export const roleSchema = z.string()
-  .transform((role) => role.toLowerCase() === 'brand' ? 'creator' : role.toLowerCase())
+export const roleSchema = z
+  .string()
+  .transform((role) => (role.toLowerCase() === 'brand' ? 'creator' : role.toLowerCase()))
   .pipe(z.enum(['customer', 'creator', 'admin']));
 
 export const sessionUserSchema = z.object({

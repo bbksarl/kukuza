@@ -1,0 +1,192 @@
+@if (loading()) {
+  <main
+    class="flex min-h-[60vh] items-center justify-center px-6 pt-16 text-sm text-slate-600"
+    aria-live="polite"
+  >
+    {{ t('catalog.loading') }}
+  </main>
+} @else if (error()) {
+  <main class="flex min-h-[60vh] items-center justify-center px-6 pb-16 pt-28">
+    <div class="max-w-lg rounded-3xl border border-slate-200 bg-white p-8 text-center">
+      <h1 class="text-2xl font-bold" role="alert">{{ error() }}</h1>
+      <button class="mt-6 rounded-full bg-teal-700 px-5 py-3 text-white" (click)="retry.next()">
+        {{ t('catalog.retry') }}</button
+      ><a routerLink="/products" class="ml-4 text-teal-700">{{ t('product.backToProducts') }}</a>
+    </div>
+  </main>
+} @else if (product(); as product) {
+  <main class="px-4 pb-16 sm:px-6 lg:px-8" [class.pt-20]="!catalog" [class.pt-8]="catalog">
+    <div class="mx-auto max-w-[900px]">
+      <button
+        class="mb-4 inline-flex items-center gap-2 rounded-full px-1 py-2 text-sm font-semibold text-slate-600 hover:text-teal-700"
+        (click)="location.back()"
+      >
+        <k-icon name="back" [size]="17" />{{ t('product.back') }}
+      </button>
+      <section
+        class="grid overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm lg:min-h-[560px] lg:grid-cols-[minmax(0,1.05fr)_minmax(340px,0.95fr)]"
+      >
+        <div class="relative min-h-[380px] bg-slate-100 sm:min-h-[480px] lg:min-h-[560px]">
+          <img
+            [src]="image()"
+            [alt]="product.name"
+            width="900"
+            height="1100"
+            class="h-full min-h-[380px] w-full object-cover sm:min-h-[480px] lg:min-h-[560px]"
+            (error)="fallback($event)"
+          />
+          @if (product.isPromoted) {
+            <span
+              class="absolute left-4 top-4 rounded-full bg-teal-700 px-3 py-1.5 text-[10px] font-bold uppercase text-white"
+              >{{ t('catalog.selection') }}</span
+            >
+          }
+        </div>
+        <div class="flex flex-col p-6 sm:p-7 lg:p-8">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">
+                {{ lang.label(product.category) }}
+              </p>
+              <h1 class="font-display mt-2 text-3xl font-bold leading-tight text-slate-900 sm:text-[2.25rem]">
+                {{ bestSeller() ? t(bestSeller()!.titleKey) : product.name }}
+              </h1>
+              <p class="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                {{ product.boutique_name || product.brand }}
+              </p>
+            </div>
+            <button
+              class="shrink-0 rounded-full border border-slate-200 p-2.5 text-slate-500 hover:text-red-500"
+              [class.text-red-500]="favorites.has(favoriteId())"
+              [attr.aria-label]="
+                favorites.has(favoriteId()) ? t('favorites.remove') : t('catalog.addToFavorites')
+              "
+              [attr.aria-pressed]="favorites.has(favoriteId())"
+              (click)="favorite()"
+              [disabled]="catalog"
+            >
+              <k-icon name="heart" [size]="18" />
+            </button>
+          </div>
+          <p class="mt-4 text-2xl font-bold text-teal-700">
+            {{ lang.money(product.price, bestSeller()?.currency) }}
+          </p>
+          @if (bestSeller()) {
+            <p class="mt-3 text-sm leading-6 text-slate-600">{{ t(bestSeller()!.descriptionKey) }}</p>
+          }
+          <div class="mt-4 border-t border-slate-200 pt-4">
+            <h2 class="text-sm font-bold uppercase tracking-[0.18em] text-slate-900">
+              {{ t('product.details') }}
+            </h2>
+            <dl class="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 text-xs sm:text-sm">
+              <div>
+                <dt class="text-slate-500">{{ t('product.creator') }}</dt>
+                <dd class="mt-1 font-semibold">{{ product.boutique_name || product.creator_name }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">{{ t('product.category') }}</dt>
+                <dd class="mt-1 font-semibold">{{ lang.label(product.category) }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">{{ t('product.subcategory') }}</dt>
+                <dd class="mt-1 font-semibold">{{ lang.label(product.subcategory) }}</dd>
+              </div>
+              @if (product.material) {
+                <div>
+                  <dt class="text-slate-500">{{ t('product.material') }}</dt>
+                  <dd>{{ lang.label(product.material) }}</dd>
+                </div>
+              }
+              @if (product.style) {
+                <div>
+                  <dt class="text-slate-500">{{ t('product.style') }}</dt>
+                  <dd>{{ lang.label(product.style) }}</dd>
+                </div>
+              }
+              <div>
+                <dt class="text-slate-500">{{ t('product.collections') }}</dt>
+                <dd class="mt-1 font-semibold">{{ product.collections.join(', ') || '—' }}</dd>
+              </div>
+            </dl>
+          </div>
+          @if (bestSeller(); as bestSeller) {
+            <fieldset class="mt-4">
+              <legend class="text-sm font-bold">{{ t('cart.color') }}</legend>
+              <div class="mt-3 flex flex-wrap gap-3">
+                @for (color of bestSeller.colors; track color.hex) {
+                  <button
+                    class="h-9 w-9 rounded-full border-2 border-white ring-1 ring-slate-300"
+                    [style.background-color]="color.hex"
+                    [attr.aria-label]="color.name"
+                    [attr.aria-pressed]="selectedColor() === color.hex"
+                    [class.ring-teal-700]="selectedColor() === color.hex"
+                    (click)="selectedColor.set(color.hex)"
+                  ></button>
+                }
+              </div>
+            </fieldset>
+          }
+          @if (product.sizes.length) {
+            <fieldset class="mt-4">
+              <legend class="text-sm font-bold uppercase tracking-[0.18em]">
+                {{ t('product.availableSizes') }}
+              </legend>
+              <div class="mt-3 flex flex-wrap gap-2">
+                @for (size of product.sizes; track size) {
+                  <button
+                    class="min-w-11 rounded-full border px-3.5 py-1.5 text-xs font-semibold"
+                    [class]="
+                      selectedSize() === size
+                        ? 'border-teal-700 bg-teal-700 text-white'
+                        : 'border-slate-200 text-slate-700'
+                    "
+                    [attr.aria-pressed]="selectedSize() === size"
+                    (click)="selectedSize.set(size)"
+                  >
+                    {{ size }}
+                  </button>
+                }
+              </div>
+            </fieldset>
+          }
+          <div class="mt-4 flex flex-wrap gap-2">
+            @for (tag of product.tags.concat(product.collections); track $index) {
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">{{
+                lang.label(tag)
+              }}</span>
+            }
+          </div>
+          <div class="mt-auto flex flex-col gap-2 pt-5 sm:flex-row sm:items-stretch">
+            @if (best) {
+              <p
+                class="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-center text-xs font-semibold leading-snug text-slate-600"
+                [attr.aria-label]="t('product.editorialOnly')"
+                [title]="t('product.editorialOnly')"
+              >
+                <k-icon name="bag" [size]="18" />
+                <span>{{ t('product.editorialSelection') }}</span>
+              </p>
+            } @else {
+              <button
+                class="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-center text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50"
+                [disabled]="catalog"
+                (click)="add()"
+              >
+                <k-icon [name]="added() ? 'check' : 'bag'" [size]="18" />
+                <span>{{ added() ? t('product.addedToCart') : t('sections.shopNow') }}</span>
+              </button>
+            }
+            <a
+              routerLink="/products"
+              class="inline-flex min-h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-slate-300 px-4 py-2.5 text-center text-xs font-semibold text-slate-700 transition hover:border-teal-700 hover:text-teal-700"
+              >{{ t('product.backToProducts') }}</a
+            >
+          </div>
+        </div>
+      </section>
+      @if (catalog) {
+        <k-reviews [productId]="'' + product.id" />
+      }
+    </div>
+  </main>
+}

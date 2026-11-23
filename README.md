@@ -1,10 +1,10 @@
 # KUKUZA
 
-Application React/TypeScript unique, organisée par fonctionnalités : portail, catalogue, authentification, boutique et administration. La [façade HTTP](facade/) est la frontière réseau commune.
+Application Angular et TypeScript de la marketplace KUKUZA.
 
 ## Démarrage
 
-Node.js 24 LTS recommandé (compatibilité déclarée dans `package.json`).
+Node.js 20.19 ou plus récent est requis.
 
 ```bash
 npm ci
@@ -12,97 +12,41 @@ cp .env.example .env.local
 npm run dev
 ```
 
-`.env.local` est ignoré par Git. Si ce fichier existe déjà, conserver ses valeurs et adapter uniquement les paramètres nécessaires.
+Le serveur Angular écoute sur `http://127.0.0.1:3000`. Il transmet `/api` au backend défini par `KUKUZA_API_PROXY_TARGET` (par défaut `https://localhost:7200`). Pour un certificat local autosigné, configurer sa confiance ou activer `KUKUZA_API_PROXY_INSECURE=true` pour le serveur de développement.
 
-Par défaut, le navigateur appelle `/api`. Vite transmet ces requêtes au backend défini par `KUKUZA_API_PROXY_TARGET` (par défaut `https://localhost:7200`). Le préfixe `/api` est conservé. Le backend peut être absent : les écrans affichent alors une indisponibilité, sans inventer de données.
+`npm run build` produit le navigateur et le serveur SSR dans `dist/browser` et `dist/server`; il lit `.env.production*` sans reprendre `.env.local`. Les pages catalogue sont pré-rendues, les fiches produits sont rendues à la requête par Node, et les pages privées restent côté client. Le serveur Node appelle l'API via `KUKUZA_API_UPSTREAM` et relaie `/api` pour le navigateur. `npm run build:demo` produit une version statique simulée pour Vercel. Les comptes démo sont publics et ne doivent jamais être réutilisés sur un vrai service. Les paramètres injectés dans le navigateur sont filtrés par `scripts/environment.mjs`; ne jamais y placer de secret.
 
-Pour un certificat ASP.NET local autosigné que Node ne reconnaît pas, configurer la confiance du certificat, ou activer explicitement `KUKUZA_API_PROXY_INSECURE=true` pour le proxy de développement uniquement.
+## Architecture
 
-`VITE_API_BASE_URL` peut aussi désigner une API sur une autre origine. Dans ce cas, le backend doit autoriser l'origine exacte du frontend et les credentials en CORS. Les cookies doivent être compatibles avec ce déploiement.
+- `src/main.ts` démarre l'application Angular.
+- `src/app/` contient les composants standalone, routes et services Angular, répartis entre `auth`, `storefront`, `studio`, `admin`, `core` et `shared`.
+- `src/app/core/` contient les services transverses Angular et le client HTTP, dont les réponses restent `unknown` jusqu'à validation par leurs schémas.
+- `src/api/` contient les contrats Zod et l'adaptateur des données de démonstration.
+- `src/features/` contient les modèles, règles métier, mappers et données réutilisés par l'interface Angular.
+- `src/features/auth/data/` contient l'adaptateur HTTP d'authentification ; les entités et types de domaine restent dans `src/features/auth/domain/`.
+- `public/` contient les fichiers statiques.
 
-## Backend C# attendu
+L'interface, les routes et les formulaires sont en Angular. Les modules applicatifs React, leurs composants, hooks et points d'entrée ont été retirés. Vitest teste les contrats, règles métier, stockage du panier et politique de génération de configuration.
 
-Le contrat cible est décrit dans [facade/docs/backend-contract.md](facade/docs/backend-contract.md). Les schémas Zod de `src/api/contracts/` valident les réponses utilisées par le frontend.
+## Configuration et contrôles
 
-À implémenter ou aligner côté ASP.NET Core :
-
-- `GET /api/Auth/me`, `POST /api/Auth/login`, `POST /api/Auth/logout` ;
-- `POST /api/Auth/register` en multipart, incluant le profil et le logo de boutique ;
-- `GET /api/Product` avec pagination et filtres serveur, `GET /api/Product/{id}` ;
-- `PATCH /api/Product/{id}` et `DELETE /api/Product/{id}` pour modifier/supprimer un produit dans l'espace boutique (contrat proposé dans `facade/docs/backend-contract.md`) ;
-- `POST /api/Order/checkout`, transactionnel et idempotent ;
-- `GET /api/admin/overview`, avec les agrégats calculés côté serveur.
-
-Le dépôt ne contient pas l'implémentation de ces endpoints C#. Les tests simulent leur contrat ; un test d'intégration avec le vrai backend reste nécessaire.
-
-## Démonstration sans backend
-
-Pour tester localement, activer `VITE_ENABLE_API_MOCKS=true` dans `.env.local`, puis lancer `npm run dev`. Pour produire une démo publiable, lancer `npm run build:demo`, puis `npm run preview`. Le mode Vite `demo` active explicitement les mocks, même si `.env.local` ou l'environnement contient `VITE_ENABLE_API_MOCKS=false`.
-
-La façade démo répond directement dans le navigateur, sans requête réseau vers `/api`. Elle couvre le catalogue et ses filtres, les comptes admin/boutique, la session, l'inscription locale, les données boutique, les avis et le checkout simulé. Les nouveaux comptes démo sont conservés dans le stockage du navigateur ; leurs identifiants servent uniquement aux tests. Les comptes prédéfinis sont dans `.env.demo` et peuvent être remplacés par les variables `VITE_DEFAULT_*`.
-
-Les comptes administrateur et boutique configurés par les variables `VITE_DEFAULT_*` sont disponibles en développement et dans les builds avec mocks. Utiliser des identifiants de démonstration, jamais ceux d'un compte réel : toute variable `VITE_*` est destinée au navigateur.
-
-Les comptes de démonstration n'autorisent aucune opération sur le backend. Le backend reste responsable des rôles, des boutiques accessibles et des permissions.
-
-## Organisation du catalogue
-
-`ProductsList.tsx` gère les filtres dans l'URL et compose les composants de `components/catalog/` : recherche, carte produit et chargement. La sélection des suggestions est isolée dans `utils/productSuggestions.ts` ; les suggestions utilisent uniquement les produits déjà chargés. La recherche complète est envoyée à l'API lors de la validation.
-
-`Header.tsx` compose les éléments de `components/header/`. Le hook `useHeaderNavigation` centralise la navigation et le panneau ouvert (menu, filtres, recherche ou langue), ainsi que sa fermeture au clavier ou lors d'un changement de route.
-
-`data/catalog.ts` conserve les exports publics ; les implémentations sont réparties dans `data/catalog/` : types, navigation, libellés, filtres, conversion des produits et données locales/de démonstration. Les conversions exigent un identifiant, un nom et un prix valides.
-
-Les appels réseau restent dans les services et la façade HTTP. `usePaginatedProducts` gère l'annulation des anciennes recherches, conserve les produits pendant le chargement suivant et permet de réessayer la page en échec.
-
-## Organisation de la boutique
-
-`AddProduct.tsx` compose le formulaire et l'aperçu. `useProductForm` gère les champs, la validation, le chargement des catégories et la soumission ; les composants de `components/products/` gèrent l'affichage. Une soumission en cours verrouille les champs et empêche une seconde création simultanée. Une erreur conserve les saisies ; une réponse valide réinitialise le formulaire. Les aperçus libèrent leurs URL temporaires.
-
-Les schémas de `src/api/contracts/shop.ts` valident les produits, ventes et métriques après conversion des alias connus. Les identifiants, dates, montants et statuts essentiels ne sont plus inventés. Une réponse invalide provoque une erreur, y compris en mode démo. Les statistiques facultatives absentes restent `null` : elles s'affichent avec un tiret ou sans pourcentage de variation. Le [contrat proposé](facade/docs/backend-contract.md) détaille les champs attendus.
-
-## Contrôles
+Les paramètres locaux sont listés dans `.env.example`. Le script de préparation lit les fichiers `.env*` et génère `src/config/environment.generated.ts` avec une liste blanche de valeurs publiques. Le proxy généré (`proxy.generated.json`) et l'environnement généré sont ignorés par Git.
 
 ```bash
+npm run format:check
 npm run lint
+npm audit --audit-level=moderate
 npm run typecheck
 npm test
+npm run test:coverage
+npm run e2e
 npm run build
-# Ou tous les contrôles :
-npm run check
 ```
 
-ESLint vérifie notamment les règles des hooks et leurs dépendances. Les tests couvrent la session, les formulaires, les commandes, la pagination, les erreurs réseau et l'interface. La CI exécute le lint, TypeScript, les tests et le build.
+Les tests E2E utilisent Chromium, le serveur Angular SSR et un faux backend local. Ils vérifient une fiche produit rendue côté serveur, la CSP sans script inline, et les statuts HTTP 404. En CI, Chromium est installé dans un job dédié après le build. `npm run test:coverage` produit un rapport HTML dans `coverage/`.
 
-La CI GitLab crée des pipelines de vérification sur les merge requests et sur `main`. Les jobs d'installation, de test et de build participent aux deux. La publication Docker reste réservée à `main`, avec un déploiement manuel ; les merge requests n'exécutent aucun de ces deux jobs. Les [règles GitLab](https://docs.gitlab.com/ci/jobs/job_rules/) sont déclarées explicitement sur chaque groupe de jobs.
+## Déploiement
 
-Les tests de la boutique couvrent aussi les réponses incomplètes, les statistiques absentes, les reprises du formulaire après erreur et les soumissions simultanées.
+Vercel publie volontairement la démo simulée; ses rewrites ne concernent que les routes Angular connues, les autres URL retournent 404. En production, la CI copie `dist/` vers `.ci-builds/` puis construit une image Node qui sert le rendu SSR et les fichiers navigateur. Le serveur transmet `/api/` à `KUKUZA_API_UPSTREAM` et renvoie `503` si le backend est indisponible. La CSP `script-src 'self'` est appliquée par le serveur Node; l'hydratation n'injecte pas le script inline d'Event Replay.
 
-Les parcours de `ProductsList.test.tsx` simulent les réponses de `fetch` en conservant la vraie façade HTTP, les services et les validations Zod. Ils couvrent la recherche et le retour navigateur, les suggestions au clavier, la pagination avec reprise après erreur, les réponses invalides et les résultats vides. Les exemples de réponses sont dans `tests/fixtures/catalog.ts`. Aucun serveur C# ni mode de démonstration n'est nécessaire pour les exécuter :
-
-```bash
-npm test -- src/features/portal/pages/ProductsList.test.tsx src/features/portal/components/portal/Header.test.tsx
-```
-
-## Vercel
-
-Le projet est actuellement publié comme une démo frontend : `vercel.json` utilise `npm run build:demo`, le dossier `dist` et le fallback React vers `index.html`. Aucun backend ni variable `KUKUZA_API_UPSTREAM` n'est nécessaire. Redéployer après avoir envoyé les changements. Si le projet Vercel possède une surcharge de la commande de build, utiliser également `npm run build:demo`.
-
-`.env.local` n'est pas envoyé par Git. Les identifiants publics de `.env.demo` sont inclus dans ce build. Pour passer ultérieurement au vrai backend, remplacer la commande de build par `npm run build`, désactiver `VITE_ENABLE_API_MOCKS` et configurer `VITE_API_BASE_URL` avec l'URL de l'API et son CORS. Le proxy Vite et Nginx ne sont pas exécutés sur Vercel.
-
-## Docker / Nginx
-
-La CI place le build dans `.ci-builds/`, utilisé par le Dockerfile. Pour construire localement :
-
-```bash
-npm run build
-mkdir -p .ci-builds
-cp -r dist/. .ci-builds/
-docker build -t kukuza-frontend .
-docker run --rm -p 3000:80 --add-host=host.docker.internal:host-gateway \
-  -e KUKUZA_API_UPSTREAM=http://host.docker.internal:7200 kukuza-frontend
-```
-
-Adapter `KUKUZA_API_UPSTREAM` à l'origine HTTP(S) réelle du backend, sans chemin ni slash final. Le nom d'un service Docker peut remplacer `host.docker.internal` si les deux conteneurs partagent un réseau. La valeur est injectée dans le modèle Nginx au démarrage du conteneur.
-
-Nginx transmet `/api/*` au backend et réserve le fallback `index.html` aux routes frontend. Un backend indisponible produit une réponse API `503`, sans retourner la page HTML. Le serveur `npm run preview` sert uniquement à inspecter le build ; il n'inclut pas ce proxy de production.
+Sur `main`, le déploiement GitLab reste manuel après réussite des contrôles et tests navigateur. Le groupe de ressources sérialise les déploiements et les rend non interruptibles. Le job requiert une variable `SSH_KNOWN_HOSTS` contenant la clé d'hôte vérifiée hors pipeline ; il échoue si cette valeur manque. Le script attend que le nouveau conteneur passe son contrôle de santé avant de supprimer l'ancien et tente de le restaurer en cas d'échec. Le backend de production doit authentifier via un cookie `HttpOnly`, `Secure` et `SameSite`, émettre et valider le jeton CSRF attendu par Angular, appliquer les autorisations sur chaque endpoint, attribuer l'auteur des avis depuis la session et recalculer les prix du panier depuis son catalogue. Les gardes Angular ne remplacent pas ces contrôles serveur.

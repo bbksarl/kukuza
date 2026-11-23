@@ -1,0 +1,13 @@
+@if (loading()) {
+  <p role="status">{{ t('admin.loading') }}</p>
+} @else if (error() || !data()) {
+  <p role="alert">{{ t('admin.error') }}</p>
+} @else {
+  <section>
+    <h1 class="mb-6 text-3xl font-bold">{{ t('admin.navigation.sales') }}</h1>
+    <k-chart [title]="t('admin.revenueEvolution')" [data]="data()!.sales" />
+    <p class="mt-5 text-lg font-semibold">
+      {{ t('admin.periodRevenue') }}: {{ lang.money(data()!.sales.reduce((n, p) => n + p.value, 0)) }}
+    </p>
+  </section>
+}

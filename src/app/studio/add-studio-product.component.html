@@ -1,0 +1,75 @@
+<section class="shop-dashboard space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold">{{ t('shop.addProductsTitle') }}</h1>
+    <p class="mt-2 text-sm text-slate-500">
+      Les prix, stocks et catégories sont enregistrés dans la boutique liée à votre session.
+    </p>
+  </div>
+  @if (error()) {
+    <p role="alert" class="rounded bg-red-50 p-4 text-red-700">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p role="status" class="rounded bg-emerald-50 p-4 text-emerald-700">{{ success() }}</p>
+  }
+  <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-6 lg:grid-cols-3">
+    <div class="space-y-5 rounded-xl bg-white p-6 shadow-sm lg:col-span-2">
+      @for (field of fields; track field.name) {
+        <label class="block text-sm font-medium"
+          >{{ t(field.key) }} *<input
+            [type]="field.type"
+            [formControlName]="field.name"
+            class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3"
+        /></label>
+      }
+      <label class="block text-sm font-medium"
+        >{{ t('shop.itemCategory') }} *<select
+          formControlName="category"
+          class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3"
+        >
+          <option value="">{{ t('shop.selectCategory') }}</option>
+          @for (category of categories(); track category.id) {
+            <option [value]="category.name">{{ lang.label(category.name) }}</option>
+          }
+        </select></label
+      ><label class="block text-sm font-medium"
+        >{{ t('shop.ageRange') }} *<select
+          formControlName="ageRange"
+          class="mt-2 w-full rounded-lg border p-3"
+        >
+          <option value="">{{ t('shop.selectAgeRange') }}</option>
+          @for (x of ['Adulte', 'Enfant']; track x) {
+            <option>{{ x }}</option>
+          }
+        </select></label
+      ><label class="block text-sm font-medium"
+        >{{ t('shop.genderCategory') }} *<select
+          formControlName="gender"
+          class="mt-2 w-full rounded-lg border p-3"
+        >
+          <option value="">{{ t('shop.selectGender') }}</option>
+          @for (x of genders(); track x) {
+            <option>{{ x }}</option>
+          }
+        </select></label
+      ><label
+        >{{ t('shop.productImages')
+        }}<input type="file" accept="image/*" multiple (change)="select($event)" class="mt-2 block"
+      /></label>
+      <div class="flex gap-3">
+        <button type="button" (click)="form.reset(create())" class="rounded border px-5 py-3">
+          {{ t('shop.reset') }}</button
+        ><button [disabled]="busy()" class="rounded bg-teal-700 px-6 py-3 text-white disabled:opacity-50">
+          {{ busy() ? t('shop.publishing') : t('shop.publish') }}
+        </button>
+      </div>
+    </div>
+    <aside class="rounded-xl bg-white p-6 shadow-sm">
+      <h2 class="font-semibold">{{ t('shop.preview') }}</h2>
+      @if (preview()) {
+        <img [src]="preview()" alt="Aperçu du produit" class="mt-4 aspect-[4/5] w-full object-cover" />
+      } @else {
+        <p class="mt-4 text-sm text-slate-500">{{ t('shop.noImage') }}</p>
+      }
+    </aside>
+  </form>
+</section>

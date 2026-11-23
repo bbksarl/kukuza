@@ -1,11 +1,5 @@
 export type DropdownType =
-  | 'nouveautes'
-  | 'createurs'
-  | 'vetements'
-  | 'chaussures'
-  | 'decor'
-  | 'sacs'
-  | 'accessoires';
+  'nouveautes' | 'createurs' | 'vetements' | 'chaussures' | 'decor' | 'sacs' | 'accessoires';
 
 export type NavType = DropdownType | 'promotion' | 'skincare';
 

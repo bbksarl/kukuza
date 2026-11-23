@@ -8,7 +8,7 @@ import type {
   CreateProductInput,
 } from '../types';
 import { runtimeConfig } from '@/config/runtime';
-import type { ShopCategory } from '../services/shop/shopService';
+import type { ShopCategory } from '../types';
 
 export const getMockCategories = (): ShopCategory[] => [
   { id: 1, name: 'Vetements' },
@@ -32,11 +32,16 @@ const readDemoProductState = (): DemoProductState => {
     const saved = window.localStorage.getItem(DEMO_PRODUCT_STATE_KEY);
     if (!saved) return { overrides: {}, deletedIds: [] };
     const parsed = JSON.parse(saved) as Partial<DemoProductState>;
-    const overrides = Object.fromEntries(Object.entries(parsed.overrides ?? {}).map(([id, product]) => [id, {
-      ...product,
-      createdAt: new Date(product.createdAt),
-      updatedAt: new Date(product.updatedAt),
-    }]));
+    const overrides = Object.fromEntries(
+      Object.entries(parsed.overrides ?? {}).map(([id, product]) => [
+        id,
+        {
+          ...product,
+          createdAt: new Date(product.createdAt),
+          updatedAt: new Date(product.updatedAt),
+        },
+      ]),
+    );
     return { overrides, deletedIds: Array.isArray(parsed.deletedIds) ? parsed.deletedIds : [] };
   } catch {
     return { overrides: {}, deletedIds: [] };
@@ -75,7 +80,7 @@ export const getMockDashboardStats = (): DashboardStats => ({
   totalSales: 74,
   salesChange: 9.3,
   activeUsers: 126,
-  usersChange: 15.1
+  usersChange: 15.1,
 });
 
 export const getMockSalesData = (): ChartDataPoint[] => [
@@ -102,12 +107,78 @@ export const getMockProducts = (): Product[] => {
   const now = new Date();
   const createdAt = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const seeds: Product[] = [
-    { id: 'demo-product-1', reference: 'KZ-1001', name: 'Robe Soleil Dakar', category: 'Vêtements', price: 125, stock: 18, image: '/assets/products/p1.png', status: 'in_stock', createdAt, updatedAt: now },
-    { id: 'demo-product-2', reference: 'KZ-1002', name: 'Top Atelier Indigo', category: 'Vêtements', price: 48, stock: 7, image: '/assets/products/p2.png', status: 'low_stock', createdAt, updatedAt: now },
-    { id: 'demo-product-3', reference: 'KZ-1003', name: 'Pantalon Signature', category: 'Vêtements', price: 95, stock: 12, image: '/assets/products/p3.png', status: 'in_stock', createdAt, updatedAt: now },
-    { id: 'demo-product-4', reference: 'KZ-1004', name: 'Veste Harmattan', category: 'Vêtements', price: 160, stock: 0, image: '/assets/products/p4.png', status: 'out_of_stock', createdAt, updatedAt: now },
-    { id: 'demo-product-5', reference: 'KZ-1005', name: 'Sneakers Kora', category: 'Chaussures', price: 85, stock: 9, image: '/assets/products/p5.png', status: 'low_stock', createdAt, updatedAt: now },
-    { id: 'demo-product-6', reference: 'KZ-1006', name: 'Sandales Orfèvre', category: 'Chaussures', price: 62, stock: 23, image: '/assets/products/p6.png', status: 'in_stock', createdAt, updatedAt: now },
+    {
+      id: 'demo-product-1',
+      reference: 'KZ-1001',
+      name: 'Robe Soleil Dakar',
+      category: 'Vêtements',
+      price: 125,
+      stock: 18,
+      image: '/assets/products/p1.webp',
+      status: 'in_stock',
+      createdAt,
+      updatedAt: now,
+    },
+    {
+      id: 'demo-product-2',
+      reference: 'KZ-1002',
+      name: 'Top Atelier Indigo',
+      category: 'Vêtements',
+      price: 48,
+      stock: 7,
+      image: '/assets/products/p2.webp',
+      status: 'low_stock',
+      createdAt,
+      updatedAt: now,
+    },
+    {
+      id: 'demo-product-3',
+      reference: 'KZ-1003',
+      name: 'Pantalon Signature',
+      category: 'Vêtements',
+      price: 95,
+      stock: 12,
+      image: '/assets/products/p3.webp',
+      status: 'in_stock',
+      createdAt,
+      updatedAt: now,
+    },
+    {
+      id: 'demo-product-4',
+      reference: 'KZ-1004',
+      name: 'Veste Harmattan',
+      category: 'Vêtements',
+      price: 160,
+      stock: 0,
+      image: '/assets/products/p4.webp',
+      status: 'out_of_stock',
+      createdAt,
+      updatedAt: now,
+    },
+    {
+      id: 'demo-product-5',
+      reference: 'KZ-1005',
+      name: 'Sneakers Kora',
+      category: 'Chaussures',
+      price: 85,
+      stock: 9,
+      image: '/assets/products/p5.webp',
+      status: 'low_stock',
+      createdAt,
+      updatedAt: now,
+    },
+    {
+      id: 'demo-product-6',
+      reference: 'KZ-1006',
+      name: 'Sandales Orfèvre',
+      category: 'Chaussures',
+      price: 62,
+      stock: 23,
+      image: '/assets/products/p6.webp',
+      status: 'in_stock',
+      createdAt,
+      updatedAt: now,
+    },
   ];
   const state = readDemoProductState();
   return seeds
@@ -124,9 +195,39 @@ export const getMockDashboardOverview = (): DashboardOverview => ({
 export const getMockSales = (): SaleItem[] => {
   const now = new Date();
   return [
-    { id: 'demo-sale-1', productName: 'Robe Soleil Dakar', reference: 'KZ-1001', quantity: 1, unitPrice: 125, totalPrice: 125, customer: 'Aminata Fall', date: new Date(now.getTime() - 2 * 60 * 60 * 1000), status: 'completed' },
-    { id: 'demo-sale-2', productName: 'Sneakers Kora', reference: 'KZ-1005', quantity: 1, unitPrice: 85, totalPrice: 85, customer: 'Moussa Diagne', date: new Date(now.getTime() - 5 * 60 * 60 * 1000), status: 'pending' },
-    { id: 'demo-sale-3', productName: 'Top Atelier Indigo', reference: 'KZ-1002', quantity: 2, unitPrice: 48, totalPrice: 96, customer: 'Fatou Ndiaye', date: new Date(now.getTime() - 24 * 60 * 60 * 1000), status: 'completed' },
+    {
+      id: 'demo-sale-1',
+      productName: 'Robe Soleil Dakar',
+      reference: 'KZ-1001',
+      quantity: 1,
+      unitPrice: 125,
+      totalPrice: 125,
+      customer: 'Aminata Fall',
+      date: new Date(now.getTime() - 2 * 60 * 60 * 1000),
+      status: 'completed',
+    },
+    {
+      id: 'demo-sale-2',
+      productName: 'Sneakers Kora',
+      reference: 'KZ-1005',
+      quantity: 1,
+      unitPrice: 85,
+      totalPrice: 85,
+      customer: 'Moussa Diagne',
+      date: new Date(now.getTime() - 5 * 60 * 60 * 1000),
+      status: 'pending',
+    },
+    {
+      id: 'demo-sale-3',
+      productName: 'Top Atelier Indigo',
+      reference: 'KZ-1002',
+      quantity: 2,
+      unitPrice: 48,
+      totalPrice: 96,
+      customer: 'Fatou Ndiaye',
+      date: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      status: 'completed',
+    },
   ];
 };
 
@@ -145,7 +246,7 @@ export const buildMockCreatedProduct = (input: CreateProductInput): Product => {
     gender: input.gender,
     ageRange: input.ageRange,
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   };
 };
 
@@ -167,15 +268,15 @@ export const formatDate = (date: Date, format: 'short' | 'long' = 'short'): stri
     return new Intl.DateTimeFormat('fr-FR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     }).format(date);
   }
-  
+
   return new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   }).format(date);
 };

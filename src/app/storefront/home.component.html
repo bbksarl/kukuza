@@ -1,0 +1,219 @@
+<main class="min-h-[calc(100vh-52px)] flex flex-col bg-gray-50 w-full overflow-x-hidden">
+  <section
+    class="relative block h-[86vh] min-h-[520px] w-full overflow-hidden pt-[72px] sm:h-[90vh] md:h-screen"
+  >
+    <video
+      class="absolute inset-0 h-full w-full scale-105 object-cover blur-sm"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="/assets/outfit/im1.webp"
+      aria-hidden="true"
+    >
+      <source src="/assets/baniere/MEET.mp4" type="video/mp4" />
+    </video>
+    <div class="absolute inset-0 bg-black/45 sm:bg-black/40" aria-hidden="true"></div>
+    <div class="absolute inset-0 flex items-center justify-center px-4 sm:px-6">
+      <div class="flex w-full max-w-[42rem] flex-col items-center gap-3 text-center text-white">
+        <img src="/assets/logo-hero.webp" alt="KUKUZA" class="h-20 w-auto sm:h-28 md:h-32 drop-shadow-lg" />
+        <p class="w-full max-w-[42rem] px-4 text-sm font-medium leading-relaxed text-white/90 sm:text-base">
+          {{ t('hero.tagline') }}
+        </p>
+        <a
+          href="#about"
+          class="text-sm font-semibold uppercase tracking-wide text-white hover:text-teal-50"
+          >{{ t('hero.about') }}</a
+        ><a
+          routerLink="/register"
+          class="rounded-xl border-2 border-white bg-white px-6 py-3 text-sm font-semibold uppercase tracking-wide text-slate-900 shadow-lg transition hover:-translate-y-0.5 hover:bg-transparent hover:text-white"
+          >{{ t('hero.registerShop') }}</a
+        >
+      </div>
+    </div>
+    <div class="pointer-events-none absolute inset-0 flex items-end justify-center pb-10">
+      <div class="pointer-events-auto flex w-full max-w-[36rem] flex-nowrap justify-center gap-2 px-4">
+        @for (filter of genderFilters; track filter.value) {
+          <a
+            routerLink="/products"
+            [queryParams]="{ gender: filter.value }"
+            class="shrink-0 whitespace-nowrap rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-[12px] font-semibold uppercase tracking-wider text-white shadow transition hover:bg-white/20"
+            >{{ t(filter.label) }}</a
+          >
+        }
+      </div>
+    </div>
+  </section>
+  <section class="bg-portal-bg px-4 py-6 sm:px-6 sm:py-7 md:px-8 md:py-8">
+    <div
+      class="relative w-full overflow-hidden"
+      role="region"
+      [attr.aria-label]="t('sections.boutiquesCarousel')"
+      style="mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent)"
+    >
+      <div class="flex w-max boutiques-track items-center gap-4 sm:gap-5 md:gap-6">
+        @for (creator of creators().concat(creators()); track $index) {
+          <a
+            routerLink="/products"
+            [queryParams]="{ nav: 'createurs', filter: creator.name }"
+            class="flex h-20 w-36 shrink-0 items-center justify-center rounded-xl bg-white px-4 shadow-md sm:w-40 md:w-44"
+            ><img
+              [src]="creator.profile_image_url || '/assets/logo-display.webp'"
+              [alt]="creator.name"
+              class="max-h-12 w-auto object-contain"
+          /></a>
+        }
+      </div>
+    </div>
+  </section>
+  <section class="products-section py-12" data-reveal>
+    <h2 class="text-2xl font-bold text-center mb-8">{{ t('catalog.allProducts') }}</h2>
+    <div class="products-grid">
+      @for (product of products().slice(0, 10); track product.id) {
+        <a
+          [routerLink]="['/products', product.id]"
+          class="product-card"
+          [attr.aria-label]="t('catalog.viewProduct') + ' ' + product.name"
+          ><img
+            [src]="product.image_url"
+            [alt]="product.name"
+            loading="lazy"
+            width="480"
+            height="600"
+            class="product-image"
+          />
+          <div class="product-overlay">
+            <div class="product-info">
+              <h3 class="product-name">{{ product.name }}</h3>
+              <p class="product-brand">{{ product.boutique_name || product.brand }}</p>
+            </div>
+          </div>
+          <span class="shop-now-btn" data-position="top">{{ t('sections.shopNow') }}</span></a
+        >
+      }
+    </div>
+    <div class="load-more-container">
+      @if (products().length > 10) {
+        <a routerLink="/products" class="load-more-btn">{{ t('sections.viewMore') }}</a>
+      }
+    </div>
+  </section>
+  <section class="outfit-section py-16 px-4" data-reveal>
+    <div class="max-w-7xl mx-auto">
+      <h2 class="outfit-main-title text-3xl md:text-4xl font-bold text-center mb-4">
+        {{ t('sections.outfitTitle') }}
+      </h2>
+      <p class="outfit-main-description text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+        {{ t('sections.outfitDescription') }}
+      </p>
+      <div
+        class="outfit-carousel-wrapper"
+        (mouseenter)="paused.set(true)"
+        (mouseleave)="paused.set(false)"
+        (focusin)="paused.set(true)"
+        (focusout)="paused.set(false)"
+      >
+        <div class="outfit-group">
+          <h3 class="outfit-group-title">{{ t(outfits[outfitIndex()].titleKey) }}</h3>
+          <p class="outfit-group-description">{{ t(outfits[outfitIndex()].descriptionKey) }}</p>
+          <div class="outfit-grid">
+            @for (image of outfits[outfitIndex()].images; track image.src) {
+              <a
+                [routerLink]="['/outfits', outfits[outfitIndex()].id]"
+                [state]="{ imageIndex: $index }"
+                class="outfit-item"
+                [class]="'outfit-item-' + ($index + 1)"
+                ><img [src]="image.src" [alt]="t(image.altKey)" loading="lazy" class="outfit-image"
+              /></a>
+            }
+          </div>
+        </div>
+        <div class="outfit-dots">
+          @for (outfit of outfits; track outfit.id) {
+            <button
+              (click)="outfitIndex.set($index)"
+              class="outfit-dot"
+              [class.active]="outfitIndex() === $index"
+              [attr.aria-label]="t('sections.goToLook', { value: $index + 1 })"
+            ></button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="skincare" class="skincare-section" data-reveal>
+    <div
+      class="skincare-background"
+      style="background-image: url(/assets/skincare/im.webp)"
+      role="img"
+      [attr.aria-label]="t('sections.skinCollection')"
+    ></div>
+    <div class="skincare-overlay" aria-hidden="true"></div>
+    <div class="skincare-content">
+      <h2 class="skincare-title">SKINCARE</h2>
+      <p class="skincare-description">{{ t('sections.skinDescription') }}</p>
+      <a routerLink="/products" [queryParams]="{ nav: 'skincare' }" class="skincare-cta">{{
+        t('sections.discover')
+      }}</a>
+    </div>
+  </section>
+  <section class="bestsellers-section" data-reveal>
+    <div class="bestsellers-container">
+      <div class="bestsellers-header">
+        <span class="bestsellers-label">{{ t('sections.bestCollection') }}</span>
+        <h2 class="bestsellers-title font-display">
+          <strong>{{ t('sections.bestSellers') }}</strong>
+        </h2>
+        <p class="bestsellers-description">{{ t('sections.bestDescription') }}</p>
+      </div>
+      <div class="bestsellers-grid">
+        @for (item of bestSellers; track item.id) {
+          <a
+            [routerLink]="['/best-sellers', item.slug]"
+            class="bestseller-card"
+            [class.bestseller-card--featured]="item.featured"
+            ><img [src]="item.src" [alt]="item.alt" loading="lazy" class="bestseller-image" />
+            <div class="bestseller-card-overlay"></div>
+            <div class="bestseller-card-top">
+              <span class="bestseller-chip">{{ t(item.categoryKey) }}</span
+              ><span class="bestseller-action">{{ t('sections.viewDetails') }} →</span>
+            </div>
+            <div class="bestseller-card-meta">
+              <p class="bestseller-kicker">{{ t('sections.kukuzaSelection') }}</p>
+              <h3 class="bestseller-name">{{ t(item.titleKey) }}</h3>
+              <p class="bestseller-price">{{ lang.money(item.price, item.currency) }}</p>
+            </div></a
+          >
+        }
+      </div>
+    </div>
+  </section>
+  <section class="offre-section" data-reveal>
+    <div class="offre-container">
+      <div class="offre-image-left">
+        <img src="/assets/offre/im1.webp" alt="Offre Image 1" loading="lazy" />
+      </div>
+      <div class="offre-content">
+        <h2>{{ t('sections.specialOffer') }}</h2>
+        <p>{{ t('sections.sale') }}</p>
+        <a routerLink="/products" class="offre-button">{{ t('sections.learnMore') }}</a>
+      </div>
+      <div class="offre-image-right">
+        <img src="/assets/offre/im2.webp" alt="Offre Image 2" loading="lazy" />
+      </div>
+    </div>
+  </section>
+  <section id="about" class="inspiration-section" data-reveal>
+    <div class="inspiration-container">
+      <div class="inspiration-image">
+        <img src="/assets/inspiration/im.webp" alt="Fashion Inspiration" loading="lazy" />
+      </div>
+      <div class="inspiration-content">
+        <h2>{{ t('sections.inspirationTitle') }}</h2>
+        <p>{{ t('sections.inspirationDescription') }}</p>
+        <a routerLink="/products" class="inspiration-button">{{ t('sections.discover') }}</a>
+      </div>
+    </div>
+  </section>
+</main>

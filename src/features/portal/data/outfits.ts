@@ -16,9 +16,9 @@ export const outfits: Outfit[] = [
     titleKey: 'sections.femaleOutfitTitle',
     descriptionKey: 'sections.femaleOutfitDescription',
     images: [
-      { src: '/assets/outfit/im3.png', altKey: 'outfit.female.sandals' },
-      { src: '/assets/outfit/im2.png', altKey: 'outfit.female.bag' },
-      { src: '/assets/outfit/im1.png', altKey: 'outfit.female.dress' },
+      { src: '/assets/outfit/im3.webp', altKey: 'outfit.female.sandals' },
+      { src: '/assets/outfit/im2.webp', altKey: 'outfit.female.bag' },
+      { src: '/assets/outfit/im1.webp', altKey: 'outfit.female.dress' },
     ],
   },
   {
@@ -26,9 +26,9 @@ export const outfits: Outfit[] = [
     titleKey: 'sections.maleOutfitTitle',
     descriptionKey: 'sections.maleOutfitDescription',
     images: [
-      { src: '/assets/outfit/im4.png', altKey: 'outfit.male.sandals' },
-      { src: '/assets/outfit/im5.png', altKey: 'outfit.male.bag' },
-      { src: '/assets/outfit/im6.png', altKey: 'outfit.male.look' },
+      { src: '/assets/outfit/im4.webp', altKey: 'outfit.male.sandals' },
+      { src: '/assets/outfit/im5.webp', altKey: 'outfit.male.bag' },
+      { src: '/assets/outfit/im6.webp', altKey: 'outfit.male.look' },
     ],
   },
 ];

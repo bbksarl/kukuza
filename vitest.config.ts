@@ -1,5 +1,4 @@
 import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -7,20 +6,15 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: appRoot,
-  plugins: [react()],
   resolve: {
-    alias: {
-      '@': appRoot + '/src',
-      '@/': appRoot + '/src/',
-      '@kukuza/facade': path.resolve(appRoot, 'facade/src/index.ts'),
-      '@kukuza/facade/': path.resolve(appRoot, 'facade/src/'),
-      '@testing-library/react': path.resolve(appRoot, 'node_modules/@testing-library/react'),
-      react: path.resolve(appRoot, 'node_modules/react'),
-      'react/jsx-runtime': path.resolve(appRoot, 'node_modules/react/jsx-runtime.js'),
-      'react/jsx-dev-runtime': path.resolve(appRoot, 'node_modules/react/jsx-dev-runtime.js'),
-      'react-dom': path.resolve(appRoot, 'node_modules/react-dom'),
-      'react-router-dom': path.resolve(appRoot, 'node_modules/react-router-dom'),
-    },
+    alias: [
+      {
+        find: '@/config/environment.generated',
+        replacement: path.resolve(appRoot, 'src/config/environment.test.ts'),
+      },
+      { find: '@/', replacement: appRoot + '/src/' },
+      { find: '@', replacement: appRoot + '/src' },
+    ],
   },
   server: {
     fs: {
@@ -30,13 +24,29 @@ export default defineConfig({
   test: {
     name: 'unified-app',
     environment: 'jsdom',
+    setupFiles: [path.resolve(appRoot, 'vitest.setup.ts')],
     // Les tests API restent indépendants du mode démo choisi dans .env.local.
     env: { VITE_ENABLE_API_MOCKS: 'false' },
-    setupFiles: [path.resolve(appRoot, 'tests/setup.ts')],
-    include: [
-      path.resolve(appRoot, 'src/**/*.test.{ts,tsx}'),
-      path.resolve(appRoot, 'facade/**/*.test.{ts,tsx}'),
-    ],
+    include: [path.resolve(appRoot, 'src/**/*.test.ts'), path.resolve(appRoot, 'scripts/**/*.test.ts')],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      all: true,
+      include: [
+        'src/app/core/format-money.ts',
+        'src/app/core/safe-return-url.ts',
+        'src/core/auth/sessionStorage.ts',
+        'src/app/storefront/cart.service.ts',
+        'src/services/orders/orderService.ts',
+        'src/api/contracts/catalog.ts',
+        'src/features/shop/services/shop/shopMappers.ts',
+        'src/features/shop/utils/productForm.ts',
+        'src/features/auth/domain/auth/schemas.ts',
+        'src/features/auth/utils/validation.ts',
+      ],
+      exclude: ['**/*.test.ts'],
+      thresholds: { statements: 70, branches: 60, functions: 65, lines: 70 },
+    },
     globals: true,
   },
 });

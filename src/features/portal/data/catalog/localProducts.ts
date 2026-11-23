@@ -1,4 +1,7 @@
-import { getMarketplaceProducts, type MarketplaceProductRecord } from '@/services/products/marketplaceProductStore';
+import {
+  getMarketplaceProducts,
+  type MarketplaceProductRecord,
+} from '@/services/products/marketplaceProductStore';
 import type { PortalProduct } from './types';
 import { mockProducts } from './mockProducts';
 import { normalizeProduct } from './productMapper';
@@ -11,11 +14,10 @@ export function getPortalProductById(productId: number | string | null | undefin
 }
 
 export function mergeMarketplaceProducts(products: PortalProduct[]): PortalProduct[] {
-  const localProducts = getMarketplaceProducts().map((product: MarketplaceProductRecord) => normalizeProduct(product));
+  const localProducts = getMarketplaceProducts().map((product: MarketplaceProductRecord) =>
+    normalizeProduct(product),
+  );
   const knownIds = new Set(localProducts.map((product) => String(product.id)));
 
-  return [
-    ...localProducts,
-    ...products.filter((product) => !knownIds.has(String(product.id))),
-  ];
+  return [...localProducts, ...products.filter((product) => !knownIds.has(String(product.id)))];
 }

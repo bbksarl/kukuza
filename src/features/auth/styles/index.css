@@ -302,7 +302,7 @@
    ============================================ */
 .auth-container {
   min-height: 100vh;
-  min-height: 100dvh; /* Fallback: 100vh for older browsers handled by autoprefixer */
+  min-height: 100dvh;
   min-height: 100svh;
   height: auto;
   display: flex;
@@ -453,7 +453,7 @@
     max-width: 28rem;
     padding: 1.5rem 1.375rem;
     margin-right: 4rem;
-    max-height: 92dvh; /* Fallback: 92vh for older browsers handled by autoprefixer */
+    max-height: 92dvh;
     overflow-y: auto;
     overflow-x: hidden;
   }
