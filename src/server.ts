@@ -11,12 +11,29 @@ import { join } from 'node:path';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 const apiOrigin = new URL(process.env['KUKUZA_API_UPSTREAM'] || 'http://host.docker.internal:7200');
+if (
+  !['http:', 'https:'].includes(apiOrigin.protocol) ||
+  apiOrigin.username ||
+  apiOrigin.password ||
+  apiOrigin.pathname !== '/' ||
+  apiOrigin.search ||
+  apiOrigin.hash
+) {
+  throw new Error('KUKUZA_API_UPSTREAM doit être une origine HTTP(S) sans identifiants ni chemin.');
+}
 const csp =
   "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self'; connect-src 'self'; img-src 'self' https: data: blob:; media-src 'self' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com";
-const allowedHosts = (process.env['SSR_ALLOWED_HOSTS'] || 'localhost,127.0.0.1,kukuza.com,www.kukuza.com')
+const defaultAllowedHosts =
+  process.env['NODE_ENV'] === 'production'
+    ? 'kukuza.com,www.kukuza.com'
+    : 'localhost,127.0.0.1,kukuza.com,www.kukuza.com';
+const allowedHosts = (process.env['SSR_ALLOWED_HOSTS'] || defaultAllowedHosts)
   .split(',')
-  .map((host) => host.trim())
+  .map((host) => host.trim().toLowerCase())
   .filter(Boolean);
+if (!allowedHosts.length || allowedHosts.includes('*')) {
+  throw new Error('SSR_ALLOWED_HOSTS doit contenir des hôtes explicites, sans joker.');
+}
 
 const app = express();
 const angularApp = new AngularNodeAppEngine({ allowedHosts });
@@ -28,22 +45,32 @@ app.use((_request, response, next) => {
   response.setHeader('X-Content-Type-Options', 'nosniff');
   response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.setHeader('Strict-Transport-Security', 'max-age=31536000');
   response.setHeader('Content-Security-Policy', csp);
   next();
 });
 
 app.use('/api', (request, response) => {
+  if (!allowedHosts.includes(request.hostname.toLowerCase())) {
+    response.status(400).type('text/plain').send('Hôte non autorisé.');
+    return;
+  }
+
   const target = new URL(request.originalUrl, apiOrigin);
+  const headers = { ...request.headers };
+  delete headers['x-forwarded-for'];
+  delete headers['x-forwarded-host'];
+  delete headers['x-forwarded-port'];
+  delete headers['x-forwarded-proto'];
+  delete headers['x-forwarded-prefix'];
   const options = {
     method: request.method,
     headers: {
-      ...request.headers,
+      ...headers,
       host: target.host,
-      'x-forwarded-host': request.headers['x-forwarded-host'] ?? request.headers.host ?? '',
-      'x-forwarded-proto': request.headers['x-forwarded-proto'] ?? request.protocol,
-      'x-forwarded-for': [request.headers['x-forwarded-for'], request.socket.remoteAddress]
-        .filter(Boolean)
-        .join(', '),
+      'x-forwarded-host': request.headers.host ?? target.host,
+      'x-forwarded-proto': request.protocol,
+      'x-forwarded-for': request.socket.remoteAddress ?? '',
     },
   };
   const handleResponse = (upstreamResponse: import('node:http').IncomingMessage) => {

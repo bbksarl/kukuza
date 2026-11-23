@@ -34,7 +34,7 @@ if ! docker run -d \
   --network kukuza-network \
   --add-host=host.docker.internal:host-gateway \
   --restart unless-stopped \
-  -p 3000:80 \
+  -p 3000:4000 \
   "$image:$tag"; then
   rollback
   exit 1

@@ -11,7 +11,7 @@ LABEL org.opencontainers.image.created=$BUILD_DATE \
 
 WORKDIR /app
 ENV NODE_ENV=production \
-    PORT=80 \
+    PORT=4000 \
     KUKUZA_API_UPSTREAM=http://host.docker.internal:7200
 
 COPY package.json package-lock.json ./
@@ -19,8 +19,10 @@ RUN npm ci --omit=dev --no-audit --no-fund
 
 COPY .ci-builds/ ./dist/
 
-EXPOSE 80
+USER node
+
+EXPOSE 4000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -q -O - http://127.0.0.1/healthz >/dev/null || exit 1
+  CMD wget -q -O - http://127.0.0.1:4000/healthz >/dev/null || exit 1
 
 CMD ["node", "dist/server/server.mjs"]
